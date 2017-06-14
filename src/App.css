@@ -1,0 +1,70 @@
+.NodeView {
+  text-align: left;
+  background-color: #444;
+  width: 100%;
+  height: 1000px;
+  user-select:none;
+}
+
+.MNode {
+  display:inline-block;
+  background-color:#777;
+  border-radius: 4px;
+  position:absolute;
+  cursor:grab;
+}
+
+.MNode:active {
+  cursor:grabbing;
+}
+
+.LinkLine {
+  stroke-width: 3px;
+  stroke: orange;
+}
+
+.CallName {
+  background-color: #333;
+  color: white;
+  padding: 4px;
+  font-family: helvetica;
+  font-weight: bold;
+  font-size: 13px;
+  text-align: center;
+}
+
+img {
+  vertical-align: bottom;
+}
+
+.CallName:hover {
+  background-color: #D51;
+}
+
+.PortGroup {
+  padding: 0px;
+  margin: 0px;
+}
+
+.SourcePortGroup {
+  text-align: right;
+}
+
+.Port {
+  border-radius: 2px;
+  padding: 0px;
+  margin: 2px;
+  cursor: default;
+}
+
+.Port:hover {
+  background-color:#fa0;
+}
+
+.Port.Sink {
+  margin-right: 0px;
+}
+
+.Port.Source {
+  margin-left: 0px;
+}
