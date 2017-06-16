@@ -35,9 +35,9 @@ export class NodeView extends React.Component {
     
     initializeEndpoints() {
         var endpts = {};
-        for (var linkID in this.props.links) {
-            var link = this.props.links[linkID];
-            endpts[linkID] = [[],[]];
+        for (var link_id in this.props.links) {
+            var link = this.props.links[link_id];
+            endpts[link_id] = [[],[]];
         }
         this.state = {endpoints : endpts}
     }
@@ -52,19 +52,26 @@ export class NodeView extends React.Component {
         });
     }
     
+    addLink(src_node_id, src_port_id, sink_node_id, sink_port_id) {
+        var src_node   = this.props.nodes[src_node_id];
+        var sink_node  = this.props.nodes[sink_node_id];
+        var src_links  = src_node.links[src_port_id];
+        var sink_links = sink_node.links[sink_port_id];
+    }
+    
     endpointMoved(evt) {
-        var nodeID = evt.nodeID;
-        var portID = evt.portID;
-        var isSink = evt.isSink;
-        var newPos = evt.newPos;
+        var node_id = evt.node_id;
+        var port_id = evt.port_id;
+        var isSink  = evt.isSink;
+        var newPos  = evt.newPos;
         
         var endpoints = {};
         
         // iterate over the links that need to be updated (if any)
-        var nod = this.props.nodes[nodeID];
-        if (nod.links && portID in nod.links) {
+        var nod = this.props.nodes[node_id];
+        if (nod.links && port_id in nod.links) {
             // a set of link_ids.
-            var cxn = nod.links[portID];
+            var cxn = nod.links[port_id];
             
             for (var i in cxn) {
                 var link_id = cxn[i];
@@ -82,7 +89,7 @@ export class NodeView extends React.Component {
         for (var i in this.state.endpoints) {
             var lnk = this.state.endpoints[i];
             if (lnk.length >= 2) {
-                links.push(<Link points={lnk}/>);
+                links.push(<Link points={lnk} key={i}/>);
             }
         }
         for (var i in this.props.nodes) {
@@ -105,21 +112,6 @@ export class NodeView extends React.Component {
 }
 
 
-export class Port extends React.Component {
-    
-    render() {
-        return (
-            <img src={typeIcons[this.props.typeID]} 
-                id={this.props.portID}
-                width={20} height={20} 
-                className={"Port " + (this.props.isSource ? "Source" : "Sink")} 
-                draggable="false"
-                ref={this.props.portRef}/>
-        );
-    }
-}
-
-
 export class Link extends React.Component {
     
     bounds() {
@@ -134,24 +126,56 @@ export class Link extends React.Component {
     }
     
     render() {
-        let bnds = this.bounds();
+        var rad = 5;
+        var pad = Math.max(rad,3);
+        var bnds = this.bounds();
+        
+        // put the points into the coordsys of this svg element.
+        var xf_pts = this.props.points.map(p => {
+            return [p[0] - bnds.lo[0] + pad, p[1] - bnds.lo[1] + pad];
+        });
+        
+        // make the dots.
+        var dots = []
+        for (var i in xf_pts) {
+            let p   = xf_pts[i];
+            let dot = <circle r={rad} cx={p[0]} cy={p[1]} className="LinkDot"/>;
+            dots.push(dot);
+        }
+        
         return (
             <svg className="Link" 
-                width ={bnds.hi[0] - bnds.lo[0]}
-                height={bnds.hi[1] - bnds.lo[1]}
+                width ={bnds.hi[0] - bnds.lo[0] + 2 * pad}
+                height={bnds.hi[1] - bnds.lo[1] + 2 * pad}
                 style={{
                     position:"absolute",
-                    left:    bnds.lo[0],
-                    top:     bnds.lo[1]
+                    left:    bnds.lo[0] - pad,
+                    top:     bnds.lo[1] - pad
                 }}>
                 <polyline 
-                    points={this.props.points.map(
-                        function(p) {
-                            return (p[0] - bnds.lo[0]) + "," + (p[1] - bnds.lo[1]);
-                        }
-                    )}
+                    points={xf_pts.map(p => {return (p[0] + "," + p[1]);})}
                     className="LinkLine"/>
+                {dots}
             </svg>);
+    }
+}
+
+
+export class Port extends React.Component {
+    
+    render() {
+        var classes = ["Port", this.props.isSource ? "Source" : "Sink"]
+        if (this.props.links != undefined && this.props.links.length > 0) {
+            classes.push("Connected");
+        }
+        return (
+            <img 
+                src={typeIcons[this.props.type_id]}
+                width={20} height={20} 
+                className={classes.join(" ")} 
+                draggable="false"
+                ref={this.props.portRef} />
+        );
     }
 }
 
@@ -160,45 +184,62 @@ export class MNode extends React.Component {
     
     constructor(props) {
         super(props);
-        this.dragging   = this.dragging.bind(this);
-        this.portElems  = {};
-        this.selfElem   = null;
-        this.updatePort = this.updatePort.bind(this);
+        this.onDrag         = this.onDrag.bind(this);
+        this.updateAllPorts = this.updateAllPorts.bind(this);
+        this.portElems      = {};
+        this.selfElem       = null;
+        this.state          = {
+            position : ("position" in props) ? (props.position) : {x:0, y:0}
+        };
+    }
+    
+    componentDidMount() {
+        // set the initial port positions
+        this.updateAllPorts();
     }
     
     
-    computePortConnectionPoint(pDom) {
-        var xy = [0,0];
+    onDrag(e, position) {
+        this.setState({position: position});
+        this.updateAllPorts();
+    }
+    
+    updatePort(port_idx) {
+        var xy = this.computePortConnectionPoint(this.portElems[port_idx]);
+        var evt = {
+            node_id : this.props.node_id,
+            port_id : port_idx,
+            isSink  : port_idx < this.props.type_sig.n_sinks,
+            newPos  : xy
+        };
+        this.props.onPortMoved(evt);
+    }
+    
+    updateAllPorts() {
+        if (this.props.onPortMoved) {
+            for (var i in this.portElems) {
+                this.updatePort(i);
+            }
+        }
+    }
+    
+    computePortConnectionPoint(elem) {
+        var eDom  = ReactDOM.findDOMNode(elem);
+        var xy    = [eDom.offsetWidth  / 2.,
+                     eDom.offsetHeight / 2.];
+        xy[0]    += elem.props.direction[0] * xy[0];
+        xy[1]    += elem.props.direction[1] * xy[1];
         var myDOM = ReactDOM.findDOMNode(this.draggableElem);
-        while (pDom != null && pDom != undefined && pDom.id != this.props.paneID) {
-            xy[0] += pDom.offsetLeft;
-            xy[1] += pDom.offsetTop;
-            if (pDom == myDOM) {
+        while (eDom != null && eDom != undefined && eDom.id != this.props.paneID) {
+            xy[0] += eDom.offsetLeft;
+            xy[1] += eDom.offsetTop;
+            if (eDom == myDOM) {
                 xy[0] += this.draggableElem.state.x;
                 xy[1] += this.draggableElem.state.y;
             }
-            pDom = pDom.offsetParent;
-        }
+            eDom = eDom.offsetParent;
+        } 
         return xy;
-    }
-    
-    updatePort(elem, i) {
-        this.portElems[i] = elem;
-    }
-    
-    dragging() {
-        if (this.props.onPortMoved) {
-            for (var i in this.portElems) {
-                var xy = this.computePortConnectionPoint(this.portElems[i]);
-                var evt = {
-                    nodeID : this.props.node_id,
-                    portID : i,
-                    isSink : i < this.props.type_sig.n_sinks,
-                    newPos : xy
-                };
-                this.props.onPortMoved(evt);
-            }
-        }
     }
     
     makePorts(doSinks) {
@@ -211,15 +252,18 @@ export class MNode extends React.Component {
         // does not create a closure. Thus the "i" inside of the ref callback
         // lambda would have a nonsense value.
         var that = this;
-        sig.type_ids.slice(start,end).forEach(function(typeId, i){
+        sig.type_ids.slice(start,end).forEach(function(type_id, i){
             var port_id = start + i;
             var p = <Port
-                key={"_node_" + that.props.node_id + "_port_" + port_id}
-                typeID={typeId} 
-                portID={port_id}
-                isSink={doSinks}
-                ref={function(e) {
-                    that.portElems[port_id] = ReactDOM.findDOMNode(e);
+                key       = {port_id}
+                port_id   = {port_id} 
+                node_id   = {that.props.node_id}
+                type_id   = {type_id} 
+                isSink    = {doSinks} 
+                links     = {that.props.links[port_id]}
+                direction = {doSinks ? [0,-1] : [0,1]} 
+                ref = {function(e) {
+                    that.portElems[port_id] = e;
                 }} />
             z.push(p);
         });
@@ -229,8 +273,9 @@ export class MNode extends React.Component {
     render() {
         return (
             <Draggable 
-                    cancel=".Port" 
-                    onDrag={this.dragging}
+                    position={this.state.position}
+                    cancel=".Port"
+                    onDrag={this.onDrag}
                     ref={(e) => {this.draggableElem = e;}}>
                 <div className="MNode">
                     <div className="PortGroup SinkPortGroup">

@@ -23,6 +23,10 @@
   stroke: orange;
 }
 
+.LinkDot {
+  fill: orange;
+}
+
 .CallName {
   background-color: #333;
   color: white;
@@ -67,4 +71,10 @@ img {
 
 .Port.Source {
   margin-left: 0px;
+}
+
+.Port.Connected {
+  background-color: orange;
+  border: 2px solid orange;
+  margin: 0px;
 }

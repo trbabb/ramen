@@ -15,6 +15,7 @@ class App extends Component {
          links    : {3 : [0]}},
         {type_sig : {type_ids : ['f64','f64','f64'],             n_sinks : 2}, 
          callName : "+",
+         position : {x:250,y:250},
          links    : {0 : [0]}},
     ];
     var links = [
