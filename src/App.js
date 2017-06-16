@@ -1,12 +1,16 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
-import {TypeElem, TypeBar, MNode, Link, NodeView} from './mNode.js';
-
-
+import React, { Component } from 'react'
+import logo from './logo.svg'
+import './App.css'
+import * as mnode from './mNode.js'
+import update from 'immutability-helper'
 
 
 class App extends Component {
+    
+  onLinkCompleted = () => {
+    console.log("LINK IS DONE.");
+  }
+    
   render() {
     
     var nodes = [
@@ -23,7 +27,7 @@ class App extends Component {
     ];
     
     return (
-      <NodeView id="blurghfart" nodes={nodes} links={links}/>
+      <mnode.NodeView id="blurghfart" nodes={nodes} links={links} onLinkCompleted={this.onLinkCompleted}/>
     );
   }
 }

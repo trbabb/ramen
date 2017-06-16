@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Draggable from 'react-draggable';
 import update    from 'immutability-helper';
-import ReactDOM  from 'react-dom'
+import ReactDOM  from 'react-dom';
 
 import i32_img from './resource/i32.png'
 import f32_img from './resource/f32.png'
@@ -16,6 +16,61 @@ const typeIcons = {
 };
 
 
+// Update a nested JS object assuming that all parent keys exist.
+// `obj`  : A js object to copy-update (will remain unchanged)
+// `keys` : A "path" of keys in the nested JS object to update.
+// `val`  : Value to set.
+function deepUpdate(obj, keys, val) {
+    var kk = keys.slice() // dupe array
+    var u = {} // full nested update array, e.g. {a : {b : {c : val}}}
+    var v = u  // current leaf array
+    while (kk.length > 0) {
+        let k = kk.shift()
+        let w = (kk.length > 0) ? {} : {$set : val}
+        v[k]  = w
+        v     = w
+    }
+    console.log("doing ", JSON.stringify(u))
+    return update(obj, u);
+}
+
+
+// Update a nested JS object and create new, empty JS objects if any 
+// parent element doesn't exist.
+// `obj`   : Object to copy-update (argument remains unaffected).
+// `keys`  : A "path" of keys in the nested JS object to update.
+// `val`   : New value.
+// `types` : A list of n-1 constructors as a funciton of nesting depth, for creating missing parents.
+//           Note that a constructor for the final key is not needed, since the value is provided.
+function lazyDeepUpdate(obj, keys, val, types=null) {
+    var k_remaining = keys.slice(); // dupe array
+    var k_shifted   = [];
+    var cur = obj;
+    var depth = 0;
+    
+    while (k_remaining.length > 0) {
+        let k = k_remaining.shift();
+        k_shifted.push(k);
+        if (!(k in cur) || k_remaining.length == 0) {
+            // either add a new empty parent, or add the final object
+            var new_obj;
+            if (k_remaining.length > 0) {
+                // make a new parent
+                new_obj = (types === null || types[depth] === null || types[depth] === undefined) ? {} : types[depth]();
+            } else {
+                new_obj = val;
+            }
+            obj = deepUpdate(obj, k_shifted, new_obj);
+            cur = new_obj;
+        } else {
+            cur = cur[k];
+        }
+        ++depth;
+    };
+    return obj;
+}
+
+
 export class NodeView extends React.Component {
     
     // port                      : {node_id, port_id}
@@ -27,44 +82,49 @@ export class NodeView extends React.Component {
     
     constructor(props) {
         super(props);
-        this.state          = {endpoints : {}}
         this.endpointMoved  = this.endpointMoved.bind(this);
         this.updateEndpoint = this.updateEndpoint.bind(this);
-        this.initializeEndpoints();
+        this.state = this.getInitialState();
     }
     
-    initializeEndpoints() {
-        var endpts = {};
-        for (var link_id in this.props.links) {
-            var link = this.props.links[link_id];
-            endpts[link_id] = [[],[]];
-        }
-        this.state = {endpoints : endpts}
+    getInitialState() {
+        return {
+            endpoints   : {},
+            port_coords : {},
+            partialLink : null
+        };
     }
     
     updateEndpoint(link_id, newPos, pt_idx) {
         this.setState(function(prevState) {
-            var link = {};
-            link[pt_idx] = {$set : newPos};
-            var z = {};
-            z[link_id] = link;
-            return update(prevState, {endpoints: z});
+            var w = lazyDeepUpdate(
+                prevState,                      // obj to copy-update
+                ['endpoints', link_id, pt_idx], // key seq
+                newPos,                         // new value
+                [Object, Array]);               // constructors for empty parents
+            console.log(w)
+            return w;
         });
     }
     
-    addLink(src_node_id, src_port_id, sink_node_id, sink_port_id) {
-        var src_node   = this.props.nodes[src_node_id];
-        var sink_node  = this.props.nodes[sink_node_id];
-        var src_links  = src_node.links[src_port_id];
-        var sink_links = sink_node.links[sink_port_id];
+    updatePortCoord = ({node_id, port_id, newPos}) => {
+        this.setState(function(prevState) {
+            var upd = {}
+        })
     }
     
-    endpointMoved(evt) {
-        var node_id = evt.node_id;
-        var port_id = evt.port_id;
-        var isSink  = evt.isSink;
-        var newPos  = evt.newPos;
-        
+    onPortClicked = (port) => {
+        if (this.state.partialLink === null) {
+            // initiate a partial link
+            this.setState({partialLink : port});
+        } else {
+            // complete a partial link
+            this.setState({partialLink : null});
+            this.props.onLinkCompleted(this.state.partialLink, port);
+        }
+    }
+    
+    endpointMoved({node_id, port_id, isSink, newPos}) {
         var endpoints = {};
         
         // iterate over the links that need to be updated (if any)
@@ -81,6 +141,14 @@ export class NodeView extends React.Component {
         }
     }
     
+    emitpartialLink() {
+        if (this.state.partialLink !== null) {
+            return (<Link points={
+                [[0,0], [100,200]]
+            }/>);
+        }
+    }
+    
     render() {
         var links = [];
         var nodes = [];
@@ -88,23 +156,24 @@ export class NodeView extends React.Component {
         // iterate over endpts instead
         for (var i in this.state.endpoints) {
             var lnk = this.state.endpoints[i];
-            if (lnk.length >= 2) {
+            if (Object.keys(lnk).length >= 2) {
                 links.push(<Link points={lnk} key={i}/>);
             }
         }
         for (var i in this.props.nodes) {
             var n = this.props.nodes[i];
-            n["onPortMoved"] = this.endpointMoved;
             nodes.push(<MNode node_id={i}
                               key={"_node_" + i}
                               paneID={this.props.id} 
                               onPortMoved={this.endpointMoved} 
+                              onPortClicked={this.onPortClicked}
                               {...n} />);
         }
         
         return (
             <div className="NodeView" id={this.props.id} style={{position:"relative"}}>
                 {links}
+                {this.emitpartialLink()}
                 {nodes}
             </div>
         );
@@ -174,6 +243,7 @@ export class Port extends React.Component {
                 width={20} height={20} 
                 className={classes.join(" ")} 
                 draggable="false"
+                onClick={this.props.onClick}
                 ref={this.props.portRef} />
         );
     }
@@ -184,11 +254,9 @@ export class MNode extends React.Component {
     
     constructor(props) {
         super(props);
-        this.onDrag         = this.onDrag.bind(this);
-        this.updateAllPorts = this.updateAllPorts.bind(this);
-        this.portElems      = {};
-        this.selfElem       = null;
-        this.state          = {
+        this.portElems = {};
+        this.selfElem  = null;
+        this.state     = {
             position : ("position" in props) ? (props.position) : {x:0, y:0}
         };
     }
@@ -199,7 +267,7 @@ export class MNode extends React.Component {
     }
     
     
-    onDrag(e, position) {
+    onDrag = (e, position) => {
         this.setState({position: position});
         this.updateAllPorts();
     }
@@ -215,7 +283,7 @@ export class MNode extends React.Component {
         this.props.onPortMoved(evt);
     }
     
-    updateAllPorts() {
+    updateAllPorts = () => {
         if (this.props.onPortMoved) {
             for (var i in this.portElems) {
                 this.updatePort(i);
@@ -262,6 +330,7 @@ export class MNode extends React.Component {
                 isSink    = {doSinks} 
                 links     = {that.props.links[port_id]}
                 direction = {doSinks ? [0,-1] : [0,1]} 
+                onClick   = {that.props.onPortClicked}
                 ref = {function(e) {
                     that.portElems[port_id] = e;
                 }} />
