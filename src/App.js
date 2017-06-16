@@ -1,35 +1,59 @@
-import React, { Component } from 'react'
-import logo from './logo.svg'
+import React, { Component }         from 'react'
+import {NodeView}                   from './mNodeView'
+import {deepUpdate, lazyDeepUpdate} from './update'
+import update                       from 'immutability-helper'
+
 import './App.css'
-import * as mnode from './mNode.js'
-import update from 'immutability-helper'
 
 
 class App extends Component {
     
-  onLinkCompleted = () => {
-    console.log("LINK IS DONE.");
-  }
+    constructor(props) {
+        super(props);
+        this.state = this.getDefaultState();
+    }
     
-  render() {
+    getDefaultState() {
+        var nodes = [
+            {type_sig : {type_ids : ['f64','f64','f64','f64','f64'], n_sinks : 3}, 
+             callName : "This is a function call",
+             links    : {3 : [0]}},
+            {type_sig : {type_ids : ['f64','f64','f64'],             n_sinks : 2}, 
+             callName : "+",
+             position : {x:250, y:250},
+             links    : {0 : [0]}},
+        ];
+        var links = [
+            {src : {node_id : 0, port_id : 3}, sink : {node_id : 1, port_id : 0}}
+        ];
+        return {
+            nodes : nodes,
+            links : links
+        };
+    }
     
-    var nodes = [
-        {type_sig : {type_ids : ['f64','f64','f64','f64','f64'], n_sinks : 3}, 
-         callName : "This is a function call",
-         links    : {3 : [0]}},
-        {type_sig : {type_ids : ['f64','f64','f64'],             n_sinks : 2}, 
-         callName : "+",
-         position : {x:250,y:250},
-         links    : {0 : [0]}},
-    ];
-    var links = [
-        {src : {node_id : 0, port_id : 3}, sink : {node_id : 1, port_id : 0}}
-    ];
+    onLinkCompleted = (p0, p1) => {
+        // todo: we don't update the node state.
+        // todo: add an addLink() action
+        this.setState((prevState) => {
+            var newLink = {
+                src:  p0,
+                sink: p1
+            }
+            var z = update(prevState, {links : {$push : [newLink]}});
+            return z;
+        });
+    }
     
-    return (
-      <mnode.NodeView id="blurghfart" nodes={nodes} links={links} onLinkCompleted={this.onLinkCompleted}/>
-    );
-  }
+    render() {
+        return (
+            <NodeView 
+                id="blurghfart" 
+                nodes={this.state.nodes} 
+                links={this.state.links} 
+                onLinkCompleted={this.onLinkCompleted}/>
+        );
+    }
 }
 
 export default App;

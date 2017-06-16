@@ -1,197 +1,7 @@
 import React, { Component } from 'react';
-import Draggable from 'react-draggable';
-import ReactDOM  from 'react-dom';
-import {lazyDeepUpdate, deepUpdate} from './update';
-
-import i32_img from './resource/i32.png'
-import f32_img from './resource/f32.png'
-import i64_img from './resource/i64.png'
-import f64_img from './resource/f64.png'
-
-const typeIcons = {
-    'i32' : i32_img,
-    'f32' : f32_img,
-    'i64' : i64_img,
-    'f64' : f64_img
-};
-
-
-export class NodeView extends React.Component {
-    
-    // port                      : {node_id, port_id}
-    // this.links     = {link_id : {src : port, sink : port}}
-    // this.endpoints = {link_id : [pt, pt]}
-    // this.nodes     = {node_id : {type_sig : [...], 
-    //                              cxns     : [link_id ...]
-    //                              call_sig : "..." }}
-    
-    constructor(props) {
-        super(props);
-        this.endpointMoved  = this.endpointMoved.bind(this);
-        this.updateEndpoint = this.updateEndpoint.bind(this);
-        this.state = this.getInitialState();
-    }
-    
-    getInitialState() {
-        return {
-            endpoints   : {},
-            port_coords : {},
-            partialLink : null
-        };
-    }
-    
-    updateEndpoint(link_id, newPos, pt_idx) {
-        this.setState(function(prevState) {
-            return lazyDeepUpdate(
-                prevState,                      // obj to copy-update
-                ['endpoints', link_id, pt_idx], // key seq
-                newPos,                         // new value
-                [Object, Array]);               // constructors for empty parents
-        });
-    }
-    
-    updatePortCoord = ({node_id, port_id, newPos}) => {
-        this.setState(function(prevState) {
-            var upd = {}
-        })
-    }
-    
-    onPortClicked = (port) => {
-        if (this.state.partialLink === null) {
-            // initiate a partial link
-            this.setState({partialLink : port});
-        } else {
-            // complete a partial link
-            this.setState({partialLink : null});
-            this.props.onLinkCompleted(this.state.partialLink, port);
-        }
-    }
-    
-    endpointMoved({node_id, port_id, isSink, newPos}) {
-        var endpoints = {};
-        
-        // iterate over the links that need to be updated (if any)
-        var nod = this.props.nodes[node_id];
-        if (nod.links && port_id in nod.links) {
-            // a set of link_ids.
-            var cxn = nod.links[port_id];
-            
-            for (var i in cxn) {
-                var link_id = cxn[i];
-                var pt_idx  = isSink ? 1 : 0;
-                this.updateEndpoint(link_id, newPos, pt_idx);
-            }
-        }
-    }
-    
-    emitpartialLink() {
-        if (this.state.partialLink !== null) {
-            return (<Link points={
-                [[0,0], [100,200]]
-            }/>);
-        }
-    }
-    
-    render() {
-        var links = [];
-        var nodes = [];
-        
-        // iterate over endpts instead
-        for (var i in this.state.endpoints) {
-            var lnk = this.state.endpoints[i];
-            if (Object.keys(lnk).length >= 2) {
-                links.push(<Link points={lnk} key={i}/>);
-            }
-        }
-        for (var i in this.props.nodes) {
-            var n = this.props.nodes[i];
-            nodes.push(<MNode node_id={i}
-                              key={"_node_" + i}
-                              paneID={this.props.id} 
-                              onPortMoved={this.endpointMoved} 
-                              onPortClicked={this.onPortClicked}
-                              {...n} />);
-        }
-        
-        return (
-            <div className="NodeView" id={this.props.id} style={{position:"relative"}}>
-                {links}
-                {this.emitpartialLink()}
-                {nodes}
-            </div>
-        );
-    }
-}
-
-
-export class Link extends React.Component {
-    
-    bounds() {
-        let mins = [ Infinity,  Infinity];
-        let maxs = [-Infinity, -Infinity];
-        for (var i in this.props.points) {
-            let p = this.props.points[i];
-            mins = [Math.min(p[0], mins[0]), Math.min(p[1], mins[1])];
-            maxs = [Math.max(p[0], maxs[0]), Math.max(p[1], maxs[1])];
-        }
-        return {lo:mins, hi:maxs};
-    }
-    
-    render() {
-        var rad = 5;
-        var pad = Math.max(rad,3);
-        var bnds = this.bounds();
-        
-        // put the points into the coordsys of this svg element.
-        var xf_pts = this.props.points.map(p => {
-            return [p[0] - bnds.lo[0] + pad, p[1] - bnds.lo[1] + pad];
-        });
-        
-        // make the dots.
-        var dots = []
-        for (var i in xf_pts) {
-            let p   = xf_pts[i];
-            let dot = <circle r={rad} cx={p[0]} cy={p[1]} className="LinkDot"/>;
-            dots.push(dot);
-        }
-        
-        return (
-            <svg className="Link" 
-                width ={bnds.hi[0] - bnds.lo[0] + 2 * pad}
-                height={bnds.hi[1] - bnds.lo[1] + 2 * pad}
-                style={{
-                    position:"absolute",
-                    left:    bnds.lo[0] - pad,
-                    top:     bnds.lo[1] - pad
-                }}>
-                <polyline 
-                    points={xf_pts.map(p => {return (p[0] + "," + p[1]);})}
-                    className="LinkLine"/>
-                {dots}
-            </svg>);
-    }
-}
-
-
-export class Port extends React.Component {
-    
-    render() {
-        var classes = ["Port", this.props.isSource ? "Source" : "Sink"]
-        if (this.props.links != undefined && this.props.links.length > 0) {
-            classes.push("Connected");
-        }
-        return (
-            <img 
-                src={typeIcons[this.props.type_id]}
-                width={20} height={20} 
-                className={classes.join(" ")} 
-                draggable="false"
-                onClick={this.props.onClick}
-                ref={this.props.portRef} />
-        );
-    }
-}
-
+import Draggable            from 'react-draggable';
+import ReactDOM             from 'react-dom';
+import {Port}               from './mPort';
 
 export class MNode extends React.Component {
     
@@ -266,14 +76,14 @@ export class MNode extends React.Component {
         sig.type_ids.slice(start,end).forEach(function(type_id, i){
             var port_id = start + i;
             var p = <Port
-                key       = {port_id}
-                port_id   = {port_id} 
-                node_id   = {that.props.node_id}
-                type_id   = {type_id} 
-                isSink    = {doSinks} 
-                links     = {that.props.links[port_id]}
-                direction = {doSinks ? [0,-1] : [0,1]} 
-                onClick   = {that.props.onPortClicked}
+                key           = {port_id}
+                port_id       = {port_id}
+                node_id       = {that.props.node_id}
+                type_id       = {type_id}
+                isSink        = {doSinks}
+                links         = {that.props.links[port_id]}
+                direction     = {doSinks ? [0,-1] : [0,1]}
+                onPortClicked = {that.props.onPortClicked}
                 ref = {function(e) {
                     that.portElems[port_id] = e;
                 }} />
