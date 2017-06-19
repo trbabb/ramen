@@ -9,12 +9,6 @@ import {Link}                       from './mLink';
 
 export class NodeView extends React.Component {
     
-    // props.links     = {link_id : {src : port, sink : port}}
-    // props.nodes     = {node_id : {type_sig : [...], 
-    //                               cxns     : [link_id ...]
-    //                               call_sig : "..." }}
-    // state.port_coords = { [node_id, port_id] : [x,y] }
-    
     constructor(props) {
         super(props);
         this.state = this.getInitialState();
@@ -80,7 +74,7 @@ export class NodeView extends React.Component {
         var nodes = [];
         
         // iterate over endpts instead
-        for (var i in this.props.links) {
+        for (let i = 0; i < this.props.links.length; ++i) {
             var lnk = this.props.links[i]
             var p0  = [lnk.src.node_id,  lnk.src.port_id]
             var p1  = [lnk.sink.node_id, lnk.sink.port_id]
@@ -91,7 +85,7 @@ export class NodeView extends React.Component {
             var p1_c = this.state.port_coords[p1];
             links.push(<Link points={[p0_c, p1_c]} />);
         }
-        for (var i in this.props.nodes) {
+        for (let i = 0; i < this.props.nodes.length; ++i) {
             var n = this.props.nodes[i];
             nodes.push(<MNode node_id={i}
                               key={"__node_" + i}

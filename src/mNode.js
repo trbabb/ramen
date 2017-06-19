@@ -7,7 +7,7 @@ export class MNode extends React.Component {
     
     constructor(props) {
         super(props);
-        this.portElems = {};
+        this.portElems = [];
         this.selfElem  = null;
         this.state     = {
             position : ("position" in props) ? (props.position) : {x:0, y:0}
@@ -38,7 +38,7 @@ export class MNode extends React.Component {
     
     updateAllPorts = () => {
         if (this.props.onPortMoved) {
-            for (var i in this.portElems) {
+            for (var i = 0; i < this.portElems.length; ++i) {
                 this.updatePort(i);
             }
         }
@@ -51,10 +51,10 @@ export class MNode extends React.Component {
         xy[0]    += elem.props.direction[0] * xy[0];
         xy[1]    += elem.props.direction[1] * xy[1];
         var myDOM = ReactDOM.findDOMNode(this.draggableElem);
-        while (eDom != null && eDom != undefined && eDom.id != this.props.paneID) {
+        while (eDom !== null && eDom !== undefined && eDom.id !== this.props.paneID) {
             xy[0] += eDom.offsetLeft;
             xy[1] += eDom.offsetTop;
-            if (eDom == myDOM) {
+            if (eDom === myDOM) {
                 xy[0] += this.draggableElem.state.x;
                 xy[1] += this.draggableElem.state.y;
             }

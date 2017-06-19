@@ -6,7 +6,7 @@ export class Link extends React.Component {
     bounds() {
         let mins = [ Infinity,  Infinity];
         let maxs = [-Infinity, -Infinity];
-        for (var i in this.props.points) {
+        for (var i = 0; i < this.props.points.length; ++i) {
             let p = this.props.points[i];
             mins = [Math.min(p[0], mins[0]), Math.min(p[1], mins[1])];
             maxs = [Math.max(p[0], maxs[0]), Math.max(p[1], maxs[1])];
@@ -26,7 +26,7 @@ export class Link extends React.Component {
         
         // make the dots.
         var dots = []
-        for (var i in xf_pts) {
+        for (var i = 0; i < xf_pts.length; ++i) {
             let p   = xf_pts[i];
             let dot = <circle r={rad} cx={p[0]} cy={p[1]} className="LinkDot"/>;
             dots.push(dot);

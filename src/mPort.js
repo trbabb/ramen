@@ -17,7 +17,7 @@ export class Port extends React.Component {
     
     render() {
         var classes = ["Port", this.props.isSource ? "Source" : "Sink"]
-        if (this.props.links != undefined && this.props.links.length > 0) {
+        if (this.props.links !== undefined && this.props.links.length > 0) {
             classes.push("Connected");
         }
         return (
