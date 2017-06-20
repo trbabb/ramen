@@ -89,7 +89,7 @@ export class MNode extends React.Component {
                 node_id       = {that.props.node_id}
                 type_id       = {type_id}
                 isSink        = {doSinks}
-                links         = {that.props.links[port_id]}
+                links         = {that.props.links.get(port_id)}
                 direction     = {doSinks ? [0,-1] : [0,1]}
                 onPortClicked = {that.props.onPortClicked}
                 ref = {function(e) {
@@ -111,7 +111,7 @@ export class MNode extends React.Component {
                         {this.makePorts(true)}
                     </div>
                     <div className="CallName" id="fncall">
-                        {this.props.callName}
+                        {this.props.name}
                     </div>
                     <div className="PortGroup SourcePortGroup">
                         {this.makePorts(false)}

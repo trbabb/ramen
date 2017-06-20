@@ -13,6 +13,9 @@ const typeIcons = {
 };
 
 
+// todo: pass the dom element, let the NodeView translate the point to local coords.
+
+
 export class Port extends React.Component {
     
     render() {

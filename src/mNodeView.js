@@ -40,7 +40,7 @@ export class NodeView extends React.Component {
     
     getInitialState() {
         return {
-            port_coords  : {},
+            port_coords  : {},   // todo: convert to immutable for speed / consistency.
             partialLink  : null,
             mouse_coords : null
         };
@@ -88,7 +88,7 @@ export class NodeView extends React.Component {
     }
     
     onLinkEndpointClicked = ({mouseEvt, linkID, endpoint}) => {
-        var link = this.props.links[linkID]
+        var link = this.props.links.get(linkID)
         var port = (endpoint == 0) ? link.sink : link.src
         
         console.assert(this.state.partialLink === null);
@@ -115,26 +115,30 @@ export class NodeView extends React.Component {
         var nodes = [];
         
         // iterate over endpts instead
-        for (let i = 0; i < this.props.links.length; ++i) {
-            if (i == this.state.hiddenLink) continue;
-            var lnk = this.props.links[i]
+        var ks = this.props.links.keySeq();
+        for (let i = 0; i < ks.size; ++i) {
+            var link_id = ks.get(i)
+            var lnk = this.props.links.get(link_id)
             var p0  = [lnk.src.node_id,  lnk.src.port_id]
             var p1  = [lnk.sink.node_id, lnk.sink.port_id]
             if (!(p0 in this.state.port_coords && p1 in this.state.port_coords)) {
+                // uninitialized port coodinates; don't know where to draw this guy.
                 continue;
             }
             var p0_c = this.state.port_coords[p0];
             var p1_c = this.state.port_coords[p1];
             links.push(<Link 
                 points={[p0_c, p1_c]} 
-                key={"__link_" + i} 
-                linkID={i}
+                key={"__link_" + link_id} 
+                linkID={link_id}
                 onLinkEndpointClicked={this.onLinkEndpointClicked}/>);
         }
-        for (let i = 0; i < this.props.nodes.length; ++i) {
-            var n = this.props.nodes[i];
-            nodes.push(<MNode node_id={i}
-                              key={"__node_" + i}
+        ks = this.props.nodes.keySeq();
+        for (let i = 0; i < ks.size; ++i) {
+            var node_id = ks.get(i)
+            var n = this.props.nodes.get(node_id);
+            nodes.push(<MNode node_id={node_id}
+                              key={"__node_" + node_id}
                               paneID={this.props.id} 
                               onPortMoved={this.onPortMoved} 
                               onPortClicked={this.onPortClicked}
