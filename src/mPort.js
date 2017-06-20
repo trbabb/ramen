@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 
 import i32_img from './resource/i32.png'
 import f32_img from './resource/f32.png'

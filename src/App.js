@@ -1,8 +1,9 @@
-import React, { Component }         from 'react'
+import React                        from 'react'
 import {NodeView}                   from './mNodeView'
 import {deepUpdate, lazyDeepUpdate} from './update'
 import update                       from 'immutability-helper'
-import *  as _                      from 'lodash'
+import * as _                       from 'lodash'
+import * as Immutable               from 'immutable'
 
 import './App.css'
 
@@ -16,7 +17,7 @@ import './App.css'
 //      into an O(n) operation. Remember SAT analogies? `this : me :: backwards-petting : a cat`.
 
 
-class App extends Component {
+class App extends React.Component {
     
     constructor(props) {
         super(props);
@@ -124,6 +125,12 @@ class App extends Component {
     
     onLinkCompleted = (p0, p1) => {
         this.addLink(p0, p1);
+    }
+    
+    onLinkDisconnected = (linkID) => {
+        this.setState((prevState) => {
+            return deepUpdate(prevState, ['links', linkID], undefined);
+        });
     }
     
     render() {

@@ -18,13 +18,21 @@
   cursor:grabbing;
 }
 
-.LinkLine {
-  stroke-width: 3px;
+.Link * {
   stroke: orange;
+  fill: orange;
 }
 
-.LinkDot {
-  fill: orange;
+.LinkLine {
+  stroke-width: 3px;
+}
+
+.LinkLine:hover {
+  stroke: #ffdd00;
+}
+
+.LinkLine.Partial {
+  stroke-dasharray: 5,5;
 }
 
 .CallName {

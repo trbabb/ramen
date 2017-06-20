@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
-import Draggable            from 'react-draggable';
-import ReactDOM             from 'react-dom';
-import {Port}               from './mPort';
+import React     from 'react';
+import Draggable from 'react-draggable';
+import ReactDOM  from 'react-dom';
+import {Port}    from './mPort';
 
 export class MNode extends React.Component {
     
@@ -50,14 +50,22 @@ export class MNode extends React.Component {
                      eDom.offsetHeight / 2.];
         xy[0]    += elem.props.direction[0] * xy[0];
         xy[1]    += elem.props.direction[1] * xy[1];
-        var myDOM = ReactDOM.findDOMNode(this.draggableElem);
         while (eDom !== null && eDom !== undefined && eDom.id !== this.props.paneID) {
             xy[0] += eDom.offsetLeft;
             xy[1] += eDom.offsetTop;
-            if (eDom === myDOM) {
-                xy[0] += this.draggableElem.state.x;
-                xy[1] += this.draggableElem.state.y;
+            
+            // this makes me sad. :(
+            let style = window.getComputedStyle(eDom);
+            if ('transform' in style) {
+                let    mx = style.transform;
+                let match = mx.match(/matrix\((.*)\)/);
+                if (match) {
+                    let arr = match[1].split(", ")
+                    xy[0] += Number(arr[4])
+                    xy[1] += Number(arr[5])
+                }
             }
+            
             eDom = eDom.offsetParent;
         } 
         return xy;
@@ -97,8 +105,7 @@ export class MNode extends React.Component {
             <Draggable 
                     position={this.state.position}
                     cancel=".Port"
-                    onDrag={this.onDrag}
-                    ref={(e) => {this.draggableElem = e;}}>
+                    onDrag={this.onDrag}>
                 <div className="MNode">
                     <div className="PortGroup SinkPortGroup">
                         {this.makePorts(true)}
