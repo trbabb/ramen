@@ -89,7 +89,7 @@ export class NodeView extends React.Component {
     
     onLinkEndpointClicked = ({mouseEvt, linkID, endpoint}) => {
         var link = this.props.links.get(linkID)
-        var port = (endpoint == 0) ? link.sink : link.src
+        var port = (endpoint === 0) ? link.sink : link.src
         
         console.assert(this.state.partialLink === null);
         
@@ -97,7 +97,7 @@ export class NodeView extends React.Component {
             hiddenLink  : linkID,
             partialLink : [port.node_id, port.port_id]};
         
-        //this.props.onLinkDisconnected(linkID);
+        this.props.onLinkDisconnected(linkID);
         
         this.setState(d)
     }

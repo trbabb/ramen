@@ -18,7 +18,7 @@ export class NodeData {
             this.type_sig,
             this.links.update(
                 port_id,
-                new Set(),
+                new Set([link_id]),
                 (s) => {return s.add(link_id)}));
     }
     
