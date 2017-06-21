@@ -29,35 +29,49 @@ export class Link extends React.Component {
             {...extraProps}/>
     }
     
+    onSourceEndpointClicked = (e) => {
+        var evt = {mouseEvt : e, linkID: this.props.linkID, endpoint:0}
+        this.props.onLinkEndpointClicked(evt)
+    }
+    
+    onSinkEndpointClicked = (e) => {
+        var evt = {mouseEvt : e, linkID: this.props.linkID, endpoint:1}
+        this.props.onLinkEndpointClicked(evt)
+    }
+    
     // todo: make the dots generate endpoint events
-    // todo: make a partial link a single line
+    // todo: add invisible elements to expand the click area.
     
     makeLine(pts, partial=false) {
         let p0 = pts[0]
         let p2 = pts[1]
         let p1 = [(p0[0] + p2[0]) / 2, (p0[1] + p2[1]) / 2]
-        var className = "LinkLine" + (partial ? " Partial" : "");
-        return [this.makeLineElement(p0, p1, 
-                    {key:"_seg_0", 
-                    className:className,
-                    onClick:(e) => {
-                        var evt = {mouseEvt : e, linkID: this.props.linkID, endpoint:0}
-                        this.props.onLinkEndpointClicked(evt)
-                    }}),
-            
-                this.makeLineElement(p1, p2, 
-                    {key:"_seg_1", 
-                    className:className,
-                    onClick:(e) => {
-                        var evt = {mouseEvt : e, linkID: this.props.linkID, endpoint:1}
-                        this.props.onLinkEndpointClicked(evt)
-                    }})]
+        
+        // partial links must not be clickable. because they are drawn on top of nodes,
+        // they would mask the port-connecting clicks. all other strokes must be clickable.
+        var style = partial ? {} : {pointerEvents : 'visiblePainted'}
+        if (partial) {
+            return [this.makeLineElement(p0, p2, {key:"_seg_0", className:"LinkLine Partial"})];
+        } else {
+            return [this.makeLineElement(p0, p1, 
+                        {key:"_seg_0", 
+                        className:"LinkLine",
+                        style:style,
+                        onClick:this.onSourceEndpointClicked}),
+                
+                    this.makeLineElement(p1, p2, 
+                        {key:"_seg_1", 
+                        className:"LinkLine",
+                        style:style,
+                        onClick:this.onSinkEndpointClicked})]
+        }
     }
     
     render() {
         var rad = 5;
         var pad = Math.max(rad,3);
         var bnds = this.bounds();
+        var cbaks = {0 : this.onSourceEndpointClicked, 1 : this.onSinkEndpointClicked};
         
         // put the points into the coordsys of this svg element.
         var xf_pts = this.props.points.map(p => {
@@ -68,21 +82,21 @@ export class Link extends React.Component {
         var dots = []
         for (var i = 0; i < xf_pts.length; ++i) {
             let p   = xf_pts[i];
-            let dot = <circle r={rad} cx={p[0]} cy={p[1]} className="LinkDot" key={"__dot_" + i}/>;
+            let dot = <circle 
+                r={rad} 
+                cx={p[0]} cy={p[1]} 
+                className="LinkDot" 
+                key={"__dot_" + i}
+                onClick={cbaks[i]} />;
             dots.push(dot);
         }
         
         var className = "LinkLine" + (this.props.partial === true ? " Partial" : "");
         var style = {
-                position:"absolute",
-                left:    bnds.lo[0] - pad,
-                top:     bnds.lo[1] - pad
-            }
-        
-        if (this.props.partial) {
-            // partial links hover on top. If they are clickable, 
-            // they'll mask the clicks to the ports underneath them, preventing a connection.
-            style['pointerEvents'] = 'none'
+            position:"absolute",
+            left:    bnds.lo[0] - pad,
+            top:     bnds.lo[1] - pad,
+            pointerEvents: 'none'  // we don't want the svg's bounding rect to capture events.
         }
         
         return (

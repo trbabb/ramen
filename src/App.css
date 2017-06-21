@@ -18,21 +18,12 @@
   cursor:grabbing;
 }
 
-.Link * {
-  stroke: orange;
-  fill: orange;
+img {
+  vertical-align: bottom;
 }
 
-.LinkLine {
-  stroke-width: 3px;
-}
-
-.LinkLine:hover {
-  stroke: #ffdd00;
-}
-
-.LinkLine.Partial {
-  stroke-dasharray: 5,5;
+.CallName:hover {
+  background-color: #D51;
 }
 
 .CallName {
@@ -45,12 +36,22 @@
   text-align: center;
 }
 
-img {
-  vertical-align: bottom;
+.Link * {
+  stroke: orange;
+  fill:   orange;
 }
 
-.CallName:hover {
-  background-color: #D51;
+.LinkLine {
+  stroke-width: 3px;
+}
+
+.Link *:hover {
+  stroke: #ffdd00;
+  fill:   #ffdd00;
+}
+
+.LinkLine.Partial {
+  stroke-dasharray: 5,5;
 }
 
 .PortGroup {

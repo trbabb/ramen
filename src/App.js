@@ -11,6 +11,7 @@ import './App.css'
 
 
 // todo: use asMutable to speed up some of the edits.
+// todo: link bboxes occlude each other.
 
 
 class App extends React.Component {
