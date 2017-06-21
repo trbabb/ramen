@@ -1,9 +1,10 @@
-import React from 'react';
+import React    from 'react';
+import ReactDOM from 'react-dom';
 
-import i32_img from './resource/i32.png'
-import f32_img from './resource/f32.png'
-import i64_img from './resource/i64.png'
-import f64_img from './resource/f64.png'
+import i32_img  from './resource/i32.png'
+import f32_img  from './resource/f32.png'
+import i64_img  from './resource/i64.png'
+import f64_img  from './resource/f64.png'
 
 const typeIcons = {
     'i32' : i32_img,
@@ -17,6 +18,26 @@ const typeIcons = {
 
 
 export class Port extends React.Component {
+    
+    constructor(props) {
+        super(props);
+        this.elem = null;
+    }
+    
+    
+    // get the connection point in "window" coordinates.
+    getConnectionPoint() {
+        if (this.elem === null) return [0,0];
+        
+        var eDom = ReactDOM.findDOMNode(this.elem);
+        var box  = eDom.getBoundingClientRect();
+        var xy   = [box.width / 2., box.height / 2.]
+        xy[0]   += this.props.direction[0] * xy[0] + box.left;
+        xy[1]   += this.props.direction[1] * xy[1] + box.top;
+        
+        return xy;
+    }
+    
     
     render() {
         var classes = ["Port", this.props.isSource ? "Source" : "Sink"]
@@ -35,7 +56,7 @@ export class Port extends React.Component {
                              mouse_evt : evt}
                     this.props.onPortClicked(e);
                 }}
-                ref={this.props.portRef} />
+                ref={(e) => {this.elem = e}} />
         );
     }
 }

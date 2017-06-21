@@ -91,7 +91,6 @@ export class Link extends React.Component {
             dots.push(dot);
         }
         
-        var className = "LinkLine" + (this.props.partial === true ? " Partial" : "");
         var style = {
             position:"absolute",
             left:    bnds.lo[0] - pad,

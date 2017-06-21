@@ -1,33 +1,8 @@
-import React                        from 'react';
-import ReactDOM                     from 'react-dom';
-import {lazyDeepUpdate, deepUpdate} from './update';
-import {MNode}                      from './mNode';
-import {Link}                       from './mLink';
-
-
-
-function computeOffset(e) {
-    var xy = [0,0];
-    while (e !== null && e !== undefined) {
-        xy[0] += e.offsetLeft - e.scrollLeft;
-        xy[1] += e.offsetTop  - e.scrollTop;
-        
-        // this is, like, super lame:
-        let style = window.getComputedStyle(e);
-        if ('transform' in style) {
-            let    mx = style.transform;
-            let match = mx.match(/matrix\((.*)\)/);
-            if (match) {
-                let arr = match[1].split(", ")
-                xy[0] += Number(arr[4])
-                xy[1] += Number(arr[5])
-            }
-        }
-        
-        e = e.offsetParent;
-    } 
-    return xy;
-}
+import React            from 'react';
+import ReactDOM         from 'react-dom';
+import {lazyDeepUpdate} from './update';
+import {MNode}          from './mNode';
+import {Link}           from './mLink';
 
 
 export class NodeView extends React.Component {
@@ -54,9 +29,9 @@ export class NodeView extends React.Component {
     }
     
     onMouseMove = (evt) => {
-        var eDom   = ReactDOM.findDOMNode(this.elem);
-        var p_offs = computeOffset(eDom);
-        this.setState({mouse_coords : [evt.clientX - p_offs[0], evt.clientY - p_offs[1]]});
+        var eDom = ReactDOM.findDOMNode(this.elem);
+        var box  = eDom.getBoundingClientRect()
+        this.setState({mouse_coords : [evt.clientX - box.left, evt.clientY - box.top]});
     }
     
     onPortMoved = ({node_id, port_id, newPos}) => {

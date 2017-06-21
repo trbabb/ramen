@@ -1,17 +1,14 @@
-import React                        from 'react'
-import update                       from 'immutability-helper'
-import * as _                       from 'lodash'
-import {Map}                        from 'immutable'
+import React      from 'react'
+import * as _     from 'lodash'
+import {Map}      from 'immutable'
 
-import {NodeView}                   from './mNodeView'
-import {deepUpdate, lazyDeepUpdate} from './update'
-import {NodeData}                   from './NodeData'
+import {NodeView} from './mNodeView'
+import {NodeData} from './NodeData'
 
 import './App.css'
 
 
 // todo: use asMutable to speed up some of the edits.
-// todo: link bboxes occlude each other.
 
 
 class App extends React.Component {
@@ -34,7 +31,7 @@ class App extends React.Component {
     
     componentDidMount = () => {
         this.addNode("wat", {type_ids: ['f64','f64','f64','f64'], n_sinks: 3})
-        this.addNode("+", {type_ids: ['f64','f64','f64'], n_sinks: 2})
+        this.addNode("+", {type_ids: ['i32','i32','i32'], n_sinks: 2})
         this.addNode("a function named \"💩\"", {type_ids: ['f64','f64','f64','f64'], n_sinks: 2})
         this.addLink({node_id : 0, port_id : 3}, {node_id : 1, port_id : 0})
     }
@@ -139,8 +136,7 @@ class App extends React.Component {
     
     render() {
         return (
-            <NodeView 
-                id="blurghfart" 
+            <NodeView
                 nodes={this.state.nodes} 
                 links={this.state.links} 
                 onLinkCompleted={this.onLinkCompleted}

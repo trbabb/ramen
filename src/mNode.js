@@ -1,9 +1,10 @@
 import React     from 'react';
 import Draggable from 'react-draggable';
-import ReactDOM  from 'react-dom';
 import {Port}    from './mPort';
 
+
 export class MNode extends React.Component {
+    
     
     constructor(props) {
         super(props);
@@ -13,6 +14,7 @@ export class MNode extends React.Component {
             position : ("position" in props) ? (props.position) : {x:0, y:0}
         };
     }
+    
     
     componentDidMount() {
         // set the initial port positions
@@ -25,8 +27,9 @@ export class MNode extends React.Component {
         this.updateAllPorts();
     }
     
+    
     updatePort(port_idx) {
-        var xy = this.computePortConnectionPoint(this.portElems[port_idx]);
+        var xy  = this.portElems[port_idx].getConnectionPoint();
         var evt = {
             node_id : this.props.node_id,
             port_id : port_idx,
@@ -36,6 +39,7 @@ export class MNode extends React.Component {
         this.props.onPortMoved(evt);
     }
     
+    
     updateAllPorts = () => {
         if (this.props.onPortMoved) {
             for (var i = 0; i < this.portElems.length; ++i) {
@@ -44,32 +48,6 @@ export class MNode extends React.Component {
         }
     }
     
-    computePortConnectionPoint(elem) {
-        var eDom  = ReactDOM.findDOMNode(elem);
-        var xy    = [eDom.offsetWidth  / 2.,
-                     eDom.offsetHeight / 2.];
-        xy[0]    += elem.props.direction[0] * xy[0];
-        xy[1]    += elem.props.direction[1] * xy[1];
-        while (eDom !== null && eDom !== undefined && eDom.id !== this.props.paneID) {
-            xy[0] += eDom.offsetLeft;
-            xy[1] += eDom.offsetTop;
-            
-            // this makes me sad. :(
-            let style = window.getComputedStyle(eDom);
-            if ('transform' in style) {
-                let    mx = style.transform;
-                let match = mx.match(/matrix\((.*)\)/);
-                if (match) {
-                    let arr = match[1].split(", ")
-                    xy[0] += Number(arr[4])
-                    xy[1] += Number(arr[5])
-                }
-            }
-            
-            eDom = eDom.offsetParent;
-        } 
-        return xy;
-    }
     
     makePorts(doSinks) {
         var sig   = this.props.type_sig;
@@ -81,7 +59,7 @@ export class MNode extends React.Component {
         // does not create a closure. Thus the "i" inside of the ref callback
         // lambda would have a nonsense value.
         var that = this;
-        sig.type_ids.slice(start,end).forEach(function(type_id, i){
+        sig.type_ids.slice(start, end).forEach(function(type_id, i) {
             var port_id = start + i;
             var p = <Port
                 key           = {port_id}
@@ -100,23 +78,43 @@ export class MNode extends React.Component {
         return z;
     }
     
+    
+   renderFunctionDefBody() {
+        return (
+            <div className="MNode Function">
+                <div className="FnHeader">
+                    <div className="CallName">{this.props.name}</div>
+                    {this.makePorts(true)}
+                </div>
+            </div>
+        );
+    }
+    
+    
+    renderPlainBody() {
+        return (
+            <div className="MNode">
+                <div className="PortGroup SinkPortGroup">
+                    {this.makePorts(true)}
+                </div>
+                <div className="CallName">
+                    {this.props.name}
+                </div>
+                <div className="PortGroup SourcePortGroup">
+                    {this.makePorts(false)}
+                </div>
+            </div>
+        );
+    }
+    
+    
     render() {
         return (
             <Draggable 
                     position={this.state.position}
                     cancel=".Port"
                     onDrag={this.onDrag}>
-                <div className="MNode">
-                    <div className="PortGroup SinkPortGroup">
-                        {this.makePorts(true)}
-                    </div>
-                    <div className="CallName" id="fncall">
-                        {this.props.name}
-                    </div>
-                    <div className="PortGroup SourcePortGroup">
-                        {this.makePorts(false)}
-                    </div>
-                </div>
+                {this.renderPlainBody()}
             </Draggable>
         );
     }
