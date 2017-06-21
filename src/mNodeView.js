@@ -7,11 +7,13 @@ import {Link}           from './mLink';
 
 export class NodeView extends React.Component {
     
+    
     constructor(props) {
         super(props);
         this.state = this.getInitialState();
         this.elem  = null;
     }
+    
     
     getInitialState() {
         return {
@@ -21,6 +23,7 @@ export class NodeView extends React.Component {
         };
     }
     
+    
     onClick = (evt) => {
         if (this.state.partialLink !== null) {
             // cancel the active link.
@@ -28,11 +31,13 @@ export class NodeView extends React.Component {
         }
     }
     
+    
     onMouseMove = (evt) => {
         var eDom = ReactDOM.findDOMNode(this.elem);
         var box  = eDom.getBoundingClientRect()
         this.setState({mouse_coords : [evt.clientX - box.left, evt.clientY - box.top]});
     }
+    
     
     onPortMoved = ({node_id, port_id, newPos}) => {
         this.setState(function(prevState) {
@@ -42,6 +47,7 @@ export class NodeView extends React.Component {
                 newPos);                             // new item
         });
     }
+    
     
     onPortClicked = ({node_id, port_id, mouse_evt}) => {
         if (this.state.partialLink === null) {
@@ -62,6 +68,7 @@ export class NodeView extends React.Component {
         }
     }
     
+    
     onLinkEndpointClicked = ({mouseEvt, linkID, endpoint}) => {
         var link = this.props.links.get(linkID)
         var port = (endpoint === 0) ? link.sink : link.src
@@ -77,6 +84,7 @@ export class NodeView extends React.Component {
         this.setState(d)
     }
     
+    
     emitpartialLink() {
         if (this.state.partialLink !== null) {
             return (<Link 
@@ -85,14 +93,13 @@ export class NodeView extends React.Component {
         }
     }
     
+    
     render() {
         var links = [];
         var nodes = [];
         
-        // iterate over endpts instead
-        var ks = this.props.links.keySeq();
-        for (let i = 0; i < ks.size; ++i) {
-            var link_id = ks.get(i)
+        // emit the links which are our direct children
+        for (var link_id of this.props.child_links) {
             var lnk = this.props.links.get(link_id)
             var p0  = [lnk.src.node_id,  lnk.src.port_id]
             var p1  = [lnk.sink.node_id, lnk.sink.port_id]
@@ -108,9 +115,9 @@ export class NodeView extends React.Component {
                 linkID={link_id}
                 onLinkEndpointClicked={this.onLinkEndpointClicked}/>);
         }
-        ks = this.props.nodes.keySeq();
-        for (let i = 0; i < ks.size; ++i) {
-            var node_id = ks.get(i)
+        
+        // emit the nodes which are our direct children
+        for (var node_id of this.props.child_nodes) {
             var n = this.props.nodes.get(node_id);
             nodes.push(<MNode node_id={node_id}
                               key={"__node_" + node_id}
