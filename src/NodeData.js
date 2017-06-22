@@ -4,11 +4,11 @@ import * as _     from 'lodash'
 export class NodeData {
     
     
-    constructor(name, type_sig, parent=null, links=null) {
+    constructor(name, type_sig, parent=null, port_links=null) {
         this.name        = name
         this.type_sig    = type_sig
         this.parent      = parent
-        this.links       = (links === null) ? new Map() : links;
+        this.port_links  = (port_links === null) ? new Map() : port_links;
         this.child_nodes = new Set();
         this.child_links = new Set();
     }
@@ -21,7 +21,7 @@ export class NodeData {
     
     addLink(port_id, link_id) {
         var n = _.clone(this)
-        n.links = this.links.update(
+        n.port_links = this.port_links.update(
                 port_id,
                 new Set([link_id]),
                 (s) => {return s.add(link_id)})
@@ -38,7 +38,7 @@ export class NodeData {
     
     addChildLink(link_id) {
         var n = _.clone(this)
-        n.child_links = this.child_nodes.add(link_id)
+        n.child_links = this.child_links.add(link_id)
         return n
     }
     
@@ -58,9 +58,9 @@ export class NodeData {
     
     
     removeLink(port_id, link_id) {
-        if (this.links.has(port_id) && this.links.get(port_id).includes(link_id)) {
+        if (this.port_links.has(port_id) && this.port_links.get(port_id).includes(link_id)) {
             var n = _.clone(this);
-            n.links = this.links.update(port_id, s => {s.delete(link_id)})
+            n.port_links = this.port_links.update(port_id, s => {s.delete(link_id)})
             return n
         } else {
             return this
@@ -69,8 +69,8 @@ export class NodeData {
     
     
     getLinks(port_id) {
-        if (this.links.has(port_id)) {
-            return this.links.get(port_id);
+        if (this.port_links.has(port_id)) {
+            return this.port_links.get(port_id);
         } else {
             return new Set();
         }

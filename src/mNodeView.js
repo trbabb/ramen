@@ -5,7 +5,7 @@ import {MNode}          from './mNode';
 import {Link}           from './mLink';
 
 
-export class NodeView extends React.Component {
+export class NodeView extends React.PureComponent {
     
     
     constructor(props) {
@@ -40,11 +40,14 @@ export class NodeView extends React.Component {
     
     
     onPortMoved = ({node_id, port_id, newPos}) => {
+        // xxx: todo: this needs to subtract the parent offsent.
         this.setState(function(prevState) {
+            var eDom = ReactDOM.findDOMNode(this.elem)
+            var box  = eDom.getBoundingClientRect()
             return lazyDeepUpdate(
-                prevState,                           // obj to copy-update
-                ['port_coords', [node_id, port_id]], // key seq
-                newPos);                             // new item
+                prevState,                                    // obj to copy-update
+                ['port_coords', [node_id, port_id]],          // key seq
+                [newPos[0] - box.left, newPos[1] - box.top]);  // new item
         });
     }
     
@@ -119,12 +122,20 @@ export class NodeView extends React.Component {
         // emit the nodes which are our direct children
         for (var node_id of this.props.child_nodes) {
             var n = this.props.nodes.get(node_id);
+            var x = {}
+            if (n.child_nodes.size > 0) {
+                x.nodes              = this.props.nodes
+                x.links              = this.props.links
+                x.onLinkCompleted    = this.props.onLinkCompleted
+                x.onLinkDisconnected = this.props.onLinkDisconnected
+            }
             nodes.push(<MNode node_id={node_id}
                               key={"__node_" + node_id}
                               paneID={this.props.id} 
                               onPortMoved={this.onPortMoved} 
                               onPortClicked={this.onPortClicked}
-                              {...n} />);
+                              {...n}
+                              {...x} />);
         }
         
         return (

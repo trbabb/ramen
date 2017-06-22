@@ -1,7 +1,7 @@
 import React from 'react';
 
 
-export class Link extends React.Component {
+export class Link extends React.PureComponent {
     
     onClick = () => {
         if (this.props.onClick) {

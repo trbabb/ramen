@@ -1,6 +1,6 @@
 import React      from 'react'
 import * as _     from 'lodash'
-import {Map}      from 'immutable'
+import {Map, Set} from 'immutable'
 
 import {NodeView} from './mNodeView'
 import {NodeData} from './NodeData'
@@ -9,6 +9,13 @@ import './App.css'
 
 
 // todo: use asMutable to speed up some of the edits.
+// todo: clientBoundingRect() does not account for scroll D:
+// todo: make nodeviews resize themselves to contain their nodes.
+// todo: drag must cancel on both nodeviews and ports.
+// todo: function def ports and names should show up on the same line.
+// todo: port coordinates are all fucked for inner links
+
+// someday: draw the type at the free end of the temporary link.
 
 
 class App extends React.Component {
@@ -35,6 +42,10 @@ class App extends React.Component {
         this.addNode("wat", {type_ids: ['f64','f64','f64','f64'], n_sinks: 3})
         this.addNode("+", {type_ids: ['i32','i32','i32'], n_sinks: 2})
         this.addNode("a function named \"💩\"", {type_ids: ['f64','f64','f64','f64'], n_sinks: 2})
+        this.addNode("function def",            {type_ids: ['s','s','s'],             n_sinks: 2})
+        this.addNode("child node",              {type_ids: ['s','s'],                 n_sinks:1}, 3) // parent=3
+        this.addNode("another kid",             {type_ids: ['s','s','s'],             n_sinks:1}, 3) // parent=3
+        
         this.addLink({node_id : 0, port_id : 3}, {node_id : 1, port_id : 0})
     }
     
@@ -51,7 +62,7 @@ class App extends React.Component {
                 s.child_nodes = prevState.child_nodes.add(id)
             } else {
                 var parent_node = prevState.nodes.get(parent_id)
-                parent_node.addChildNode(id);
+                parent_node = parent_node.addChildNode(id);
                 s.nodes = s.nodes.set(parent_id, parent_node);
             }
             
@@ -114,7 +125,6 @@ class App extends React.Component {
                 
                 // add the link to the parent
                 var parent_id   = src_node.parent;
-                var parent_node = null;
                 
                 if (parent_id === null) {
                     s.child_links = prevState.child_links.add(new_link_id);
@@ -125,6 +135,7 @@ class App extends React.Component {
                 }
                 
                 s.max_link_id = new_link_id + 1;
+                
                 return s;
             }
         });
@@ -147,7 +158,7 @@ class App extends React.Component {
             // remove link from its parent
             var parent_id = src_node.parent;
             if (parent_id === null) {
-                s.child_links = prevState.child_links.delete(link_id);
+                s.child_links = prevState.child_links.remove(link_id);
             } else {
                 var parent_node = prevState.nodes.get(parent_id);
                 parent_node = parent_node.removeChildLink(link_id);
@@ -171,6 +182,8 @@ class App extends React.Component {
     
     render() {
         return (
+            // use this.module.{cbak}?
+            // or does passing the global state make React do a lot of differencing work?
             <NodeView
                 nodes={this.state.nodes}
                 links={this.state.links}

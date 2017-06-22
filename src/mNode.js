@@ -1,9 +1,10 @@
-import React     from 'react';
-import Draggable from 'react-draggable';
-import {Port}    from './mPort';
+import React      from 'react';
+import Draggable  from 'react-draggable';
+import {Port}     from './mPort';
+import {NodeView} from './mNodeView';
 
 
-export class MNode extends React.Component {
+export class MNode extends React.PureComponent {
     
     
     constructor(props) {
@@ -67,7 +68,7 @@ export class MNode extends React.Component {
                 node_id       = {that.props.node_id}
                 type_id       = {type_id}
                 isSink        = {doSinks}
-                links         = {that.props.links.get(port_id)}
+                links         = {that.props.port_links.get(port_id)}
                 direction     = {doSinks ? [0,-1] : [0,1]}
                 onPortClicked = {that.props.onPortClicked}
                 ref = {function(e) {
@@ -86,6 +87,13 @@ export class MNode extends React.Component {
                     <div className="CallName">{this.props.name}</div>
                     {this.makePorts(true)}
                 </div>
+                <NodeView 
+                    nodes={this.props.nodes}
+                    links={this.props.links}
+                    child_nodes={this.props.child_nodes}
+                    child_links={this.props.child_links}
+                    onLinkCompleted={this.props.onLinkCompleted}
+                    onLinkDisconnected={this.props.onLinkDisconnected}/>
             </div>
         );
     }
@@ -112,9 +120,9 @@ export class MNode extends React.Component {
         return (
             <Draggable 
                     position={this.state.position}
-                    cancel=".Port"
+                    cancel=".NodeView"
                     onDrag={this.onDrag}>
-                {this.renderPlainBody()}
+                {this.props.child_nodes.size > 0 ? this.renderFunctionDefBody() : this.renderPlainBody()}
             </Draggable>
         );
     }

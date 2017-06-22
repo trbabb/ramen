@@ -5,19 +5,21 @@ import i32_img  from './resource/i32.png'
 import f32_img  from './resource/f32.png'
 import i64_img  from './resource/i64.png'
 import f64_img  from './resource/f64.png'
+import s_img    from './resource/s.png'
 
 const typeIcons = {
     'i32' : i32_img,
     'f32' : f32_img,
     'i64' : i64_img,
-    'f64' : f64_img
+    'f64' : f64_img,
+    's'   : s_img
 };
 
 
 // todo: pass the dom element, let the NodeView translate the point to local coords.
 
 
-export class Port extends React.Component {
+export class Port extends React.PureComponent {
     
     constructor(props) {
         super(props);
