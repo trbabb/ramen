@@ -9,11 +9,17 @@ import './App.css'
 
 
 // todo: use asMutable to speed up some of the edits.
-// todo: clientBoundingRect() does not account for scroll D:
 // todo: make nodeviews resize themselves to contain their nodes.
-// todo: drag must cancel on both nodeviews and ports.
+// todo: both nodeviews and ports must not drag the parent node
 // todo: function def ports and names should show up on the same line.
-// todo: port coordinates are all fucked for inner links
+// todo: link does not follow beyond the edge of the nodeview and this is bad for interaction
+// todo: nodes must accept initial position
+// todo: attempting a connection from outer node to inner behaves weirdly
+//       (that's because each nodeView has its own temporary link)
+//       (maybe that should be owned by the App)
+// todo: the above also makes it impossible to connect function args to function body.
+//       we should in general allow nodes to connect across nesting levels.
+
 
 // someday: draw the type at the free end of the temporary link.
 
@@ -109,6 +115,9 @@ class App extends React.Component {
                 // link exists; don't make a redundancy.
                 console.log("Rejected link; exists."); // xxx debug
                 return false;
+            } else if (sink_node.parent !== src_node.parent) {
+                console.log("Rejected link; nodes must have same parent.")
+                return false;
             } else {
                 console.log("Accepted link."); // xxx debug
                 var new_link_id = prevState.max_link_id;
@@ -124,8 +133,7 @@ class App extends React.Component {
                 s.links = prevState.links.set(new_link_id, new_link);
                 
                 // add the link to the parent
-                var parent_id   = src_node.parent;
-                
+                var parent_id = src_node.parent;
                 if (parent_id === null) {
                     s.child_links = prevState.child_links.add(new_link_id);
                 } else {

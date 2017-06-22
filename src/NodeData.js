@@ -1,6 +1,12 @@
 import {Map, Set} from 'immutable'
 import * as _     from 'lodash'
 
+// NodeData is the React state representation of a language node.
+// It is rendered by an MNode react element.
+
+// It carries the type signature and name, a mapping of port ID
+// to connected link ID, and a list of IDs for any inner nodes and links.
+
 export class NodeData {
     
     

@@ -5,6 +5,9 @@ import {MNode}          from './mNode';
 import {Link}           from './mLink';
 
 
+// NodeView holds nodes and links, and ensures that the two stay visually connected.
+
+
 export class NodeView extends React.PureComponent {
     
     
@@ -17,7 +20,8 @@ export class NodeView extends React.PureComponent {
     
     getInitialState() {
         return {
-            port_coords  : {},   // todo: convert to immutable for speed / consistency.
+            // used for emitting the node endpoints:
+            port_coords  : {},   // todo: convert to Immutable for speed / consistency.
             partialLink  : null,
             mouse_coords : null
         };
@@ -40,19 +44,20 @@ export class NodeView extends React.PureComponent {
     
     
     onPortMoved = ({node_id, port_id, newPos}) => {
-        // xxx: todo: this needs to subtract the parent offsent.
+        // some child port moved. Update the mapping of port positions.
         this.setState(function(prevState) {
             var eDom = ReactDOM.findDOMNode(this.elem)
             var box  = eDom.getBoundingClientRect()
             return lazyDeepUpdate(
                 prevState,                                    // obj to copy-update
                 ['port_coords', [node_id, port_id]],          // key seq
-                [newPos[0] - box.left, newPos[1] - box.top]);  // new item
+                [newPos[0] - box.left, newPos[1] - box.top]); // new item
         });
     }
     
     
     onPortClicked = ({node_id, port_id, mouse_evt}) => {
+        // create or complete the "partial" link
         if (this.state.partialLink === null) {
             // initiate a partial link
             this.setState({partialLink : [node_id, port_id]});
@@ -124,6 +129,8 @@ export class NodeView extends React.PureComponent {
             var n = this.props.nodes.get(node_id);
             var x = {}
             if (n.child_nodes.size > 0) {
+                // these are heavy, so don't send them to 
+                // the nodes which don't have inner nodes.
                 x.nodes              = this.props.nodes
                 x.links              = this.props.links
                 x.onLinkCompleted    = this.props.onLinkCompleted

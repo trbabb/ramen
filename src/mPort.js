@@ -16,7 +16,12 @@ const typeIcons = {
 };
 
 
-// todo: pass the dom element, let the NodeView translate the point to local coords.
+// Port is a connection point on a language node.
+// It renders a badge representing the type of the accepted connection.
+
+// The connection point may be anywhere within or on the edge of the DOM element,
+// as specified by the "direction" prop, which carries two coordinates on [0,1],
+// representing the fraction position of the connection point within the element.
 
 
 export class Port extends React.PureComponent {

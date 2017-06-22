@@ -4,6 +4,9 @@ import {Port}     from './mPort';
 import {NodeView} from './mNodeView';
 
 
+// MNode is the React element for a language node.
+
+
 export class MNode extends React.PureComponent {
     
     
@@ -83,8 +86,8 @@ export class MNode extends React.PureComponent {
    renderFunctionDefBody() {
         return (
             <div className="MNode Function">
-                <div className="FnHeader">
-                    <div className="CallName">{this.props.name}</div>
+                <div className="FnHeader Function">
+                    <div className="CallName Function">{this.props.name}</div>
                     {this.makePorts(true)}
                 </div>
                 <NodeView 
@@ -94,6 +97,9 @@ export class MNode extends React.PureComponent {
                     child_links={this.props.child_links}
                     onLinkCompleted={this.props.onLinkCompleted}
                     onLinkDisconnected={this.props.onLinkDisconnected}/>
+                <div className="PortGroup SinkPortGroup">
+                    {this.makePorts(false)}
+                </div>
             </div>
         );
     }

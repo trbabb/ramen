@@ -1,13 +1,12 @@
 import React from 'react';
 
 
+// Link is the React element for rendering a link between two node ports.
+// It knows the port ID and the (local) coordinates of its endpoints.
+
+
 export class Link extends React.PureComponent {
     
-    onClick = () => {
-        if (this.props.onClick) {
-            // xxx todo: this
-        }
-    }
     
     bounds() {
         let mins = [ Infinity,  Infinity];
@@ -20,6 +19,7 @@ export class Link extends React.PureComponent {
         return {lo:mins, hi:maxs};
     }
     
+    
     makeLineElement(p0, p1, extraProps) {
         return <line 
             x1={p0[0]}
@@ -29,18 +29,22 @@ export class Link extends React.PureComponent {
             {...extraProps}/>
     }
     
+    
     onSourceEndpointClicked = (e) => {
         var evt = {mouseEvt : e, linkID: this.props.linkID, endpoint:0}
         this.props.onLinkEndpointClicked(evt)
     }
+    
     
     onSinkEndpointClicked = (e) => {
         var evt = {mouseEvt : e, linkID: this.props.linkID, endpoint:1}
         this.props.onLinkEndpointClicked(evt)
     }
     
+    
     // todo: make the dots generate endpoint events
     // todo: add invisible elements to expand the click area.
+    
     
     makeLine(pts, partial=false) {
         let p0 = pts[0]
@@ -66,6 +70,7 @@ export class Link extends React.PureComponent {
                         onClick:this.onSinkEndpointClicked})]
         }
     }
+    
     
     render() {
         var rad = 5;
@@ -107,4 +112,5 @@ export class Link extends React.PureComponent {
                 {dots}
             </svg>);
     }
+    
 }
