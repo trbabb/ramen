@@ -1,11 +1,12 @@
-import React      from 'react'
-import * as _     from 'lodash'
-import {Map, Set} from 'immutable'
-import ReactDOM   from 'react-dom';
+import React           from 'react'
+import * as _          from 'lodash'
+import {Map, Set}      from 'immutable'
+import ReactDOM        from 'react-dom';
 
-import {NodeView} from './mNodeView'
-import {NodeData} from './NodeData'
-import {Link}     from './mLink'
+import {NodeView}      from './mNodeView'
+import {NodeData}      from './NodeData'
+import {Link}          from './mLink'
+import {NewNodeDialog} from './mNewNodeDialog'
 
 import './App.css'
 
@@ -52,7 +53,9 @@ class App extends React.Component {
             mouse_pos    : [0,0], // in local coords
             partial_link : null,  // anchor port
             
-            port_coords  : new Map() // in window coords
+            port_coords  : new Map(), // in window coords
+            
+            showing_node_dialog : true
         }
     }
     
@@ -71,7 +74,7 @@ class App extends React.Component {
     /****** Mutation functions ******/
     
     
-    addNode(name, type_sig, parent_id=null, id=null) {
+    addNode = (name, type_sig, parent_id=null, id=null) => {
         this.setState(prevState => {
             if (id === null) {
                 id = prevState.max_node_id;
@@ -92,7 +95,7 @@ class App extends React.Component {
     }
     
     
-    addLink(port_0, port_1) {
+    addLink = (port_0, port_1) => {
         this.setState((prevState) => {
             var p0_sink = prevState.nodes.get(port_0.node_id).isPortSink(port_0.port_id);
             var p1_sink = prevState.nodes.get(port_1.node_id).isPortSink(port_1.port_id);
@@ -118,18 +121,28 @@ class App extends React.Component {
             }
             
             // get endpoint nodes
-            var sink_node  = prevState.nodes.get(new_link.sink.node_id);
-            var src_node   = prevState.nodes.get(new_link.src.node_id);
+            var sink_id    = new_link.sink.node_id;
+            var src_id     = new_link.src.node_id;
+            var sink_node  = prevState.nodes.get(sink_id);
+            var src_node   = prevState.nodes.get(src_id);
             // check for a link matching the one we're about to make.
             var cxn_exists = sink_node.getLinks(new_link.sink.port_id)
             cxn_exists = cxn_exists.find(x => {
                 return _.isEqual(prevState.links.get(x), new_link);
             });
             
+            var src_parent  = src_node.parent;
+            var sink_parent = sink_node.parent;
+            
             if (cxn_exists !== undefined) {
                 // link exists; don't make a redundancy.
                 console.log("Rejected link; exists."); // xxx debug
                 return false;
+            } if (sink_parent != src_parent && 
+                  sink_parent != src_id &&
+                  src_parent  != sink_id) {
+                // xxx debug
+                console.log("Rejected link; links must be to siblings or parent-to-child.")
             } else {
                 console.log("Accepted link."); // xxx debug
                 var new_link_id = prevState.max_link_id;
@@ -138,14 +151,20 @@ class App extends React.Component {
                 sink_node = sink_node.addLink(new_link.sink.port_id, new_link_id);
                 
                 // clobber the old node entries
-                var s   = {nodes : prevState.nodes.set(new_link.src.node_id,  src_node)};
-                s.nodes =                  s.nodes.set(new_link.sink.node_id, sink_node);
+                var s   = {nodes : prevState.nodes.set(src_id,  src_node)};
+                s.nodes =                  s.nodes.set(sink_id, sink_node);
                 
                 // add the link
                 s.links = prevState.links.set(new_link_id, new_link);
                 
                 // add the link to the parent
-                var parent_id = src_node.parent;
+                var parent_id = src_parent;
+                if (sink_parent != src_parent && sink_parent == src_id) {
+                    // in this case, the parent of the sink is the source.
+                    // the link should belong to the source (outer) node,
+                    // not the *parent* of the outer node.
+                    parent_id = sink_parent;
+                }
                 if (parent_id === null) {
                     s.child_links = prevState.child_links.add(new_link_id);
                 } else {
@@ -162,7 +181,7 @@ class App extends React.Component {
     }
     
     
-    removeLink(link_id) {
+    removeLink = (link_id) => {
         this.setState((prevState) => {
             var link      = prevState.links.get(link_id);
             var src_node  = prevState.nodes.get(link.src.node_id);
@@ -236,7 +255,8 @@ class App extends React.Component {
     
     onLinkEndpointClicked = ({mouseEvt, linkID, isSource}) => {
         var link = this.state.links.get(linkID)
-        var port = isSource ? link.src : link.sink
+        // we want the endpoint that *wasn't* grabbed
+        var port = isSource ? link.sink : link.src
         
         console.assert(this.state.partial_link === null);
         
@@ -264,6 +284,23 @@ class App extends React.Component {
     }
     
     
+    renderNewNodeDialog() {
+        var availableNodes = [
+            new NodeData("+", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2}),
+            new NodeData("-", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2}),
+            new NodeData("*", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2}),
+            new NodeData("/", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2})
+        ]
+        
+        return (
+            <NewNodeDialog 
+                className="NewNodeDialog"
+                onNodeCreate={this.addNode}
+                availableNodes={availableNodes}/>
+        )
+    }
+    
+    
     render() {
         var mutation_callbacks = {
             onLinkDisconnected    : this.onLinkDisconnected,
@@ -283,7 +320,10 @@ class App extends React.Component {
                     child_links={this.state.child_links}
                     port_coords={this.state.port_coords}
                     mutation_callbacks={mutation_callbacks}/>
-                {this.renderPartialLink()}  
+                {this.renderPartialLink()}
+                {this.state.showing_node_dialog ? 
+                    this.renderNewNodeDialog() :
+                    []}
             </div>
         );
     }

@@ -22,13 +22,13 @@ export class MNode extends React.PureComponent {
     
     componentDidMount() {
         // set the initial port positions
-        this.updateAllPorts();
+        //this.updateAllPorts();
     }
     
     
     onDrag = (e, position) => {
         this.setState({position: position});
-        this.updateAllPorts();
+        //this.updateAllPorts();
     }
     
     // xxx delete me {
