@@ -31,13 +31,13 @@ export class Link extends React.PureComponent {
     
     
     onSourceEndpointClicked = (e) => {
-        var evt = {mouseEvt : e, linkID: this.props.linkID, endpoint:0}
+        var evt = {mouseEvt : e, linkID: this.props.linkID, isSource:true}
         this.props.onLinkEndpointClicked(evt)
     }
     
     
     onSinkEndpointClicked = (e) => {
-        var evt = {mouseEvt : e, linkID: this.props.linkID, endpoint:1}
+        var evt = {mouseEvt : e, linkID: this.props.linkID, isSource:false}
         this.props.onLinkEndpointClicked(evt)
     }
     

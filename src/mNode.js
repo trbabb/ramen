@@ -31,26 +31,29 @@ export class MNode extends React.PureComponent {
         this.updateAllPorts();
     }
     
+    // xxx delete me {
     
     updatePort(port_idx) {
         var xy  = this.portElems[port_idx].getConnectionPoint();
         var evt = {
             node_id : this.props.node_id,
             port_id : port_idx,
-            isSink  : port_idx < this.props.type_sig.n_sinks,
-            newPos  : xy
+            is_sink : port_idx < this.props.type_sig.n_sinks,
+            new_pos : xy
         };
-        this.props.onPortMoved(evt);
+        this.props.mutation_callbacks.onPortMoved(evt);
     }
     
     
     updateAllPorts = () => {
-        if (this.props.onPortMoved) {
+        if (this.props.mutation_callbacks.onPortMoved) {
             for (var i = 0; i < this.portElems.length; ++i) {
                 this.updatePort(i);
             }
         }
     }
+    
+    // }
     
     
     makePorts(doSinks) {
@@ -70,10 +73,11 @@ export class MNode extends React.PureComponent {
                 port_id       = {port_id}
                 node_id       = {that.props.node_id}
                 type_id       = {type_id}
-                isSink        = {doSinks}
                 links         = {that.props.port_links.get(port_id)}
                 direction     = {doSinks ? [0,-1] : [0,1]}
-                onPortClicked = {that.props.onPortClicked}
+                is_sink       = {doSinks}
+                onPortClicked = {that.props.mutation_callbacks.onPortClicked}
+                onPortMoved   = {that.props.mutation_callbacks.onPortMoved}
                 ref = {function(e) {
                     that.portElems[port_id] = e;
                 }} />
@@ -88,20 +92,20 @@ export class MNode extends React.PureComponent {
             <div className="MNode Function">
                 <div className="FnHeader Function">
                     <div className="CallName Function">{this.props.name}</div>
-                    {this.makePorts(true)}
+                    {this.makePorts(false)}
                 </div>
                 <NodeView 
                     nodes={this.props.nodes}
                     links={this.props.links}
+                    port_coords={this.props.port_coords}
                     child_nodes={this.props.child_nodes}
                     child_links={this.props.child_links}
-                    onLinkCompleted={this.props.onLinkCompleted}
-                    onLinkDisconnected={this.props.onLinkDisconnected}/>
+                    mutation_callbacks={this.props.mutation_callbacks}/>
                 <div className="PortGroup SinkPortGroup">
-                    {this.makePorts(false)}
+                    {this.makePorts(true)}
                 </div>
             </div>
-        );
+        )
     }
     
     

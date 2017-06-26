@@ -1,9 +1,11 @@
 import React      from 'react'
 import * as _     from 'lodash'
 import {Map, Set} from 'immutable'
+import ReactDOM   from 'react-dom';
 
 import {NodeView} from './mNodeView'
 import {NodeData} from './NodeData'
+import {Link}     from './mLink'
 
 import './App.css'
 
@@ -34,12 +36,23 @@ class App extends React.Component {
     
     getDefaultState() {
         return {
-            nodes : new Map(),
-            links : new Map(),
-            child_nodes : new Set(),
-            child_links : new Set(),
-            max_node_id : 0,
-            max_link_id : 0
+            // node graph state:
+            nodes        : new Map(),
+            links        : new Map(),
+            
+            // immediate children:
+            child_nodes  : new Set(),
+            child_links  : new Set(),
+            
+            // for ID uniqification:
+            max_node_id  : 0,
+            max_link_id  : 0,
+            
+            // "partial link" logic:
+            mouse_pos    : [0,0], // in local coords
+            partial_link : null,  // anchor port
+            
+            port_coords  : new Map() // in window coords
         }
     }
     
@@ -54,6 +67,8 @@ class App extends React.Component {
         
         this.addLink({node_id : 0, port_id : 3}, {node_id : 1, port_id : 0})
     }
+    
+    /****** Mutation functions ******/
     
     
     addNode(name, type_sig, parent_id=null, id=null) {
@@ -115,9 +130,6 @@ class App extends React.Component {
                 // link exists; don't make a redundancy.
                 console.log("Rejected link; exists."); // xxx debug
                 return false;
-            } else if (sink_node.parent !== src_node.parent) {
-                console.log("Rejected link; nodes must have same parent.")
-                return false;
             } else {
                 console.log("Accepted link."); // xxx debug
                 var new_link_id = prevState.max_link_id;
@@ -178,8 +190,19 @@ class App extends React.Component {
     }
     
     
-    onLinkCompleted = (p0, p1) => {
-        this.addLink(p0, p1);
+    /****** Callback functions ******/
+    
+    
+    onPortClicked = ({node_id, port_id, elem, mouse_evt}) => {
+        // create or complete the "partial" link
+        var p = {node_id : node_id, port_id : port_id}
+        if (this.state.partial_link === null) {
+            this.setState({partial_link : p})
+        } else {
+            // complete a partial link
+            this.addLink(this.state.partial_link, p)
+            this.setState({partial_link : null})
+        }
     }
     
     
@@ -188,17 +211,80 @@ class App extends React.Component {
     }
     
     
+    onPortMoved = ({node_id, port_id, is_sink, new_pos}) => {
+        this.setState(prevState => {
+            return {port_coords : prevState.port_coords.setIn([node_id, port_id], new_pos)}
+        })
+    }
+    
+    
+    onMouseMove = (evt) => {
+        var eDom = ReactDOM.findDOMNode(this.elem);
+        var box  = eDom.getBoundingClientRect()
+        // update the mouse position so that the partial link can follow it.
+        this.setState({mouse_pos : [evt.clientX - box.left, evt.clientY - box.top]});
+    }
+    
+    
+    onClick = (evt) => {
+        if (this.state.partial_link !== null) {
+            // cancel the active link.
+            this.setState({partial_link : null});
+        }
+    }
+    
+    
+    onLinkEndpointClicked = ({mouseEvt, linkID, isSource}) => {
+        var link = this.state.links.get(linkID)
+        var port = isSource ? link.src : link.sink
+        
+        console.assert(this.state.partial_link === null);
+        
+        // "pick up" the link
+        this.removeLink(linkID);
+        this.setState({partial_link : port});
+    }
+    
+    
+    /****** Rendering functions ******/
+    
+    
+    renderPartialLink() {
+        if (this.state.partial_link !== null) {
+            var port  = this.state.partial_link
+            var i     = [port.node_id, port.port_id]
+            var cxnPt = this.state.port_coords.getIn(i)
+            var myDom = ReactDOM.findDOMNode(this.elem) // XXX update this in compDid{Update,Mount}
+            var myBox = myDom.getBoundingClientRect()
+            var pt    = [cxnPt[0] - myBox.left, cxnPt[1] - myBox.top]
+            return (<Link
+                points={[this.state.mouse_pos, pt]}
+                partial={true}/>);
+        }
+    }
+    
+    
     render() {
+        var mutation_callbacks = {
+            onLinkDisconnected    : this.onLinkDisconnected,
+            onPortClicked         : this.onPortClicked,
+            onPortMoved           : this.onPortMoved,
+            onLinkEndpointClicked : this.onLinkEndpointClicked
+        }
         return (
-            // use this.module.{cbak}?
-            // or does passing the global state make React do a lot of differencing work?
-            <NodeView
-                nodes={this.state.nodes}
-                links={this.state.links}
-                child_nodes={this.state.child_nodes}
-                child_links={this.state.child_links}
-                onLinkCompleted={this.onLinkCompleted}
-                onLinkDisconnected={this.onLinkDisconnected}/>
+            <div
+                onMouseMove={this.onMouseMove}
+                onClick={this.onClick}
+                ref={e => {this.elem = e}}>
+                <NodeView
+                    nodes={this.state.nodes}
+                    links={this.state.links}
+                    child_nodes={this.state.child_nodes}
+                    child_links={this.state.child_links}
+                    port_coords={this.state.port_coords}
+                    mutation_callbacks={mutation_callbacks}/>
+                {this.renderPartialLink()}  
+            </div>
         );
     }
     

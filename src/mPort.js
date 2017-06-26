@@ -1,5 +1,6 @@
 import React    from 'react';
 import ReactDOM from 'react-dom';
+import * as _   from 'lodash'
 
 import i32_img  from './resource/i32.png'
 import f32_img  from './resource/f32.png'
@@ -28,7 +29,8 @@ export class Port extends React.PureComponent {
     
     constructor(props) {
         super(props);
-        this.elem = null;
+        this.elem  = null;
+        this.cxnpt = [0,0]
     }
     
     
@@ -46,24 +48,52 @@ export class Port extends React.PureComponent {
     }
     
     
+    componentDidMount() {
+        this.doPortMoved();
+    }
+    
+    
+    componentDidUpdate() {
+        this.doPortMoved();
+    }
+    
+    
+    doPortMoved() {
+        var xy = this.getConnectionPoint();
+        if (!_.isEqual(xy, this.cxnpt)) {
+            var evt = {
+                node_id : this.props.node_id,
+                port_id : this.props.port_id,
+                is_sink : this.props.is_sink,
+                new_pos : xy
+            };
+            this.cxnpt = xy;
+            this.props.onPortMoved(evt);
+        }
+    }
+    
+    
     render() {
-        var classes = ["Port", this.props.isSource ? "Source" : "Sink"]
+        var classes = ["Port", this.props.is_sink ? "Sink" : "Source"]
         if (this.props.links !== undefined && this.props.links.length > 0) {
             classes.push("Connected");
         }
         return (
             <img 
                 src={typeIcons[this.props.type_id]}
-                width={20} height={20} 
+                width={20} height={20}
                 className={classes.join(" ")} 
                 draggable="false"
                 onClick={(evt) => {
                     var e = {node_id   : this.props.node_id,
                              port_id   : this.props.port_id,
+                             elem      : this.elem,
                              mouse_evt : evt}
                     this.props.onPortClicked(e);
                 }}
-                ref={(e) => {this.elem = e}} />
+                ref={(e) => {
+                    this.elem = e;
+                }} />
         );
     }
 }
