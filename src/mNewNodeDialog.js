@@ -13,9 +13,9 @@ export class NewNodeDialog extends React.Component {
     render() {
         return (
             <div className="NewNodeDialog">
-                <table>
-                {this.props.availableNodes.map(x => {return <tr><td>{x.name}</td></tr>})}
-                </table>
+                <table><tbody>
+                {this.props.availableNodes.map(x => {return <tr key={x.name}><td>{x.name}</td></tr>})}
+                </tbody></table>
             </div>
         )
     }
