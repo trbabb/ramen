@@ -20,7 +20,7 @@ export class NewNodeDialog extends React.Component {
         var filteredList = nodeList.map((x,i) => ({key:i, node:x}))
         if (filterString !== "") {
             filteredList = filteredList.filter(x => {
-                return x.node.name.includes(filterString)
+                return x.node.name.toLowerCase().includes(filterString.toLowerCase())
             })
         }
         return filteredList
@@ -64,15 +64,20 @@ export class NewNodeDialog extends React.Component {
     }
     
     
+    accept = () => {
+        if (this.state.selectionKey >= 0) {
+            var retNode = this.props.availableNodes[this.state.selectionKey]
+            this.props.onNodeCreate(retNode)
+        } else {
+            // nothing selected
+            this.props.onNodeCreate(null)
+        }
+    }
+    
+    
     onKeyDown = (evt) => {
         if (evt.key === 'Enter') {
-            if (this.state.selectionKey >= 0) {
-                var retNode = this.props.availableNodes[this.state.selectionKey]
-                this.props.onNodeCreate(retNode)
-            } else {
-                // nothing selected
-                this.props.onNodeCreate(null)
-            }
+            this.accept()
         } else if (evt.key === 'Escape') {
             // canceled by user
             this.props.onNodeCreate(null)
@@ -91,7 +96,8 @@ export class NewNodeDialog extends React.Component {
                     nodeList={this.state.filteredList}
                     filterString={this.state.filterString}
                     selectionKey={this.state.selectionKey}
-                    onListSelectionChanged={this.onListSelectionChanged}/>
+                    onListSelectionChanged={this.onListSelectionChanged}
+                    onItemClicked={this.accept}/>
             </div>
         )
     }
