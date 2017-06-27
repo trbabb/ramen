@@ -32,7 +32,11 @@ const availableNodes = [
         new NodeData("+", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
         new NodeData("-", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
         new NodeData("*", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("/", {type_ids : ['float', 'float', 'float'], n_sinks: 2})
+        new NodeData("hello", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
+        new NodeData("helloWorld", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
+        new NodeData("sendHello", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
+        new NodeData("createWorld", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
+        new NodeData("whatever", {type_ids : ['float', 'float', 'float'], n_sinks: 2})
     ]
 
 

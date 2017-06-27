@@ -8,10 +8,22 @@ export class NewNodeDialog extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            filterString   : "",
+            filterString : "",
             selectionKey : -1
         }
+        this.state.filteredList = this.makeFilteredList("", this.props.availableNodes)
         this.inputElem = null
+    }
+    
+    
+    makeFilteredList(filterString, nodeList) {
+        var filteredList = nodeList.map((x,i) => ({key:i, node:x}))
+        if (filterString !== "") {
+            filteredList = filteredList.filter(x => {
+                return x.node.name.includes(filterString)
+            })
+        }
+        return filteredList
     }
     
     
@@ -26,8 +38,28 @@ export class NewNodeDialog extends React.Component {
     }
     
     
+    onInputChanged = (evt) => {
+        var val = evt.target.value
+        this.setState(prevState => {
+            var s = {
+                filterString : val,
+                filteredList : this.makeFilteredList(val, this.props.availableNodes)
+            }
+            
+            if (s.filteredList.findIndex(x => x.key === prevState.selectionKey) < 0) {
+                if (s.filteredList.length > 0) {
+                    s.selectionKey = s.filteredList[0].key
+                } else {
+                    s.selectionKey = -1
+                }
+            }
+            
+            return s
+        })
+    }
+    
+    
     onListSelectionChanged = (selectionKey) => {
-        console.log("setting state?", selectionKey)
         this.setState({selectionKey : selectionKey})
     }
     
@@ -49,20 +81,16 @@ export class NewNodeDialog extends React.Component {
     
     
     render() {
-        var filteredList = this.props.availableNodes.map((x,i) => ({key:i, node:x}))
-        if (this.props.filterString !== "") {
-            filteredList = filteredList.filter(x => {
-                return x.node.name.includes(this.state.filterString)
-            })
-        }
+        
         return (
             <div className="NewNodeDialog" onKeyDown={this.onKeyDown}>
                 <input type="text" className="FunctionNameInput"
-                    onChange={evt => {this.setState({filterString : evt.target.value})}}
+                    onChange={this.onInputChanged}
                     ref={elem => {this.inputElem = elem}}/>
                 <NodeSelectionList
-                    nodeList={filteredList}
+                    nodeList={this.state.filteredList}
                     filterString={this.state.filterString}
+                    selectionKey={this.state.selectionKey}
                     onListSelectionChanged={this.onListSelectionChanged}/>
             </div>
         )
