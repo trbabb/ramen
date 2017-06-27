@@ -87,4 +87,9 @@ export class NodeData {
     }
     
     
+    hasBody() {
+        return (this.name === "function" || this.name === "loop")
+    }
+    
+    
 }

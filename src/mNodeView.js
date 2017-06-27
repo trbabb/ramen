@@ -88,7 +88,7 @@ export class NodeView extends React.PureComponent {
         for (var node_id of this.props.ng.child_nodes) {
             var n = this.props.ng.nodes.get(node_id);
             var x = {}
-            if (n.child_nodes.size > 0) {
+            if (n.hasBody()) {
                 // these are heavy, so don't send them to 
                 // the nodes which don't have inner nodes.
                 x.ng          = this.props.ng.ofNode(node_id)
@@ -98,7 +98,7 @@ export class NodeView extends React.PureComponent {
                               key={"__node_" + node_id}
                               paneID={this.props.id} 
                               mutation_callbacks={this.props.mutation_callbacks}
-                              {...n}
+                              node={n}
                               {...x} />);
         }
         

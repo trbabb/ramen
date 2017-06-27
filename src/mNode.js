@@ -24,7 +24,7 @@ export class MNode extends React.PureComponent {
     
     
     makePorts(doSinks) {
-        var sig   = this.props.type_sig;
+        var sig   = this.props.node.type_sig;
         var start = doSinks ? 0 : sig.n_sinks;
         var end   = doSinks ? sig.n_sinks : sig.type_ids.length;
         var z = []
@@ -40,7 +40,7 @@ export class MNode extends React.PureComponent {
                 port_id       = {port_id}
                 node_id       = {that.props.node_id}
                 type_id       = {type_id}
-                links         = {that.props.port_links.get(port_id)}
+                links         = {that.props.node.port_links.get(port_id)}
                 direction     = {doSinks ? [0,-1] : [0,1]}
                 is_sink       = {doSinks}
                 onPortClicked = {that.props.mutation_callbacks.onPortClicked}
@@ -55,7 +55,7 @@ export class MNode extends React.PureComponent {
         return (
             <div className="MNode Function">
                 <div className="FnHeader Function">
-                    <div className="CallName Function">{this.props.name}</div>
+                    <div className="CallName Function">{this.props.node.name}</div>
                     {this.makePorts(false)}
                 </div>
                 <NodeView
@@ -77,7 +77,7 @@ export class MNode extends React.PureComponent {
                     {this.makePorts(true)}
                 </div>
                 <div className="CallName">
-                    {this.props.name}
+                    {this.props.node.name}
                 </div>
                 <div className="PortGroup SourcePortGroup">
                     {this.makePorts(false)}
@@ -93,7 +93,7 @@ export class MNode extends React.PureComponent {
                     position={this.state.position}
                     cancel=".NodeView"
                     onDrag={this.onDrag}>
-                {this.props.child_nodes.size > 0 ? this.renderFunctionDefBody() : this.renderPlainBody()}
+                {this.props.node.hasBody() ? this.renderFunctionDefBody() : this.renderPlainBody()}
             </Draggable>
         );
     }

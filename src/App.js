@@ -32,7 +32,8 @@ const availableNodes = [
         new NodeData("+", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
         new NodeData("-", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
         new NodeData("*", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("hello", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
+        new NodeData("/", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
+        new NodeData("function", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
         new NodeData("helloWorld", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
         new NodeData("sendHello", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
         new NodeData("createWorld", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
@@ -73,10 +74,10 @@ class App extends React.Component {
     
     
     loadDefaultNodeGraph = () => {
-        this.addNode("wat", {type_ids: ['float','float','float','float'], n_sinks: 3})
-        this.addNode("+", {type_ids: ['int','int','int'], n_sinks: 2})
+        this.addNode("wat",                     {type_ids: ['float','float','float','float'], n_sinks: 3})
+        this.addNode("+",                       {type_ids: ['int','int','int'], n_sinks: 2})
         this.addNode("a function named \"💩\"", {type_ids: ['float','float','float','float'], n_sinks: 2})
-        this.addNode("function def",            {type_ids: ['str','str','str'],               n_sinks: 2})
+        this.addNode("function",                {type_ids: ['str','str','str'],               n_sinks: 2})
         this.addNode("child node",              {type_ids: ['str','str'],                     n_sinks:1}, 3) // parent=3
         this.addNode("another kid",             {type_ids: ['str','str','str'],               n_sinks:1}, 3) // parent=3
         
