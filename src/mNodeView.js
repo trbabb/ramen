@@ -59,8 +59,8 @@ export class NodeView extends React.PureComponent {
         var nodes = [];
         
         // emit the links which are our direct children
-        for (var link_id of this.props.child_links) {
-            var lnk = this.props.links.get(link_id)
+        for (var link_id of this.props.ng.child_links) {
+            var lnk = this.props.ng.links.get(link_id)
             var p0  = [lnk.src.node_id,  lnk.src.port_id]
             var p1  = [lnk.sink.node_id, lnk.sink.port_id]
             
@@ -85,14 +85,13 @@ export class NodeView extends React.PureComponent {
         }
         
         // emit the nodes which are our direct children
-        for (var node_id of this.props.child_nodes) {
-            var n = this.props.nodes.get(node_id);
+        for (var node_id of this.props.ng.child_nodes) {
+            var n = this.props.ng.nodes.get(node_id);
             var x = {}
             if (n.child_nodes.size > 0) {
                 // these are heavy, so don't send them to 
                 // the nodes which don't have inner nodes.
-                x.nodes       = this.props.nodes
-                x.links       = this.props.links
+                x.ng          = this.props.ng.ofNode(node_id)
                 x.port_coords = this.props.port_coords
             }
             nodes.push(<MNode node_id={node_id}

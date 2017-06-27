@@ -7,6 +7,10 @@ import * as _     from 'lodash'
 // It carries the type signature and name, a mapping of port ID
 // to connected link ID, and a list of IDs for any inner nodes and links.
 
+// A NodeData is "immutable", in that mutation functions return a 
+// new, altered copy, leaving the original unchanged.
+
+
 export class NodeData {
     
     
