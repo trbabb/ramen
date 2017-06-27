@@ -27,6 +27,15 @@ import './App.css'
 // someday: draw the type at the free end of the temporary link.
 
 
+const availableNodes = [
+        new NodeData("+", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2}),
+        new NodeData("-", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2}),
+        new NodeData("*", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2}),
+        new NodeData("/", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2})
+    ]
+
+
+
 class App extends React.Component {
     
     constructor(props) {
@@ -55,12 +64,12 @@ class App extends React.Component {
             
             port_coords  : new Map(), // in window coords
             
-            showing_node_dialog : true
+            showing_node_dialog : false
         }
     }
     
     
-    componentDidMount = () => {
+    loadDefaultNodeGraph = () => {
         this.addNode("wat", {type_ids: ['f64','f64','f64','f64'], n_sinks: 3})
         this.addNode("+", {type_ids: ['i32','i32','i32'], n_sinks: 2})
         this.addNode("a function named \"💩\"", {type_ids: ['f64','f64','f64','f64'], n_sinks: 2})
@@ -69,6 +78,13 @@ class App extends React.Component {
         this.addNode("another kid",             {type_ids: ['s','s','s'],             n_sinks:1}, 3) // parent=3
         
         this.addLink({node_id : 0, port_id : 3}, {node_id : 1, port_id : 0})
+    }
+    
+    
+    componentDidMount = () => {
+        this.loadDefaultNodeGraph()
+        document.addEventListener('keydown', this.onHotKeyPressed);
+        
     }
     
     /****** Mutation functions ******/
@@ -225,6 +241,14 @@ class App extends React.Component {
     }
     
     
+    onHotKeyPressed = (evt) => {
+        if (evt.key === " " && !this.state.showing_node_dialog) {
+            this.setState({showing_node_dialog : true})
+            evt.preventDefault()
+        }
+    }
+    
+    
     onLinkDisconnected = (linkID) => {
         this.removeLink(linkID);
     }
@@ -266,6 +290,14 @@ class App extends React.Component {
     }
     
     
+    onNodeCreate = (node) => {
+        this.setState({showing_node_dialog : false})
+        if (node !== null) {
+            this.addNode(node.name, node.type_sig)
+        }
+    }
+    
+    
     /****** Rendering functions ******/
     
     
@@ -285,17 +317,11 @@ class App extends React.Component {
     
     
     renderNewNodeDialog() {
-        var availableNodes = [
-            new NodeData("+", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2}),
-            new NodeData("-", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2}),
-            new NodeData("*", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2}),
-            new NodeData("/", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2})
-        ]
         
         return (
             <NewNodeDialog 
                 className="NewNodeDialog"
-                onNodeCreate={this.addNode}
+                onNodeCreate={this.onNodeCreate}
                 availableNodes={availableNodes}/>
         )
     }

@@ -102,10 +102,18 @@ img {
 
 .NewNodeDialog {
   position: absolute;
-  top: 50%;
+  top: 30%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, 0);
   background-color: #666;
   border: 1px solid #AAA;
   border-radius:3px;
+}
+
+.NewNodeDialog > *:active {
+  background-color: blue;
+}
+
+.NodeListElement.Selected {
+  background-color: #ffdd00;
 }
