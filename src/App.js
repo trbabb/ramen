@@ -28,10 +28,10 @@ import './App.css'
 
 
 const availableNodes = [
-        new NodeData("+", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2}),
-        new NodeData("-", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2}),
-        new NodeData("*", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2}),
-        new NodeData("/", {type_ids : ['f64', 'f64', 'f64'], n_sinks: 2})
+        new NodeData("+", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
+        new NodeData("-", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
+        new NodeData("*", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
+        new NodeData("/", {type_ids : ['float', 'float', 'float'], n_sinks: 2})
     ]
 
 
@@ -70,12 +70,14 @@ class App extends React.Component {
     
     
     loadDefaultNodeGraph = () => {
-        this.addNode("wat", {type_ids: ['f64','f64','f64','f64'], n_sinks: 3})
-        this.addNode("+", {type_ids: ['i32','i32','i32'], n_sinks: 2})
-        this.addNode("a function named \"💩\"", {type_ids: ['f64','f64','f64','f64'], n_sinks: 2})
-        this.addNode("function def",            {type_ids: ['s','s','s'],             n_sinks: 2})
-        this.addNode("child node",              {type_ids: ['s','s'],                 n_sinks:1}, 3) // parent=3
-        this.addNode("another kid",             {type_ids: ['s','s','s'],             n_sinks:1}, 3) // parent=3
+        this.addNode("wat", {type_ids: ['float','float','float','float'], n_sinks: 3})
+        this.addNode("+", {type_ids: ['int','int','int'], n_sinks: 2})
+        this.addNode("a function named \"💩\"", {type_ids: ['float','float','float','float'], n_sinks: 2})
+        this.addNode("function def",            {type_ids: ['str','str','str'],               n_sinks: 2})
+        this.addNode("child node",              {type_ids: ['str','str'],                     n_sinks:1}, 3) // parent=3
+        this.addNode("another kid",             {type_ids: ['str','str','str'],               n_sinks:1}, 3) // parent=3
+        
+        this.addNode("DEMO", {type_ids: ['int','float','bool','type','str','list','proc','int'], n_sinks:7})
         
         this.addLink({node_id : 0, port_id : 3}, {node_id : 1, port_id : 0})
     }
@@ -86,6 +88,18 @@ class App extends React.Component {
         document.addEventListener('keydown', this.onHotKeyPressed);
         
     }
+    
+    
+    updateMouse = (x, y) => {
+        var eDom    = ReactDOM.findDOMNode(this.elem);
+        var box     = eDom.getBoundingClientRect()
+        var new_pos = [x - box.left, y - box.top]
+        // update the mouse position so that the partial link can follow it.
+        if (!_.isEqual(this.state.mouse_mos, new_pos)) {
+            this.setState({mouse_pos : new_pos});
+        }
+    }
+    
     
     /****** Mutation functions ******/
     
@@ -262,14 +276,14 @@ class App extends React.Component {
     
     
     onMouseMove = (evt) => {
-        var eDom = ReactDOM.findDOMNode(this.elem);
-        var box  = eDom.getBoundingClientRect()
-        // update the mouse position so that the partial link can follow it.
-        this.setState({mouse_pos : [evt.clientX - box.left, evt.clientY - box.top]});
+        if (this.state.partial_link !== null) {
+            this.updateMouse(evt.clientX, evt.clientY)
+        }
     }
     
     
     onClick = (evt) => {
+        this.updateMouse(evt.clientX, evt.clientY)
         if (this.state.partial_link !== null) {
             // cancel the active link.
             this.setState({partial_link : null});

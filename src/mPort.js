@@ -2,18 +2,22 @@ import React    from 'react';
 import ReactDOM from 'react-dom';
 import * as _   from 'lodash'
 
-import i32_img  from './resource/i32.png'
-import f32_img  from './resource/f32.png'
-import i64_img  from './resource/i64.png'
-import f64_img  from './resource/f64.png'
-import s_img    from './resource/s.png'
+import float_img from './resource/float.png'
+import int_img   from './resource/int.png'
+import bool_img  from './resource/bool.png'
+import type_img  from './resource/type.png'
+import proc_img  from './resource/proc.png'
+import list_img  from './resource/list.png'
+import str_img   from './resource/str.png'
 
 const typeIcons = {
-    'i32' : i32_img,
-    'f32' : f32_img,
-    'i64' : i64_img,
-    'f64' : f64_img,
-    's'   : s_img
+    'int'   : int_img,
+    'float' : float_img,
+    'str'   : str_img,
+    'bool'  : bool_img,
+    'proc'  : proc_img,
+    'list'  : list_img,
+    'type'  : type_img
 };
 
 
@@ -81,7 +85,7 @@ export class Port extends React.PureComponent {
         return (
             <img 
                 src={typeIcons[this.props.type_id]}
-                width={20} height={20}
+                width={16} height={16}
                 className={classes.join(" ")} 
                 draggable="false"
                 onClick={(evt) => {
