@@ -43,36 +43,41 @@ const availableNodes = [
 
 
 class App extends React.Component {
-    
+
     constructor(props) {
         super(props);
         this.state = this.getDefaultState();
     }
-    
-    
+
+
     getDefaultState() {
         return {
             ng : new NodeGraph(),
-            
+
             // "partial link" logic:
             mouse_pos    : [0,0], // in local coords
             partial_link : null,  // anchor port
-            
+
             // in window coords
-            port_coords  : new Map(), 
-            
-            showing_node_dialog : false
+            port_coords  : new Map(),
+
+            showing_node_dialog : false,
+
+            port_hovered: {
+              node_id: null,
+              port_id: null
+            }
         }
     }
-    
-    
+
+
     addNode(name, type_sig, parent_id=null) {
         this.setState(prevState => {
             return {ng:prevState.ng.addNode(name,type_sig,parent_id)}
         })
     }
-    
-    
+
+
     loadDefaultNodeGraph = () => {
         this.addNode("wat",                     {type_ids: ['float','float','float','float'], n_sinks: 3})
         this.addNode("+",                       {type_ids: ['int','int','int'], n_sinks: 2})
@@ -80,20 +85,20 @@ class App extends React.Component {
         this.addNode("function",                {type_ids: ['str','str','str'],               n_sinks: 2})
         this.addNode("child node",              {type_ids: ['str','str'],                     n_sinks:1}, 3) // parent=3
         this.addNode("another kid",             {type_ids: ['str','str','str'],               n_sinks:1}, 3) // parent=3
-        
+
         this.addNode("DEMO", {type_ids: ['int','float','bool','type','str','list','proc','int'], n_sinks:7})
-        
+
         //this.addLink({node_id : 0, port_id : 3}, {node_id : 1, port_id : 0})
     }
-    
-    
+
+
     componentDidMount = () => {
         this.loadDefaultNodeGraph()
         document.addEventListener('keydown', this.onHotKeyPressed);
-        
+
     }
-    
-    
+
+
     updateMouse = (x, y) => {
         var eDom    = ReactDOM.findDOMNode(this.elem);
         var box     = eDom.getBoundingClientRect()
@@ -103,11 +108,11 @@ class App extends React.Component {
             this.setState({mouse_pos : new_pos});
         }
     }
-    
-    
+
+
     /****** Callback functions ******/
-    
-    
+
+
     onPortClicked = ({node_id, port_id, elem, mouse_evt}) => {
         // create or complete the "partial" link
         var p = {node_id : node_id, port_id : port_id}
@@ -121,37 +126,47 @@ class App extends React.Component {
             }))
         }
     }
-    
-    
+
+
     onHotKeyPressed = (evt) => {
         if (evt.key === " " && !this.state.showing_node_dialog) {
             this.setState({showing_node_dialog : true})
             evt.preventDefault()
         }
+        if (evt.key === 'Delete' && this.state.port_hovered.port_id !== null) {
+          const ph = this.state.port_hovered;
+          this.setState(prevState => ({ ng: prevState.ng.removePort(ph.node_id, ph.port_id)}));
+        }
     }
-    
-    
+
+
     onLinkDisconnected = (linkID) => {
         this.setState(prevState => ({
             ng : prevState.ng.removeLink(linkID)
         }))
     }
-    
-    
+
+
     onPortMoved = ({node_id, port_id, is_sink, new_pos}) => {
         this.setState(prevState => {
             return {port_coords : prevState.port_coords.setIn([node_id, port_id], new_pos)}
         })
     }
-    
-    
+
+    onPortHovered = (node_id, port_id) => {
+      this.setState({ port_hovered: {
+        node_id,
+        port_id
+      }});
+    }
+
     onMouseMove = (evt) => {
         if (this.state.partial_link !== null) {
             this.updateMouse(evt.clientX, evt.clientY)
         }
     }
-    
-    
+
+
     onClick = (evt) => {
         this.updateMouse(evt.clientX, evt.clientY)
         if (this.state.partial_link !== null) {
@@ -159,23 +174,23 @@ class App extends React.Component {
             this.setState({partial_link : null});
         }
     }
-    
-    
+
+
     onLinkEndpointClicked = ({mouseEvt, linkID, isSource}) => {
         var link = this.state.ng.links.get(linkID)
         // we want the endpoint that *wasn't* grabbed
         var port = isSource ? link.sink : link.src
-        
+
         console.assert(this.state.partial_link === null);
-        
+
         // "pick up" the link
         this.setState(prevState => ({
             ng           : prevState.ng.removeLink(linkID),
             partial_link : port
         }));
     }
-    
-    
+
+
     onNodeCreate = (node) => {
         this.setState(prevState => {
             var s = {showing_node_dialog : false}
@@ -185,11 +200,11 @@ class App extends React.Component {
             return s
         })
     }
-    
-    
+
+
     /****** Rendering functions ******/
-    
-    
+
+
     renderPartialLink() {
         if (this.state.partial_link !== null) {
             var port  = this.state.partial_link
@@ -203,23 +218,24 @@ class App extends React.Component {
                 partial={true}/>);
         }
     }
-    
-    
+
+
     renderNewNodeDialog() {
         return (
-            <NewNodeDialog 
+            <NewNodeDialog
                 className="NewNodeDialog"
                 onNodeCreate={this.onNodeCreate}
                 availableNodes={availableNodes}/>
         )
     }
-    
-    
+
+
     render() {
         var mutation_callbacks = {
             onLinkDisconnected    : this.onLinkDisconnected,
             onPortClicked         : this.onPortClicked,
             onPortMoved           : this.onPortMoved,
+            onPortHovered         : this.onPortHovered,
             onLinkEndpointClicked : this.onLinkEndpointClicked
         }
         return (
@@ -232,13 +248,13 @@ class App extends React.Component {
                     port_coords={this.state.port_coords}
                     mutation_callbacks={mutation_callbacks}/>
                 {this.renderPartialLink()}
-                {this.state.showing_node_dialog ? 
+                {this.state.showing_node_dialog ?
                     this.renderNewNodeDialog() :
                     []}
             </div>
         );
     }
-    
+
 }
 
 export default App;

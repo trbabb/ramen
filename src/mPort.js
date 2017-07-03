@@ -30,38 +30,38 @@ const typeIcons = {
 
 
 export class Port extends React.PureComponent {
-    
+
     constructor(props) {
         super(props);
         this.elem  = null;
         this.cxnpt = [0,0]
     }
-    
-    
+
+
     // get the connection point in "window" coordinates.
     getConnectionPoint() {
         if (this.elem === null) return [0,0];
-        
+
         var eDom = ReactDOM.findDOMNode(this.elem);
         var box  = eDom.getBoundingClientRect();
         var xy   = [box.width / 2., box.height / 2.]
         xy[0]   += this.props.direction[0] * xy[0] + box.left;
         xy[1]   += this.props.direction[1] * xy[1] + box.top;
-        
+
         return xy;
     }
-    
-    
+
+
     componentDidMount() {
         this.doPortMoved();
     }
-    
-    
+
+
     componentDidUpdate() {
         this.doPortMoved();
     }
-    
-    
+
+
     doPortMoved() {
         var xy = this.getConnectionPoint();
         if (!_.isEqual(xy, this.cxnpt)) {
@@ -75,19 +75,28 @@ export class Port extends React.PureComponent {
             this.props.onPortMoved(evt);
         }
     }
-    
-    
+
+    onMouseEnter = () => {
+      this.props.onPortHovered(this.props.node_id, this.props.port_id);
+    }
+
+    onMouseLeave = () => {
+      this.props.onPortHovered(null, null);
+    }
+
     render() {
         var classes = ["Port", this.props.is_sink ? "Sink" : "Source"]
         if (this.props.links !== undefined && this.props.links.length > 0) {
             classes.push("Connected");
         }
         return (
-            <img 
+            <img
                 src={typeIcons[this.props.type_id]}
                 width={16} height={16}
-                className={classes.join(" ")} 
+                className={classes.join(" ")}
                 draggable="false"
+                onMouseEnter={this.onMouseEnter}
+                onMouseLeave={this.onMouseLeave}
                 onClick={(evt) => {
                     var e = {node_id   : this.props.node_id,
                              port_id   : this.props.port_id,
