@@ -1,7 +1,7 @@
 import {Map, Set} from 'immutable'
 import * as _     from 'lodash'
 
-// NodeData is the React state representation of a language node.
+// NodeData is the state representation of a language node.
 // It is rendered by an MNode react element.
 
 // It carries the type signature and name, a mapping of port ID
@@ -21,6 +21,7 @@ export class NodeData {
         this.links_by_id = (links_by_id === null) ? new Map() : links_by_id;
         this.child_nodes = new Set();
         this.child_links = new Set();
+        this.position    = [0,0]
     }
     
     
@@ -55,14 +56,14 @@ export class NodeData {
     
     removeChildNode(node_id) {
         var n = _.clone(this)
-        n.child_nodes = this.child_nodes.delete(node_id)
+        n.child_nodes = this.child_nodes.remove(node_id)
         return n
     }
     
     
     removeChildLink(link_id) {
         var n = _.clone(this)
-        n.child_links = this.child_links.delete(link_id)
+        n.child_links = this.child_links.remove(link_id)
         return n
     }
     
@@ -89,7 +90,7 @@ export class NodeData {
     removeLink(port_id, link_id) {
         if (this.links_by_id.has(port_id) && this.links_by_id.get(port_id).includes(link_id)) {
             var n = _.clone(this);
-            n.links_by_id = this.links_by_id.update(port_id, s => {s.delete(link_id)})
+            n.links_by_id = this.links_by_id.update(port_id, s => {s.remove(link_id)})
             return n
         } else {
             return this

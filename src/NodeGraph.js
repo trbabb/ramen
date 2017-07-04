@@ -13,7 +13,17 @@ import {NodeData} from './NodeData'
 // todo: it might be good to keep function type signatures in a common place.
 //       this will matter more when we have multiple function calls referring to a common
 //       definition.
-
+// todo: we need to separate the concept of a plain node and a body node,
+//       and need a concept for inner ports and outer ports. this is needed for both
+//       function definitions and loops. those ports will need connectivity too, so
+//       probably the best way to handle it is refer to exactly two nodes representing
+//       the header/footer. those nodes could have the outer node as a parent, and then
+//       we have a simplified connectivity rule that connections may only happen to
+//       nodes with the same parent.
+// todo: addPort/removePort will do different things for loops and functions; maybe
+//       should not be permitted for bare nodes. for loops: every port is added to
+//       both inner/outer and sorce/sink signatures. for functions: only changes the 
+//       inner signature (and also possibly the signature at call sites).
 
 export class NodeGraph {
     

@@ -25,11 +25,17 @@ import './App.css'
 // todo: the above also makes it impossible to connect function args to function body.
 //       we should in general allow nodes to connect across nesting levels.
 
+// todo: should we override and re-implement or take advantage of browser native focus traversal?
+
 
 // someday: draw the type at the free end of the temporary link.
 
+
+// don't really care what this is, for now:
 const STANDIN_TYPE_SIGNATURE = new TypeSignature(['float', 'float', 'float'], [0,1])
 
+
+// list of nodes read by the "place node" dialog.
 const availableNodes = [
         new NodeData("+",           STANDIN_TYPE_SIGNATURE),
         new NodeData("-",           STANDIN_TYPE_SIGNATURE),
@@ -52,6 +58,9 @@ class App extends React.Component {
     }
     
     
+    /****** Setup / init ******/
+    
+    
     getDefaultState() {
         return {
             ng : new NodeGraph(),
@@ -63,15 +72,10 @@ class App extends React.Component {
             // in window coords
             port_coords  : new Map(), 
             
-            showing_node_dialog : false
+            showing_node_dialog : false,
+            
+            selected_obj : null   // xxx todo: not yet taken advantage of.
         }
-    }
-    
-    
-    addNode(name, type_sig, parent_id=null) {
-        this.setState(prevState => {
-            return {ng:prevState.ng.addNode(name,type_sig,parent_id)}
-        })
     }
     
     
@@ -103,7 +107,7 @@ class App extends React.Component {
                 [0,1]), 
             3) // parent=3
         
-        this.addNode("DEMO", 
+        this.addNode("type glyph demo", 
             new TypeSignature( 
                 ['int','float','bool','type','str','list','proc','int'], 
                 [0,1,2,3,4,5,6]))
@@ -116,6 +120,57 @@ class App extends React.Component {
         this.loadDefaultNodeGraph()
         document.addEventListener('keydown', this.onHotKeyPressed);
         
+    }
+    
+    
+    
+    /****** Object selection ******/
+    // (not yet respected)
+    
+    
+    addNode(name, type_sig, parent_id=null) {
+        this.setState(prevState => {
+            return {ng:prevState.ng.addNode(name,type_sig,parent_id)}
+        })
+    }
+    
+    
+    selectNode(node_id) {
+        this.setState({selected_obj : {
+            kind : "node", 
+            id   : node_id
+        }})
+    }
+    
+    
+    selectPort(node_id, port_id) {
+        this.setState({selected_obj: {
+            kind : "port",
+            id   : port_id
+        }})
+    }
+    
+    
+    selectLink(link_id) {
+        this.setState({ selected_obj: 
+        {
+            kind : "link",
+            id   : link_id
+        }})
+    }
+    
+    
+    selectNodeBody(node_id) {
+        this.setState({ selected_obj :
+        {
+            kind : "node_body",
+            id   : node_id
+        }})
+    }
+    
+    
+    unselect() {
+        this.setState({ selected_obj : null })
     }
     
     
