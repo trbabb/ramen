@@ -4,11 +4,6 @@ import React from 'react'
 export class NodeSelectionList extends React.Component {
     
     
-    constructor(props) {
-        super(props)
-    }
-    
-    
     componentDidMount() {
         document.addEventListener('keydown', this.onKeyDown);
         this.setFirstItemSelected()

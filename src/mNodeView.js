@@ -1,6 +1,5 @@
 import React    from 'react';
 import ReactDOM from 'react-dom';
-import {Map}    from 'immutable'
 import * as _   from 'lodash'
 
 import {MNode}  from './mNode';

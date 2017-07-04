@@ -1,5 +1,5 @@
-import {Map, Set, List} from 'immutable'
-import * as _           from 'lodash'
+import {Map, Set} from 'immutable'
+import * as _     from 'lodash'
 
 
 export class TypeSignature {

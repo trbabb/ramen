@@ -10,6 +10,9 @@ import {NodeData} from './NodeData'
 
 // todo: it would be good to make alterations using immutable.AsMutable for performance.
 //       the mutable intermediates could be shared by mutators which call each other.
+// todo: it might be good to keep function type signatures in a common place.
+//       this will matter more when we have multiple function calls referring to a common
+//       definition.
 
 
 export class NodeGraph {
@@ -135,7 +138,7 @@ export class NodeGraph {
             
             // add the link to the parent
             var parent_id = src_parent;
-            if (sink_parent != src_parent && sink_parent == src_id) {
+            if (sink_parent !== src_parent && sink_parent === src_id) {
                 // in this case, the parent of the sink is the source.
                 // the link should belong to the source (outer) node,
                 // not the *parent* of the outer node.
@@ -166,7 +169,7 @@ export class NodeGraph {
         sink_node     = sink_node.removeLink(link.sink.port_id, link_id);
         
         var ng   = _.clone(this)
-        ng.links = this.links.delete(link_id),
+        ng.links = this.links.remove(link_id)
         ng.nodes = this.nodes.set(link.src.node_id, src_node).set(link.sink.node_id, sink_node)
         
         // remove link from its parent
@@ -183,15 +186,31 @@ export class NodeGraph {
     }
     
     
-    addPort(node_id, type) {
-        // todo: this
+    addPort(node_id, type_id, is_sink, port_id=null) {
         var n = this.nodes.get(node_id)
+        n = n.addPort(type_id, is_sink, port_id)
+        
+        var ng = _.clone(this)
+        ng.nodes = ng.nodes.set(node_id, n)
+        
+        return ng
     }
     
     
     removePort(node_id, port_id) {
-        // todo: this
+        var ng = _.clone(this)
+        var n  = ng.nodes.get(node_id)
         
+        // there might be links connected to the port we're deleting. if so, remove them.
+        var links = n.getLinks(port_id)
+        for (var link_id of links) {
+            ng = ng.removeLink(link_id)
+        }
+        
+        n = n.removePort(port_id)
+        ng.nodes = ng.nodes.set(node_id, n)
+        
+        return ng
     }
     
     
