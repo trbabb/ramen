@@ -8,6 +8,7 @@ import {NodeData}      from './NodeData'
 import {NodeGraph}     from './NodeGraph'
 import {Link}          from './mLink'
 import {NewNodeDialog} from './mNewNodeDialog'
+import {TypeSignature} from './TypeSignature'
 
 import './App.css'
 
@@ -27,17 +28,18 @@ import './App.css'
 
 // someday: draw the type at the free end of the temporary link.
 
+const STANDIN_TYPE_SIGNATURE = new TypeSignature(['float', 'float', 'float'], [0,1])
 
 const availableNodes = [
-        new NodeData("+", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("-", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("*", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("/", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("function", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("helloWorld", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("sendHello", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("createWorld", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("whatever", {type_ids : ['float', 'float', 'float'], n_sinks: 2})
+        new NodeData("+",           STANDIN_TYPE_SIGNATURE),
+        new NodeData("-",           STANDIN_TYPE_SIGNATURE),
+        new NodeData("*",           STANDIN_TYPE_SIGNATURE),
+        new NodeData("/",           STANDIN_TYPE_SIGNATURE),
+        new NodeData("function",    STANDIN_TYPE_SIGNATURE),
+        new NodeData("helloWorld",  STANDIN_TYPE_SIGNATURE),
+        new NodeData("sendHello",   STANDIN_TYPE_SIGNATURE),
+        new NodeData("createWorld", STANDIN_TYPE_SIGNATURE),
+        new NodeData("whatever",    STANDIN_TYPE_SIGNATURE)
     ]
 
 
@@ -74,14 +76,37 @@ class App extends React.Component {
     
     
     loadDefaultNodeGraph = () => {
-        this.addNode("wat",                     {type_ids: ['float','float','float','float'], n_sinks: 3})
-        this.addNode("+",                       {type_ids: ['int','int','int'], n_sinks: 2})
-        this.addNode("a function named \"💩\"", {type_ids: ['float','float','float','float'], n_sinks: 2})
-        this.addNode("function",                {type_ids: ['str','str','str'],               n_sinks: 2})
-        this.addNode("child node",              {type_ids: ['str','str'],                     n_sinks:1}, 3) // parent=3
-        this.addNode("another kid",             {type_ids: ['str','str','str'],               n_sinks:1}, 3) // parent=3
+        this.addNode("wat",                     
+            new TypeSignature(
+                ['float','float','float','float'], 
+                [0,1,2]))
+        this.addNode("+",                       
+            new TypeSignature(
+                ['int','int','int'],               
+                [0,1]))
+        this.addNode("a function named \"💩\"", 
+            new TypeSignature(
+                ['float','float','float','float'], 
+                [0,1,2]))
+        this.addNode("function",                
+            new TypeSignature(
+                ['str','str','str'],               
+                [0,1]))
+        this.addNode("child node",              
+            new TypeSignature(
+                ['str','str'],                     
+                [0]),   
+            3) // parent=3
+        this.addNode("another kid",             
+            new TypeSignature(
+                ['str','str','str'],               
+                [0,1]), 
+            3) // parent=3
         
-        this.addNode("DEMO", {type_ids: ['int','float','bool','type','str','list','proc','int'], n_sinks:7})
+        this.addNode("DEMO", 
+            new TypeSignature( 
+                ['int','float','bool','type','str','list','proc','int'], 
+                [0,1,2,3,4,5,6]))
         
         //this.addLink({node_id : 0, port_id : 3}, {node_id : 1, port_id : 0})
     }

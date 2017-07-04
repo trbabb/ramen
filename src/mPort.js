@@ -79,7 +79,7 @@ export class Port extends React.PureComponent {
     
     render() {
         var classes = ["Port", this.props.is_sink ? "Sink" : "Source"]
-        if (this.props.links !== undefined && this.props.links.length > 0) {
+        if (this.props.connnected) {
             classes.push("Connected");
         }
         return (

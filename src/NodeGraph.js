@@ -114,9 +114,9 @@ export class NodeGraph {
         if (cxn_exists !== undefined) {
             // link exists; don't make a redundancy.
             console.log("Rejected link; exists.");
-        } if (sink_parent != src_parent && 
-              sink_parent != src_id &&
-              src_parent  != sink_id) {
+        } if (sink_parent !== src_parent && 
+              sink_parent !== src_id &&
+              src_parent  !== sink_id) {
             console.log("Rejected link; links must be to siblings or parent-to-child.")
         } else {
             console.log("Accepted link.");
@@ -128,7 +128,7 @@ export class NodeGraph {
             // clobber the old node entries
             var ng   = _.clone(this)
             ng.nodes = this.nodes.set(src_id,  src_node);
-            ng.nodes =    ng.nodes.set(sink_id, sink_node);
+            ng.nodes =   ng.nodes.set(sink_id, sink_node);
             
             // add the link
             ng.links = this.links.set(new_link_id, new_link);
@@ -180,6 +180,24 @@ export class NodeGraph {
         }
         
         return ng
+    }
+    
+    
+    addPort(node_id, type) {
+        // todo: this
+        var n = this.nodes.get(node_id)
+    }
+    
+    
+    removePort(node_id, port_id) {
+        // todo: this
+        
+    }
+    
+    
+    setPosition(node_id, coords) {
+        // todo: this
+        
     }
     
     

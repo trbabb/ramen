@@ -24,23 +24,22 @@ export class MNode extends React.PureComponent {
     
     
     makePorts(doSinks) {
-        var sig   = this.props.node.type_sig;
-        var start = doSinks ? 0 : sig.n_sinks;
-        var end   = doSinks ? sig.n_sinks : sig.type_ids.length;
-        var z = []
+        var sig = this.props.node.type_sig;
+        var z   = []
         
         // we HAVE to use function application here, because the body of a loop
         // does not create a closure. Thus the "i" inside of the ref callback
         // lambda would have a nonsense value.
         var that = this;
-        sig.type_ids.slice(start, end).forEach(function(type_id, i) {
-            var port_id = start + i;
+        (doSinks?sig.getSinkIDs():sig.getSourceIDs()).forEach(function(port_id) {
+            var type_id = sig.type_by_port_id.get(port_id)
+            var links   = that.props.node.links_by_id.get(port_id)
             var p = <Port
                 key           = {port_id}
                 port_id       = {port_id}
                 node_id       = {that.props.node_id}
                 type_id       = {type_id}
-                links         = {that.props.node.port_links.get(port_id)}
+                connected     = {links !== undefined && links.size > 0}
                 direction     = {doSinks ? [0,-1] : [0,1]}
                 is_sink       = {doSinks}
                 onPortClicked = {that.props.mutation_callbacks.onPortClicked}
