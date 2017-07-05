@@ -225,8 +225,11 @@ export class NodeGraph {
     
     
     setPosition(node_id, coords) {
-        // todo: this
-        
+        var n = this.nodes.get(node_id)
+        n = n.setPosition(coords)
+        var ng = _.clone(this)
+        ng.nodes = ng.nodes.set(node_id, n)
+        return ng
     }
     
     

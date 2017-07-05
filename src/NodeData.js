@@ -98,6 +98,13 @@ export class NodeData {
     }
     
     
+    setPosition(position) {
+        var n = _.clone(this)
+        n.position = position
+        return n
+    }
+    
+    
     getLinks(port_id) {
         if (this.links_by_id.has(port_id)) {
             return this.links_by_id.get(port_id);

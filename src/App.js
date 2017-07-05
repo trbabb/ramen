@@ -24,7 +24,6 @@ import './App.css'
 //       (maybe that should be owned by the App)
 // todo: the above also makes it impossible to connect function args to function body.
 //       we should in general allow nodes to connect across nesting levels.
-
 // todo: should we override and re-implement or take advantage of browser native focus traversal?
 
 
@@ -33,7 +32,6 @@ import './App.css'
 
 // don't really care what this is, for now:
 const STANDIN_TYPE_SIGNATURE = new TypeSignature(['float', 'float', 'float'], [0,1])
-
 
 // list of nodes read by the "place node" dialog.
 const availableNodes = [
@@ -55,6 +53,13 @@ class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = this.getDefaultState();
+        this.mutation_callbacks = {
+            onLinkDisconnected    : this.onLinkDisconnected,
+            onPortClicked         : this.onPortClicked,
+            onPortMoved           : this.onPortMoved,
+            onLinkEndpointClicked : this.onLinkEndpointClicked,
+            onNodeMove            : this.onNodeMove
+        }
     }
     
     
@@ -112,27 +117,34 @@ class App extends React.Component {
                 ['int','float','bool','type','str','list','proc','int'], 
                 [0,1,2,3,4,5,6]))
         
-        //this.addLink({node_id : 0, port_id : 3}, {node_id : 1, port_id : 0})
+        this.setPosition(0, [100,200])
+        this.setPosition(1, [300,400])
     }
     
     
     componentDidMount = () => {
         this.loadDefaultNodeGraph()
         document.addEventListener('keydown', this.onHotKeyPressed);
-        
+    }
+    
+    
+    setPosition = (node_id, pos) => {
+        this.setState(prevState => {
+            return { ng : prevState.ng.setPosition(node_id, pos) }
+        })
+    }
+    
+    
+    addNode(name, type_sig, parent_id=null) {
+        this.setState(prevState => {
+            return { ng : prevState.ng.addNode(name, type_sig, parent_id) }
+        })
     }
     
     
     
     /****** Object selection ******/
     // (not yet respected)
-    
-    
-    addNode(name, type_sig, parent_id=null) {
-        this.setState(prevState => {
-            return {ng:prevState.ng.addNode(name,type_sig,parent_id)}
-        })
-    }
     
     
     selectNode(node_id) {
@@ -174,6 +186,9 @@ class App extends React.Component {
     }
     
     
+    /****** Callback functions ******/
+    
+    
     updateMouse = (x, y) => {
         var eDom    = ReactDOM.findDOMNode(this.elem);
         var box     = eDom.getBoundingClientRect()
@@ -183,9 +198,6 @@ class App extends React.Component {
             this.setState({mouse_pos : new_pos});
         }
     }
-    
-    
-    /****** Callback functions ******/
     
     
     onPortClicked = ({node_id, port_id, elem, mouse_evt}) => {
@@ -222,6 +234,11 @@ class App extends React.Component {
         this.setState(prevState => {
             return {port_coords : prevState.port_coords.setIn([node_id, port_id], new_pos)}
         })
+    }
+    
+    
+    onNodeMove = (node_id, new_pos) => {
+        this.setPosition(node_id, new_pos)
     }
     
     
@@ -296,12 +313,6 @@ class App extends React.Component {
     
     
     render() {
-        var mutation_callbacks = {
-            onLinkDisconnected    : this.onLinkDisconnected,
-            onPortClicked         : this.onPortClicked,
-            onPortMoved           : this.onPortMoved,
-            onLinkEndpointClicked : this.onLinkEndpointClicked
-        }
         return (
             <div
                 onMouseMove={this.onMouseMove}
@@ -310,7 +321,7 @@ class App extends React.Component {
                 <NodeView
                     ng={this.state.ng}
                     port_coords={this.state.port_coords}
-                    mutation_callbacks={mutation_callbacks}/>
+                    mutation_callbacks={this.mutation_callbacks}/>
                 {this.renderPartialLink()}
                 {this.state.showing_node_dialog ? 
                     this.renderNewNodeDialog() :

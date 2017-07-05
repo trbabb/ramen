@@ -12,14 +12,12 @@ export class MNode extends React.PureComponent {
     
     constructor(props) {
         super(props);
-        this.state = {
-            position : ("position" in props) ? (props.position) : {x:0, y:0}
-        };
+        var p = props.node.position
     }
     
     
     onDrag = (e, position) => {
-        this.setState({position: position});
+        this.props.mutation_callbacks.onNodeMove(this.props.node_id, [position.x, position.y])
     }
     
     
@@ -87,9 +85,10 @@ export class MNode extends React.PureComponent {
     
     
     render() {
+        var p = this.props.node.position
         return (
             <Draggable 
-                    position={this.state.position}
+                    position={{x : p[0], y : p[1]}}
                     cancel=".NodeView"
                     onDrag={this.onDrag}>
                 {this.props.node.hasBody() ? this.renderFunctionDefBody() : this.renderPlainBody()}
