@@ -97,8 +97,8 @@ export class NodeView extends React.PureComponent {
                               key={"__node_" + node_id}
                               paneID={this.props.id} 
                               mutation_callbacks={this.props.mutation_callbacks}
-                              node={n}
-                              {...x} />);
+                              node={n} 
+                              {...x}/>);
         }
         
         return (

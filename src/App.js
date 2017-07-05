@@ -25,6 +25,9 @@ import './App.css'
 // todo: the above also makes it impossible to connect function args to function body.
 //       we should in general allow nodes to connect across nesting levels.
 // todo: should we override and re-implement or take advantage of browser native focus traversal?
+// todo: performance fix: only update port positions & node positions on drag stop.
+//       find some other way (pass a callback, edit DOM directly?) to get the links to track.
+// todo: xxx: links stopped updating after performance fix. GOD DAMMIT.
 
 
 // someday: draw the type at the free end of the temporary link.
