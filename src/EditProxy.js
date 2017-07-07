@@ -5,7 +5,7 @@ import io from 'socket.io-client'
 
 // todo: the "action" key is redundant with the message key.
 
-export class EditManager {
+export class EditProxy {
     
     constructor(app) {
         this.app       = app

@@ -10,7 +10,7 @@ import {NodeGraph}     from './NodeGraph'
 import {Link}          from './mLink'
 import {NewNodeDialog} from './mNewNodeDialog'
 import {TypeSignature} from './TypeSignature'
-import {EditManager}   from './EditManager'
+import {EditProxy}     from './EditProxy'
 
 import './App.css'
 
@@ -29,7 +29,7 @@ import './App.css'
 // todo: should we override and re-implement or take advantage of browser native focus traversal?
 // todo: performance fix: only update port positions & node positions on drag stop.
 //       find some other way (pass a callback, edit DOM directly?) to get the links to track.
-// todo: xxx: links stopped updating after performance fix. GOD DAMMIT.
+// todo: xxx: links stopped updating after performancƒe fix. GOD DAMMIT.
 
 
 // someday: draw the type at the free end of the temporary link.
@@ -67,7 +67,7 @@ class App extends React.Component {
             onLinkEndpointClicked : this.onLinkEndpointClicked,
             onNodeMove            : this.onNodeMove
         }
-        this.editMgr = new EditManager(this)
+        this.editProxy = new EditProxy(this)
     }
     
     
@@ -146,7 +146,7 @@ class App extends React.Component {
     
     
     addNode(name, type_sig, parent_id=null) {
-        this.editMgr.action("addNode", [name, type_sig, parent_id])
+        this.editProxy.action("addNode", [name, type_sig, parent_id])
     }
     
     
@@ -224,7 +224,7 @@ class App extends React.Component {
             this.setState(prevState => ({
                 partial_link : null
             }))
-            this.editMgr.action("addLink", [link, p])
+            this.editProxy.action("addLink", [link, p])
         }
     }
     
@@ -238,7 +238,7 @@ class App extends React.Component {
     
     
     onLinkDisconnected = (linkID) => {
-        this.editMgr.action("removeLink", [linkID])
+        this.editProxy.action("removeLink", [linkID])
     }
     
     
@@ -281,7 +281,7 @@ class App extends React.Component {
         this.setState(prevState => ({
             partial_link : port
         }));
-        this.editMgr.action("removeLink", [linkID])
+        this.editProxy.action("removeLink", [linkID])
     }
     
     
@@ -290,8 +290,7 @@ class App extends React.Component {
             return {showing_node_dialog : false}
         })
         if (node !== null) {
-           //this.editMgr.addNode(node.name, node.type_sig)
-           this.editMgr.action("addNode", [node.name, node.type_sig])
+           this.editProxy.action("addNode", [node.name, node.type_sig])
         }
     }
     
