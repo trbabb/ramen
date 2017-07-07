@@ -2,12 +2,15 @@ import React           from 'react'
 import * as _          from 'lodash'
 import {Map}           from 'immutable'
 import ReactDOM        from 'react-dom';
+import io              from 'socket.io-client'
 
 import {NodeView}      from './mNodeView'
 import {NodeData}      from './NodeData'
 import {NodeGraph}     from './NodeGraph'
 import {Link}          from './mLink'
 import {NewNodeDialog} from './mNewNodeDialog'
+import {TypeSignature} from './TypeSignature'
+import {EditManager}   from './EditManager'
 
 import './App.css'
 
@@ -23,21 +26,29 @@ import './App.css'
 //       (maybe that should be owned by the App)
 // todo: the above also makes it impossible to connect function args to function body.
 //       we should in general allow nodes to connect across nesting levels.
+// todo: should we override and re-implement or take advantage of browser native focus traversal?
+// todo: performance fix: only update port positions & node positions on drag stop.
+//       find some other way (pass a callback, edit DOM directly?) to get the links to track.
+// todo: xxx: links stopped updating after performance fix. GOD DAMMIT.
 
 
 // someday: draw the type at the free end of the temporary link.
 
 
+// don't really care what this is, for now:
+const STANDIN_TYPE_SIGNATURE = new TypeSignature(['float', 'float', 'float'], [0,1])
+
+// list of nodes read by the "place node" dialog.
 const availableNodes = [
-        new NodeData("+", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("-", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("*", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("/", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("function", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("helloWorld", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("sendHello", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("createWorld", {type_ids : ['float', 'float', 'float'], n_sinks: 2}),
-        new NodeData("whatever", {type_ids : ['float', 'float', 'float'], n_sinks: 2})
+        new NodeData("+",           STANDIN_TYPE_SIGNATURE),
+        new NodeData("-",           STANDIN_TYPE_SIGNATURE),
+        new NodeData("*",           STANDIN_TYPE_SIGNATURE),
+        new NodeData("/",           STANDIN_TYPE_SIGNATURE),
+        new NodeData("function",    STANDIN_TYPE_SIGNATURE),
+        new NodeData("helloWorld",  STANDIN_TYPE_SIGNATURE),
+        new NodeData("sendHello",   STANDIN_TYPE_SIGNATURE),
+        new NodeData("createWorld", STANDIN_TYPE_SIGNATURE),
+        new NodeData("whatever",    STANDIN_TYPE_SIGNATURE)
     ]
 
 
@@ -47,7 +58,21 @@ class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = this.getDefaultState();
+        // neccesary to store across frames, or else the entire app will
+        // redraw on every frame D:
+        this.mutation_callbacks = {
+            onLinkDisconnected    : this.onLinkDisconnected,
+            onPortClicked         : this.onPortClicked,
+            onPortHovered         : this.onPortHovered,
+            onPortMoved           : this.onPortMoved,
+            onLinkEndpointClicked : this.onLinkEndpointClicked,
+            onNodeMove            : this.onNodeMove
+        }
+        this.editMgr = new EditManager(this)
     }
+
+
+    /****** Setup / init ******/
 
 
     getDefaultState() {
@@ -63,6 +88,10 @@ class App extends React.Component {
 
             showing_node_dialog : false,
 
+            selected_obj : null,  // xxx todo: not yet taken advantage of.
+
+            connected    : false,
+
             port_hovered: {
               node_id: null,
               port_id: null
@@ -71,31 +100,111 @@ class App extends React.Component {
     }
 
 
-    addNode(name, type_sig, parent_id=null) {
-        this.setState(prevState => {
-            return {ng:prevState.ng.addNode(name,type_sig,parent_id)}
-        })
-    }
-
-
     loadDefaultNodeGraph = () => {
-        this.addNode("wat",                     {type_ids: ['float','float','float','float'], n_sinks: 3})
-        this.addNode("+",                       {type_ids: ['int','int','int'], n_sinks: 2})
-        this.addNode("a function named \"💩\"", {type_ids: ['float','float','float','float'], n_sinks: 2})
-        this.addNode("function",                {type_ids: ['str','str','str'],               n_sinks: 2})
-        this.addNode("child node",              {type_ids: ['str','str'],                     n_sinks:1}, 3) // parent=3
-        this.addNode("another kid",             {type_ids: ['str','str','str'],               n_sinks:1}, 3) // parent=3
+        this.addNode("wat",
+            new TypeSignature(
+                ['float','float','float','float'],
+                [0,1,2]))
+        this.addNode("+",
+            new TypeSignature(
+                ['int','int','int'],
+                [0,1]))
+        this.addNode("a function named \"💩\"",
+            new TypeSignature(
+                ['float','float','float','float'],
+                [0,1,2]))
+        this.addNode("function",
+            new TypeSignature(
+                ['str','str','str'],
+                [0,1]))
+        this.addNode("child node",
+            new TypeSignature(
+                ['str','str'],
+                [0]),
+            3) // parent=3
+        this.addNode("another kid",
+            new TypeSignature(
+                ['str','str','str'],
+                [0,1]),
+            3) // parent=3
 
-        this.addNode("DEMO", {type_ids: ['int','float','bool','type','str','list','proc','int'], n_sinks:7})
+        this.addNode("type glyph demo",
+            new TypeSignature(
+                ['int','float','bool','type','str','list','proc','int'],
+                [0,1,2,3,4,5,6]))
 
-        //this.addLink({node_id : 0, port_id : 3}, {node_id : 1, port_id : 0})
+        this.setPosition(0, [100,200])
+        this.setPosition(1, [300,400])
     }
 
 
     componentDidMount = () => {
         this.loadDefaultNodeGraph()
         document.addEventListener('keydown', this.onHotKeyPressed);
+    }
 
+
+    setPosition = (node_id, pos) => {
+        this.setState(prevState => {
+            return { ng : prevState.ng.setPosition(node_id, pos) }
+        })
+    }
+
+
+    addNode(name, type_sig, parent_id=null) {
+        this.editMgr.action("addNode", [name, type_sig, parent_id])
+    }
+
+
+
+    /****** Object selection ******/
+    // (not yet respected)
+
+
+    selectNode(node_id) {
+        this.setState({selected_obj : {
+            kind : "node",
+            id   : node_id
+        }})
+    }
+
+
+    selectPort(node_id, port_id) {
+        this.setState({selected_obj: {
+            kind : "port",
+            id   : port_id
+        }})
+    }
+
+
+    selectLink(link_id) {
+        this.setState({ selected_obj:
+        {
+            kind : "link",
+            id   : link_id
+        }})
+    }
+
+
+    selectNodeBody(node_id) {
+        this.setState({ selected_obj :
+        {
+            kind : "node_body",
+            id   : node_id
+        }})
+    }
+
+
+    unselect() {
+        this.setState({ selected_obj : null })
+    }
+
+
+    /****** Callback functions ******/
+
+
+    setConnected = (connected) => {
+        this.setState({connected : connected})
     }
 
 
@@ -120,10 +229,11 @@ class App extends React.Component {
             this.setState({partial_link : p})
         } else {
             // complete a partial link
+            var link = this.state.partial_link
             this.setState(prevState => ({
-                ng           : prevState.ng.addLink(this.state.partial_link, p),
                 partial_link : null
             }))
+            this.editMgr.action("addLink", [link, p])
         }
     }
 
@@ -135,15 +245,13 @@ class App extends React.Component {
         }
         if (evt.key === 'Delete' && this.state.port_hovered.port_id !== null) {
           const ph = this.state.port_hovered;
-          this.setState(prevState => ({ ng: prevState.ng.removePort(ph.node_id, ph.port_id)}));
+          this.editMgr.action("removePort", [ph.node_id, ph.port_id])
         }
     }
 
 
     onLinkDisconnected = (linkID) => {
-        this.setState(prevState => ({
-            ng : prevState.ng.removeLink(linkID)
-        }))
+        this.editMgr.action("removeLink", [linkID])
     }
 
 
@@ -159,6 +267,12 @@ class App extends React.Component {
         port_id
       }});
     }
+
+
+    onNodeMove = (node_id, new_pos) => {
+        this.setPosition(node_id, new_pos)
+    }
+
 
     onMouseMove = (evt) => {
         if (this.state.partial_link !== null) {
@@ -185,20 +299,20 @@ class App extends React.Component {
 
         // "pick up" the link
         this.setState(prevState => ({
-            ng           : prevState.ng.removeLink(linkID),
             partial_link : port
         }));
+        this.editMgr.action("removeLink", [linkID])
     }
 
 
     onNodeCreate = (node) => {
         this.setState(prevState => {
-            var s = {showing_node_dialog : false}
-            if (node !== null) {
-               s.ng = prevState.ng.addNode(node.name, node.type_sig)
-            }
-            return s
+            return {showing_node_dialog : false}
         })
+        if (node !== null) {
+           //this.editMgr.addNode(node.name, node.type_sig)
+           this.editMgr.action("addNode", [node.name, node.type_sig])
+        }
     }
 
 
@@ -231,13 +345,7 @@ class App extends React.Component {
 
 
     render() {
-        var mutation_callbacks = {
-            onLinkDisconnected    : this.onLinkDisconnected,
-            onPortClicked         : this.onPortClicked,
-            onPortMoved           : this.onPortMoved,
-            onPortHovered         : this.onPortHovered,
-            onLinkEndpointClicked : this.onLinkEndpointClicked
-        }
+        // xxx hack below: _.clone() to cause extra updates.
         return (
             <div
                 onMouseMove={this.onMouseMove}
@@ -246,11 +354,12 @@ class App extends React.Component {
                 <NodeView
                     ng={this.state.ng}
                     port_coords={this.state.port_coords}
-                    mutation_callbacks={mutation_callbacks}/>
+                    mutation_callbacks={_.clone(this.mutation_callbacks)}/>
                 {this.renderPartialLink()}
                 {this.state.showing_node_dialog ?
                     this.renderNewNodeDialog() :
                     []}
+                {this.state.connected ? null : <p>NOT CONNECTED</p>}
             </div>
         );
     }

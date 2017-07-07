@@ -1,6 +1,5 @@
 import React    from 'react';
 import ReactDOM from 'react-dom';
-import {Map}    from 'immutable'
 import * as _   from 'lodash'
 
 import {MNode}  from './mNode';
@@ -29,7 +28,7 @@ export class NodeView extends React.PureComponent {
 
     getInitialState() {
         return {
-            corner_offs : [0,0]
+            corner_offs : this.props.position
         };
     }
 
@@ -91,7 +90,7 @@ export class NodeView extends React.PureComponent {
             if (n.hasBody()) {
                 // these are heavy, so don't send them to
                 // the nodes which don't have inner nodes.
-                x.ng          = this.props.ng.ofNode(node_id)
+                x.ng          = this.props.ng.ofNode(node_id)  // xxx: this is re-created on every frame D:
                 x.port_coords = this.props.port_coords
             }
             nodes.push(<MNode node_id={node_id}
@@ -99,7 +98,7 @@ export class NodeView extends React.PureComponent {
                               paneID={this.props.id}
                               mutation_callbacks={this.props.mutation_callbacks}
                               node={n}
-                              {...x} />);
+                              {...x}/>);
         }
 
         return (
