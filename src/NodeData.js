@@ -70,20 +70,20 @@ export class NodeData {
     
     addPort(type_id, is_sink, port_id=null) {
         var n   = _.clone(this)
-        port_id = (port_id === null) ? 
+        port_id = (port_id === null || port_id === undefined) ? 
             // if port_id unspecified, choose largest id + 1
             (_.max(n.type_sig.type_by_port_id.keySeq().toArray()) + 1) : 
             // else, use specified
             port_id
         n.type_sig = n.type_sig.addPort(port_id, type_id, is_sink)
-        return n
+        return {node:n,id:port_id}
     }
     
     
     removePort(port_id) {
         var n = _.clone(this)
         n.type_sig = n.type_sig.removePort(port_id)
-        return n
+        return {node:n,id:port_id}
     }
     
     

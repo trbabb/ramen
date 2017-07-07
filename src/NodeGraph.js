@@ -46,7 +46,7 @@ export class NodeGraph {
         ng.max_node_id = Math.max(this.max_node_id, id) + 1
         ng.nodes       = this.nodes.set(id, new NodeData(name, type_sig, parent_id))
         
-        if (parent_id === null) {
+        if (parent_id === null || parent_id === undefined) {
             ng.child_nodes  = this.child_nodes.add(id)
         } else {
             var parent_node = this.nodes.get(parent_id)
@@ -54,7 +54,7 @@ export class NodeGraph {
             ng.nodes        = ng.nodes.set(parent_id, parent_node);
         }
         
-        return ng
+        return {ng, id}
     }
     
     
@@ -82,18 +82,18 @@ export class NodeGraph {
         }
         
         ng.nodes = ng.nodes.remove(node_id)
-        return ng
+        return { ng:ng, id:node_id }
     }
     
     
     addLink(port_0, port_1) {
-        var p0_sink = this.nodes.get(port_0.node_id).isPortSink(port_0.port_id);
-        var p1_sink = this.nodes.get(port_1.node_id).isPortSink(port_1.port_id);
+        var p0_sink = this.nodes.get(port_0.node_id).isPortSink(port_0.port_id)
+        var p1_sink = this.nodes.get(port_1.node_id).isPortSink(port_1.port_id)
         
         if (p0_sink === p1_sink) {
             // can't connect a src to a src or a sink to a sink.
-            console.log("Rejected link; must connect source to sink.");
-            return this;
+            console.log("Rejected link; must connect source to sink.")
+            return { ng:this, id:null }
         }
         
         // order the link source to sink.
@@ -164,10 +164,10 @@ export class NodeGraph {
             
             ng.max_link_id = new_link_id + 1;
             
-            return ng
+            return { ng:ng, id:new_link_id }
         }
         
-        return this
+        return { ng:this, id:null }
     }
     
     
@@ -184,7 +184,7 @@ export class NodeGraph {
         
         // remove link from its parent
         var parent_id = src_node.parent;
-        if (parent_id === null) {
+        if (parent_id === null || parent_id === undefined) {
             ng.child_links = this.child_links.remove(link_id);
         } else {
             var parent_node = this.nodes.get(parent_id);
@@ -192,18 +192,20 @@ export class NodeGraph {
             ng.nodes        = ng.nodes.set(parent_id, parent_node);
         }
         
-        return ng
+        return { ng:ng, id:link_id}
     }
     
     
     addPort(node_id, type_id, is_sink, port_id=null) {
-        var n = this.nodes.get(node_id)
-        n = n.addPort(type_id, is_sink, port_id)
+        var node = this.nodes.get(node_id)
+        var z    = node.addPort(type_id, is_sink, port_id)
+        node     = z.node
+        var id   = z.id
         
         var ng = _.clone(this)
-        ng.nodes = ng.nodes.set(node_id, n)
+        ng.nodes = ng.nodes.set(node_id, node)
         
-        return ng
+        return {ng,id}
     }
     
     
@@ -220,7 +222,7 @@ export class NodeGraph {
         n = n.removePort(port_id)
         ng.nodes = ng.nodes.set(node_id, n)
         
-        return ng
+        return {ng:ng, id:[node_id,port_id]}
     }
     
     

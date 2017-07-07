@@ -2,6 +2,7 @@ import React           from 'react'
 import * as _          from 'lodash'
 import {Map}           from 'immutable'
 import ReactDOM        from 'react-dom';
+import io              from 'socket.io-client'
 
 import {NodeView}      from './mNodeView'
 import {NodeData}      from './NodeData'
@@ -9,6 +10,7 @@ import {NodeGraph}     from './NodeGraph'
 import {Link}          from './mLink'
 import {NewNodeDialog} from './mNewNodeDialog'
 import {TypeSignature} from './TypeSignature'
+import {EditManager}   from './EditManager'
 
 import './App.css'
 
@@ -56,6 +58,8 @@ class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = this.getDefaultState();
+        // neccesary to store across frames, or else the entire app will
+        // redraw on every frame D:
         this.mutation_callbacks = {
             onLinkDisconnected    : this.onLinkDisconnected,
             onPortClicked         : this.onPortClicked,
@@ -63,6 +67,7 @@ class App extends React.Component {
             onLinkEndpointClicked : this.onLinkEndpointClicked,
             onNodeMove            : this.onNodeMove
         }
+        this.editMgr = new EditManager(this)
     }
     
     
@@ -82,7 +87,9 @@ class App extends React.Component {
             
             showing_node_dialog : false,
             
-            selected_obj : null   // xxx todo: not yet taken advantage of.
+            selected_obj : null,  // xxx todo: not yet taken advantage of.
+            
+            connected    : false
         }
     }
     
@@ -139,9 +146,7 @@ class App extends React.Component {
     
     
     addNode(name, type_sig, parent_id=null) {
-        this.setState(prevState => {
-            return { ng : prevState.ng.addNode(name, type_sig, parent_id) }
-        })
+        this.editMgr.action("addNode", [name, type_sig, parent_id])
     }
     
     
@@ -192,6 +197,11 @@ class App extends React.Component {
     /****** Callback functions ******/
     
     
+    setConnected = (connected) => {
+        this.setState({connected : connected})
+    }
+    
+    
     updateMouse = (x, y) => {
         var eDom    = ReactDOM.findDOMNode(this.elem);
         var box     = eDom.getBoundingClientRect()
@@ -210,10 +220,11 @@ class App extends React.Component {
             this.setState({partial_link : p})
         } else {
             // complete a partial link
+            var link = this.state.partial_link
             this.setState(prevState => ({
-                ng           : prevState.ng.addLink(this.state.partial_link, p),
                 partial_link : null
             }))
+            this.editMgr.action("addLink", [link, p])
         }
     }
     
@@ -227,9 +238,7 @@ class App extends React.Component {
     
     
     onLinkDisconnected = (linkID) => {
-        this.setState(prevState => ({
-            ng : prevState.ng.removeLink(linkID)
-        }))
+        this.editMgr.action("removeLink", [linkID])
     }
     
     
@@ -270,20 +279,20 @@ class App extends React.Component {
         
         // "pick up" the link
         this.setState(prevState => ({
-            ng           : prevState.ng.removeLink(linkID),
             partial_link : port
         }));
+        this.editMgr.action("removeLink", [linkID])
     }
     
     
     onNodeCreate = (node) => {
         this.setState(prevState => {
-            var s = {showing_node_dialog : false}
-            if (node !== null) {
-               s.ng = prevState.ng.addNode(node.name, node.type_sig)
-            }
-            return s
+            return {showing_node_dialog : false}
         })
+        if (node !== null) {
+           //this.editMgr.addNode(node.name, node.type_sig)
+           this.editMgr.action("addNode", [node.name, node.type_sig])
+        }
     }
     
     
@@ -316,6 +325,7 @@ class App extends React.Component {
     
     
     render() {
+        // xxx hack below: _.clone() to cause extra updates.
         return (
             <div
                 onMouseMove={this.onMouseMove}
@@ -324,11 +334,12 @@ class App extends React.Component {
                 <NodeView
                     ng={this.state.ng}
                     port_coords={this.state.port_coords}
-                    mutation_callbacks={this.mutation_callbacks}/>
+                    mutation_callbacks={_.clone(this.mutation_callbacks)}/>
                 {this.renderPartialLink()}
                 {this.state.showing_node_dialog ? 
                     this.renderNewNodeDialog() :
                     []}
+                {this.state.connected ? null : <p>NOT CONNECTED</p>}
             </div>
         );
     }
