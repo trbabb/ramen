@@ -244,7 +244,7 @@ class App extends React.Component {
         }
         if (evt.key === 'Delete' && this.state.port_hovered.port_id !== null) {
           const ph = this.state.port_hovered;
-          this.editMgr.action("removePort", [ph.node_id, ph.port_id])
+          this.editProxy.action("removePort", [ph.node_id, ph.port_id])
         }
     }
 
