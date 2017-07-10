@@ -247,19 +247,20 @@ class App extends React.Component {
           this.editProxy.action("removePort", [ph.node_id, ph.port_id])
         }
     }
-
-
+    
+    
     onLinkDisconnected = (linkID) => {
         this.editProxy.action("removeLink", [linkID])
     }
-
-
+    
+    
     onPortMoved = ({node_id, port_id, is_sink, new_pos}) => {
         this.setState(prevState => {
             return {port_coords : prevState.port_coords.setIn([node_id, port_id], new_pos)}
         })
     }
-
+    
+    
     onPortHovered = (node_id, port_id) => {
       this.setState({ port_hovered: {
         node_id,
