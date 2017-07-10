@@ -2,7 +2,6 @@ import React           from 'react'
 import * as _          from 'lodash'
 import {Map}           from 'immutable'
 import ReactDOM        from 'react-dom';
-import io              from 'socket.io-client'
 
 import {NodeView}      from './mNodeView'
 import {NodeData}      from './NodeData'

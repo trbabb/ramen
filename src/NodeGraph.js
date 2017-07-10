@@ -64,8 +64,8 @@ export class NodeGraph {
         var  n = this.nodes.get(node_id)
     
         // remove all existing links
-        for (var cxns of n.port_links.values()) {
-            for (var link_id of cxns.values()) {
+        for (var cxns of n.links_by_id.valueSeq()) {
+            for (var link_id of cxns.valueSeq()) {
                 ng = ng.removeLink(link_id)
             }
         }
