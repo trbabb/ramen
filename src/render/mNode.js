@@ -1,7 +1,7 @@
-import React      from 'react';
-import Draggable  from 'react-draggable';
-import {Port}     from './mPort';
-import {NodeView} from './mNodeView';
+import React        from 'react';
+import Draggable    from 'react-draggable';
+import {Port}       from './mPort';
+import {NodeView}   from './mNodeView';
 import {PortConfig} from './mPortConfig';
 
 

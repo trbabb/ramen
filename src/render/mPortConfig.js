@@ -2,11 +2,11 @@ import React    from 'react';
 import ReactDOM from 'react-dom';
 import * as _   from 'lodash'
 
-import gearImg   from './resource/gear.png'
+import gearImg   from '../resource/gear.png'
 
 export class PortConfig extends React.PureComponent {
     render() {
-        var classes = ["port-config", this.props.is_sink ? "Sink" : "Source"]
+        var classes = ["PortConfig", this.props.is_sink ? "Sink" : "Source"]
         return (
             <img
                 src={gearImg}

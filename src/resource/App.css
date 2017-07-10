@@ -83,6 +83,12 @@ img {
   cursor: default;
 }
 
+.PortConfig {
+  padding: 2px;
+  margin: 2px;
+  cursor: default;
+}
+
 .Port:hover {
   background-color:#fa0;
 }

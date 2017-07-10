@@ -3,15 +3,16 @@ import * as _          from 'lodash'
 import {Map}           from 'immutable'
 import ReactDOM        from 'react-dom';
 
-import {NodeView}      from './mNodeView'
-import {NodeData}      from './NodeData'
-import {NodeGraph}     from './NodeGraph'
-import {Link}          from './mLink'
-import {NewNodeDialog} from './mNewNodeDialog'
-import {TypeSignature} from './TypeSignature'
-import {EditProxy}     from './EditProxy'
+import {NodeData}      from './state/NodeData'
+import {NodeGraph}     from './state/NodeGraph'
+import {TypeSignature} from './state/TypeSignature'
+import {EditProxy}     from './state/EditProxy'
 
-import './App.css'
+import {NodeView}      from './render/mNodeView'
+import {Link}          from './render/mLink'
+import {NewNodeDialog} from './render/mNewNodeDialog'
+
+import './resource/App.css'
 
 
 // todo: use asMutable to speed up some of the edits.

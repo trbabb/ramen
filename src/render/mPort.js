@@ -2,13 +2,13 @@ import React    from 'react';
 import ReactDOM from 'react-dom';
 import * as _   from 'lodash'
 
-import float_img from './resource/float.png'
-import int_img   from './resource/int.png'
-import bool_img  from './resource/bool.png'
-import type_img  from './resource/type.png'
-import proc_img  from './resource/proc.png'
-import list_img  from './resource/list.png'
-import str_img   from './resource/str.png'
+import float_img from '../resource/float.png'
+import int_img   from '../resource/int.png'
+import bool_img  from '../resource/bool.png'
+import type_img  from '../resource/type.png'
+import proc_img  from '../resource/proc.png'
+import list_img  from '../resource/list.png'
+import str_img   from '../resource/str.png'
 
 const typeIcons = {
     'int'   : int_img,
