@@ -54,7 +54,7 @@ const availableNodes = [
 
 
 class App extends React.Component {
-    
+
     constructor(props) {
         super(props);
         this.state = this.getDefaultState();
@@ -63,123 +63,129 @@ class App extends React.Component {
         this.mutation_callbacks = {
             onLinkDisconnected    : this.onLinkDisconnected,
             onPortClicked         : this.onPortClicked,
+            onPortHovered         : this.onPortHovered,
             onPortMoved           : this.onPortMoved,
             onLinkEndpointClicked : this.onLinkEndpointClicked,
             onNodeMove            : this.onNodeMove
         }
         this.editMgr = new EditManager(this)
     }
-    
-    
+
+
     /****** Setup / init ******/
-    
-    
+
+
     getDefaultState() {
         return {
             ng : new NodeGraph(),
-            
+
             // "partial link" logic:
             mouse_pos    : [0,0], // in local coords
             partial_link : null,  // anchor port
-            
+
             // in window coords
-            port_coords  : new Map(), 
-            
+            port_coords  : new Map(),
+
             showing_node_dialog : false,
-            
+
             selected_obj : null,  // xxx todo: not yet taken advantage of.
-            
-            connected    : false
+
+            connected    : false,
+
+            port_hovered: {
+              node_id: null,
+              port_id: null
+            }
         }
     }
-    
-    
+
+
     loadDefaultNodeGraph = () => {
-        this.addNode("wat",                     
+        this.addNode("wat",
             new TypeSignature(
-                ['float','float','float','float'], 
+                ['float','float','float','float'],
                 [0,1,2]))
-        this.addNode("+",                       
+        this.addNode("+",
             new TypeSignature(
-                ['int','int','int'],               
+                ['int','int','int'],
                 [0,1]))
-        this.addNode("a function named \"💩\"", 
+        this.addNode("a function named \"💩\"",
             new TypeSignature(
-                ['float','float','float','float'], 
+                ['float','float','float','float'],
                 [0,1,2]))
-        this.addNode("function",                
+        this.addNode("function",
             new TypeSignature(
-                ['str','str','str'],               
+                ['str','str','str'],
                 [0,1]))
-        this.addNode("child node",              
+        this.addNode("child node",
             new TypeSignature(
-                ['str','str'],                     
-                [0]),   
+                ['str','str'],
+                [0]),
             3) // parent=3
-        this.addNode("another kid",             
+        this.addNode("another kid",
             new TypeSignature(
-                ['str','str','str'],               
-                [0,1]), 
+                ['str','str','str'],
+                [0,1]),
             3) // parent=3
-        
-        this.addNode("type glyph demo", 
-            new TypeSignature( 
-                ['int','float','bool','type','str','list','proc','int'], 
+
+        this.addNode("type glyph demo",
+            new TypeSignature(
+                ['int','float','bool','type','str','list','proc','int'],
                 [0,1,2,3,4,5,6]))
-        
+
         this.setPosition(0, [100,200])
         this.setPosition(1, [300,400])
     }
-    
-    
+
+
     componentDidMount = () => {
         this.loadDefaultNodeGraph()
         document.addEventListener('keydown', this.onHotKeyPressed);
     }
-    
-    
+
+
     setPosition = (node_id, pos) => {
         this.setState(prevState => {
             return { ng : prevState.ng.setPosition(node_id, pos) }
         })
     }
-    
-    
+
+
     addNode(name, type_sig, parent_id=null) {
         this.editMgr.action("addNode", [name, type_sig, parent_id])
     }
-    
-    
-    
+
+
+
     /****** Object selection ******/
     // (not yet respected)
-    
-    
+
+
     selectNode(node_id) {
         this.setState({selected_obj : {
-            kind : "node", 
+            kind : "node",
             id   : node_id
         }})
     }
-    
-    
+
+
     selectPort(node_id, port_id) {
         this.setState({selected_obj: {
             kind : "port",
             id   : port_id
         }})
     }
-    
-    
+
+
     selectLink(link_id) {
-        this.setState({ selected_obj: 
+        this.setState({ selected_obj:
         {
             kind : "link",
             id   : link_id
         }})
     }
-    
-    
+
+
     selectNodeBody(node_id) {
         this.setState({ selected_obj :
         {
@@ -187,21 +193,21 @@ class App extends React.Component {
             id   : node_id
         }})
     }
-    
-    
+
+
     unselect() {
         this.setState({ selected_obj : null })
     }
-    
-    
+
+
     /****** Callback functions ******/
-    
-    
+
+
     setConnected = (connected) => {
         this.setState({connected : connected})
     }
-    
-    
+
+
     updateMouse = (x, y) => {
         var eDom    = ReactDOM.findDOMNode(this.elem);
         var box     = eDom.getBoundingClientRect()
@@ -211,8 +217,11 @@ class App extends React.Component {
             this.setState({mouse_pos : new_pos});
         }
     }
-    
-    
+
+
+    /****** Callback functions ******/
+
+
     onPortClicked = ({node_id, port_id, elem, mouse_evt}) => {
         // create or complete the "partial" link
         var p = {node_id : node_id, port_id : port_id}
@@ -227,40 +236,51 @@ class App extends React.Component {
             this.editMgr.action("addLink", [link, p])
         }
     }
-    
-    
+
+
     onHotKeyPressed = (evt) => {
         if (evt.key === " " && !this.state.showing_node_dialog) {
             this.setState({showing_node_dialog : true})
             evt.preventDefault()
         }
+        if (evt.key === 'Delete' && this.state.port_hovered.port_id !== null) {
+          const ph = this.state.port_hovered;
+          this.editMgr.action("removePort", [ph.node_id, ph.port_id])
+        }
     }
-    
-    
+
+
     onLinkDisconnected = (linkID) => {
         this.editMgr.action("removeLink", [linkID])
     }
-    
-    
+
+
     onPortMoved = ({node_id, port_id, is_sink, new_pos}) => {
         this.setState(prevState => {
             return {port_coords : prevState.port_coords.setIn([node_id, port_id], new_pos)}
         })
     }
-    
-    
+
+    onPortHovered = (node_id, port_id) => {
+      this.setState({ port_hovered: {
+        node_id,
+        port_id
+      }});
+    }
+
+
     onNodeMove = (node_id, new_pos) => {
         this.setPosition(node_id, new_pos)
     }
-    
-    
+
+
     onMouseMove = (evt) => {
         if (this.state.partial_link !== null) {
             this.updateMouse(evt.clientX, evt.clientY)
         }
     }
-    
-    
+
+
     onClick = (evt) => {
         this.updateMouse(evt.clientX, evt.clientY)
         if (this.state.partial_link !== null) {
@@ -268,23 +288,23 @@ class App extends React.Component {
             this.setState({partial_link : null});
         }
     }
-    
-    
+
+
     onLinkEndpointClicked = ({mouseEvt, linkID, isSource}) => {
         var link = this.state.ng.links.get(linkID)
         // we want the endpoint that *wasn't* grabbed
         var port = isSource ? link.sink : link.src
-        
+
         console.assert(this.state.partial_link === null);
-        
+
         // "pick up" the link
         this.setState(prevState => ({
             partial_link : port
         }));
         this.editMgr.action("removeLink", [linkID])
     }
-    
-    
+
+
     onNodeCreate = (node) => {
         this.setState(prevState => {
             return {showing_node_dialog : false}
@@ -294,11 +314,11 @@ class App extends React.Component {
            this.editMgr.action("addNode", [node.name, node.type_sig])
         }
     }
-    
-    
+
+
     /****** Rendering functions ******/
-    
-    
+
+
     renderPartialLink() {
         if (this.state.partial_link !== null) {
             var port  = this.state.partial_link
@@ -312,18 +332,18 @@ class App extends React.Component {
                 partial={true}/>);
         }
     }
-    
-    
+
+
     renderNewNodeDialog() {
         return (
-            <NewNodeDialog 
+            <NewNodeDialog
                 className="NewNodeDialog"
                 onNodeCreate={this.onNodeCreate}
                 availableNodes={availableNodes}/>
         )
     }
-    
-    
+
+
     render() {
         // xxx hack below: _.clone() to cause extra updates.
         return (
@@ -336,14 +356,14 @@ class App extends React.Component {
                     port_coords={this.state.port_coords}
                     mutation_callbacks={_.clone(this.mutation_callbacks)}/>
                 {this.renderPartialLink()}
-                {this.state.showing_node_dialog ? 
+                {this.state.showing_node_dialog ?
                     this.renderNewNodeDialog() :
                     []}
                 {this.state.connected ? null : <p>NOT CONNECTED</p>}
             </div>
         );
     }
-    
+
 }
 
 export default App;

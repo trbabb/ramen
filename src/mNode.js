@@ -2,6 +2,7 @@ import React      from 'react';
 import Draggable  from 'react-draggable';
 import {Port}     from './mPort';
 import {NodeView} from './mNodeView';
+import {PortConfig} from './mPortConfig';
 
 
 // MNode is the React element for a language node.
@@ -41,7 +42,8 @@ export class MNode extends React.PureComponent {
                 direction     = {doSinks ? [0,-1] : [0,1]}
                 is_sink       = {doSinks}
                 onPortClicked = {that.props.mutation_callbacks.onPortClicked}
-                onPortMoved   = {that.props.mutation_callbacks.onPortMoved} />
+                onPortMoved   = {that.props.mutation_callbacks.onPortMoved}
+                onPortHovered   = {that.props.mutation_callbacks.onPortHovered} />
             z.push(p);
         });
         return z;
@@ -54,6 +56,7 @@ export class MNode extends React.PureComponent {
                 <div className="FnHeader Function">
                     <div className="CallName Function">{this.props.node.name}</div>
                     {this.makePorts(false)}
+                    <PortConfig handlePortConfigClick={this.handlePortConfigClick}/>
                 </div>
                 <NodeView
                     ng={this.props.ng}
@@ -61,6 +64,7 @@ export class MNode extends React.PureComponent {
                     mutation_callbacks={this.props.mutation_callbacks}/>
                 <div className="PortGroup SinkPortGroup">
                     {this.makePorts(true)}
+                    <PortConfig handlePortConfigClick={this.handlePortConfigClick}/>
                 </div>
             </div>
         )
@@ -72,11 +76,13 @@ export class MNode extends React.PureComponent {
             <div className="MNode">
                 <div className="PortGroup SinkPortGroup">
                     {this.makePorts(true)}
+                    <PortConfig handlePortConfigClick={this.handlePortConfigClick}/>
                 </div>
                 <div className="CallName">
                     {this.props.node.name}
                 </div>
                 <div className="PortGroup SourcePortGroup">
+                  <PortConfig handlePortConfigClick={this.handlePortConfigClick}/>
                     {this.makePorts(false)}
                 </div>
             </div>
