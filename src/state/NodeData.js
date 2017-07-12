@@ -74,7 +74,7 @@ export class NodeData {
     removeLink(port_id, link_id) {
         if (this.links_by_id.has(port_id) && this.links_by_id.get(port_id).includes(link_id)) {
             var n = _.clone(this);
-            n.links_by_id = this.links_by_id.update(port_id, s => {s.remove(link_id)})
+            n.links_by_id = this.links_by_id.update(port_id, s => { return s.remove(link_id) })
             return n
         } else {
             return this

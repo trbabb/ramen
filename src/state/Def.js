@@ -20,22 +20,17 @@ export class Def {
         this.type_sig  = type_sig
     }
     
-    addPort(type_id, is_sink, port_id=null) {
+    addPort(port_id, type_id, is_sink) {
         var d   = _.clone(this)
-        port_id = (port_id === null || port_id === undefined) ?
-            // if port_id unspecified, choose largest id + 1
-            (_.max(d.type_sig.type_by_port_id.keySeq().toArray()) + 1) :
-            // else, use specified
-            port_id
         d.type_sig = d.type_sig.addPort(port_id, type_id, is_sink)
-        return {def:d, id:port_id}
+        return d
     }
 
 
     removePort(port_id) {
         var d = _.clone(this)
         d.type_sig = d.type_sig.removePort(port_id)
-        return {def:d,id:port_id}
+        return d
     }
     
     

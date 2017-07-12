@@ -142,10 +142,12 @@ class App extends React.Component {
         
         
         for (var i = 0; i < 7; ++i) {
-            // parent nodes 4 and 5 to node 3 (the fn)
+            // add a node for each def above.
+            // parent nodes 4 and 5 to node 3 (the fn node).
             this.addNode(i, (i === 4 || i === 5) ? 3 : null)
         }
         
+        // add all the extra defs
         for (var d of availableNodes) {
             this.addDef.apply(this, d)
         }
@@ -169,12 +171,12 @@ class App extends React.Component {
 
 
     addDef(name, node_type, type_sig) {
-        this.editProxy.action("addDef", [name, node_type, type_sig])
+        this.editProxy.action("addDef", {name, node_type, type_sig})
     }
     
     
     addNode(def_id, parent_id=null) {
-        this.editProxy.action("addNode", [def_id, parent_id])
+        this.editProxy.action("addNode", {def_id, parent_id})
     }
 
 
@@ -255,7 +257,7 @@ class App extends React.Component {
             this.setState(prevState => ({
                 partial_link : null
             }))
-            this.editProxy.action("addLink", [link, p])
+            this.editProxy.action("addLink", {port_0 : link, port_1 : p})
         }
     }
 
@@ -268,13 +270,13 @@ class App extends React.Component {
         if (evt.key === 'Delete' && this.state.port_hovered.port_id !== null) {
           const ph = this.state.port_hovered;
           var n    = this.state.ng.nodes.get(ph.node_id)
-          this.editProxy.action("removePort", [n.def_id, ph.port_id])
+          this.editProxy.action("removePort", {def_id:n.def_id, port_id:ph.port_id})
         }
     }
     
     
-    onLinkDisconnected = (linkID) => {
-        this.editProxy.action("removeLink", [linkID])
+    onLinkDisconnected = (link_id) => {
+        this.editProxy.action("removeLink", {link_id})
     }
     
     
@@ -325,7 +327,7 @@ class App extends React.Component {
         this.setState(prevState => ({
             partial_link : port
         }));
-        this.editProxy.action("removeLink", [linkID])
+        this.editProxy.action("removeLink", {link_id:linkID})
     }
 
 
@@ -334,7 +336,7 @@ class App extends React.Component {
             return {showing_node_dialog : false}
         })
         if (def_id !== null) {
-           this.editProxy.action("addNode", [def_id])
+           this.editProxy.action("addNode", {def_id})
         }
     }
 

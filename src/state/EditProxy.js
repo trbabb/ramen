@@ -3,8 +3,6 @@ import io from 'socket.io-client'
 // EditProxy tattles on everything that's done to the node graph.
 // This is sent back to the server, so it can keep the AST in sync.
 
-// todo: the "action" key is redundant with the message key.
-
 export class EditProxy {
     
     constructor(app) {
@@ -15,6 +13,7 @@ export class EditProxy {
             this.socket.on('connect', (socket) => {resolve()})
             this.socket.on('disconnect',    () => {reject()})
             this.socket.on('error',         () => {reject()})
+            this.socket.on('graph_edit', this.processServerAction)
         }).then(() => {
             this.connected = true
             this.app.setConnected(true)
@@ -25,19 +24,36 @@ export class EditProxy {
         })
         this.queued = []
         this.actionTemplates = {
-            addNode    : {action : "add",    type : "node", args : ["name", "type_sig", "parent_id", "id"]},
+            addNode    : {action : "add",    type : "node", args : ["node_id", "def_id", "parent_id"]},
             removeNode : {action : "remove", type : "node", args : ["node_id"]},
-            addDef     : {action : "add",    type : "def",  args : ["name", "node_type", "type_sig", "def_id"]},
+            addDef     : {action : "add",    type : "def",  args : ["def_id", "name", "node_type", "type_sig"]},
             removeDef  : {action : "remove", type : "def",  args : ["def_id"]},
-            addLink    : {action : "add",    type : "link", args : ["port_0", "port_1", "id"]},
+            addLink    : {action : "add",    type : "link", args : ["link_id", "port_0", "port_1"]},
             removeLink : {action : "remove", type : "link", args : ["link_id"]},
-            addPort    : {action : "add",    type : "port", args : ["def_id", "type_id", "is_sink", "id"]},
+            addPort    : {action : "add",    type : "port", args : ["def_id", "port_id", "type_id", "is_sink"]},
             removePort : {action : "remove", type : "port", args : ["def_id", "port_id"]},
+        }
+        this.max_id = {
+            node : 0,
+            link : 0,
+            def  : 0,
+            port : 0,
         }
     }
     
     
-    extractArgs(data, act) {
+    // generate a new, unique id for an object of the given type
+    // (in "node", "link", "def", or "port").
+    generateID(objtype) {
+        var id = this.max_id[objtype]
+        this.max_id[objtype] += 1
+        return id
+    }
+    
+    
+    // take an action + object holding a keyword mapping of properties,
+    // and use the action template to figure out the order of the args.
+    unpackArgs(act, data) {
         var tp   = this.actionTemplates[act]
         var args = []
         for (var a of tp.args) {
@@ -47,16 +63,23 @@ export class EditProxy {
     }
     
     
-    processAction = (data) => {
+    // apply an add/remove event to the given nodegraph
+    applyEvent(ng, evt) {
+        var act  = {node : "Node",
+                    def  : "Def",
+                    link : "Link",
+                    port : "Port"}[evt.type]
+        act      = evt.action + act
+        var fn   = ng[act]
+        var args = this.unpackArgs(act, evt.details)
+        return fn.apply(ng, args)
+    }
+    
+    
+    // handle and execute an edit action arriving from the server.
+    processServerAction = (data) => {
         this.app.setState(prevState => {
-            var act  = {node : "Node",
-                        def  : "Def",
-                        link : "Link",
-                        port : "Port"}[data.type]
-            act = data.action + act
-            var fn      = prevState.ng[act]
-            var args    = this.extractArgs(data, act)
-            var {ng,id} = fn.apply(prevState.ng, args)
+            var ng = this.applyEvent(prevState.ng, data)
             if (ng === prevState.ng) {
                 return {}
             } else {
@@ -66,32 +89,23 @@ export class EditProxy {
     }
     
     
-    actionForCall(act, args, id=null) {
-        var t = this.actionTemplates[act]
-        var o = {action : t.action, type : t.type}
-        var d = {}
-        for (var i = 0; i < args.length; ++i) {
-            var a = args[i]
-            var argname = t.args[i]
-            // todo: mandate id
-            if (argname === "id" && (a === null || a === undefined)) {
-                a = id
-            }
-            d[argname] = a
-        }
-        o.details = d
-        return o
-    }
-    
-    
-    action(act, args) {
+    // request an action be executed. After doing it, tell the server.
+    action(act, keyword_args) {
         this.app.setState(prevState => {
-            var f       = prevState.ng[act]
-            var {ng,id} = f.apply(prevState.ng, args) // kwargs like python would make this all nicer :[
+            var f   = prevState.ng[act]
+            var t   = this.actionTemplates[act]
+            var evt = {action : t.action, type : t.type, details : keyword_args}
+            var id_name = evt.type + "_id"
+            
+            if (evt.action === "add" && (evt.details[id_name] === undefined || evt.details[id_name] === null)) {
+                evt.details[id_name] = this.generateID(evt.type)
+            }
+            
+            var ng = this.applyEvent(prevState.ng, evt)
+            
             if (ng === prevState.ng) {
                 return {}
             } else {
-                var evt = this.actionForCall(act, args, id)
                 this.enqueue(evt)
                 return {ng : ng}
             }
