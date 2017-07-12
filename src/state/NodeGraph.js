@@ -255,7 +255,7 @@ export class NodeGraph {
         var def = ng.defs.get(def_id)
         
         def     = def.removePort(port_id)
-        ng.defs = ng.defs.set(def_id, def.def)
+        ng.defs = ng.defs.set(def_id, def)
         
         return ng
     }
