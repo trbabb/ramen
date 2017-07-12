@@ -39,7 +39,8 @@ import './resource/App.css'
 
 
 // don't really care what this is, for now:
-const STANDIN_TYPE_SIGNATURE = new TypeSignature(['float', 'float', 'float'], [0,1])
+const STANDIN_TYPE_SIGNATURE  = new TypeSignature(['float', 'float', 'float'], [0,1])
+const FUNCTION_TYPE_SIGNATURE = new TypeSignature(['proc'],[])
 
 // list of nodes read by the "place node" dialog.
 const availableNodes = [
@@ -47,7 +48,7 @@ const availableNodes = [
         ["-",           NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
         ["*",           NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
         ["/",           NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
-        ["function",    NODE_TYPE.NODE_FUNCTION, STANDIN_TYPE_SIGNATURE],
+        ["function",    NODE_TYPE.NODE_FUNCTION, FUNCTION_TYPE_SIGNATURE],
         ["helloWorld",  NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
         ["sendHello",   NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
         ["createWorld", NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
@@ -122,8 +123,8 @@ class App extends React.Component {
         this.addDef("function",
             NODE_TYPE.NODE_FUNCTION,
             new TypeSignature(
-                ['str','str','str'],
-                [0,1]))
+                ['proc'],
+                []))
         this.addDef("child node",
             NODE_TYPE.NODE_FNCALL,
             new TypeSignature(

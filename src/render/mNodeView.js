@@ -1,9 +1,10 @@
-import React    from 'react';
-import ReactDOM from 'react-dom';
-import * as _   from 'lodash'
+import React       from 'react';
+import ReactDOM    from 'react-dom';
+import * as _      from 'lodash'
 
-import {MNode}  from './mNode';
-import {Link}   from './mLink';
+import {MNode}     from './mNode';
+import {Link}      from './mLink';
+import {NODE_TYPE} from '../state/Def'
 
 
 // NodeView holds nodes and links, and ensures that the two stay visually connected.
@@ -87,6 +88,10 @@ export class NodeView extends React.PureComponent {
         for (var node_id of this.props.ng.child_nodes) {
             var n   = this.props.ng.nodes.get(node_id)
             var def = this.props.ng.defs.get(n.def_id)
+            if (def.node_type === NODE_TYPE.NODE_ENTRY || def.node_type == NODE_TYPE.NODE_EXIT) {
+                // magic header / footer node. don't render.
+                continue
+            }
             var x   = {}
             if (def.hasBody()) {
                 // these are heavy, so don't send them to

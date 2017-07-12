@@ -2,7 +2,7 @@ import {Map, Set}       from 'immutable'
 import * as _           from 'lodash'
 
 import {NodeData}       from './NodeData'
-import {Def, NODE_TYPE} from './Def.js'
+import {Def, NODE_TYPE} from './Def'
 
 
 // an "immutable" NodeGraph.
@@ -69,6 +69,7 @@ export class NodeGraph {
             parent_node     = parent_node.addChildNode(node_id);
             
             // should the parent be updated to refer to a new entry/exit?
+            // see footnote [1] if it's unclear why this happens here.
             var def = this.defs.get(def_id)
             if (def.node_type === NODE_TYPE.NODE_ENTRY) {
                 parent_node.entry_id = node_id
@@ -282,3 +283,24 @@ export class NodeGraph {
 
 
 }
+
+
+// footnote [1]:
+
+// it might seem weird that we individually add the entry and exit nodes for
+// all nodes with bodies here. why not automatically add them the moment they are 
+// created, you ask? we don't ever want those nodes to be without entry/exits.
+
+// we do it this way because the server/client have to sync state, and so have
+// to agree on the identifiers for things. this means the EditProxy has to be
+// aware of every "node creation" act that happens, so it can tattle to the server 
+// about it (or so that we can hear from the server what the names of the header/footer
+// nodes are).
+
+// the alternative would be to name the header/footers in predictable ways, so that
+// we don't have to exchange information about them. this could be asking for trouble,
+// though, as we don't want name collisions to ever be possible. ensuring that could
+// become subtle/difficult given that nodes can be added/deleted in any order, and this
+// would also impose rules on every component that might generate an identifier (or
+// we are back to the same problem of centralizing node creation).
+

@@ -1,4 +1,6 @@
-import io from 'socket.io-client'
+import io              from 'socket.io-client'
+import {NODE_TYPE}     from './Def'
+import {TypeSignature} from './TypeSignature'  // todo: not needed after server handles entry/exits
 
 // EditProxy tattles on everything that's done to the node graph.
 // This is sent back to the server, so it can keep the AST in sync.
@@ -64,7 +66,7 @@ export class EditProxy {
     
     
     // apply an add/remove event to the given nodegraph
-    applyEvent(ng, evt) {
+    applyEvent(ng, evt, do_enqueue=true) {
         var act  = {node : "Node",
                     def  : "Def",
                     link : "Link",
@@ -72,20 +74,72 @@ export class EditProxy {
         act      = evt.action + act
         var fn   = ng[act]
         var args = this.unpackArgs(act, evt.details)
-        return fn.apply(ng, args)
+        var new_ng = fn.apply(ng, args)
+        
+        if (do_enqueue && new_ng !== ng) {
+            this.enqueue(evt)
+        }
+        
+        return new_ng
     }
     
     
     // handle and execute an edit action arriving from the server.
     processServerAction = (data) => {
         this.app.setState(prevState => {
-            var ng = this.applyEvent(prevState.ng, data)
+            var ng = this.applyEvent(prevState.ng, data, false)
             if (ng === prevState.ng) {
                 return {}
             } else {
                 return { ng : ng }
             }
         })
+    }
+    
+    
+    // xxx: this should be done by the server, eventually.
+    addEntryExitNodes(ng, node_id) {
+        var new_def_id = ng.nodes.get(node_id).def_id
+        var new_def    = ng.defs.get(new_def_id)
+        if (new_def.hasBody()) {
+            var entry_def_id = this.generateID("def")
+            var exit_def_id  = this.generateID("def")
+            var evts = [{
+                action  : "add", 
+                type    : "def", 
+                details : {
+                    def_id    : entry_def_id,
+                    name      : "entry", 
+                    node_type : NODE_TYPE.NODE_ENTRY,
+                    type_sig  : new TypeSignature(),
+                }}, {
+                action  : "add", 
+                type    : "def", 
+                details : {
+                    def_id    : exit_def_id,
+                    name      : "exit", 
+                    node_type : NODE_TYPE.NODE_EXIT,
+                    type_sig  : new TypeSignature(),
+                }}, {
+                action  : "add", 
+                type    : "node", 
+                details : {
+                    node_id   : this.generateID("node"),
+                    def_id    : entry_def_id,
+                    parent_id : node_id,
+                }}, {
+                action  : "add", 
+                type    : "node", 
+                details : {
+                    node_id   : this.generateID("node"),
+                    def_id    : exit_def_id,
+                    parent_id : node_id,
+                }}]
+            for (var e of evts) {
+                ng = this.applyEvent(ng, e)
+            }
+        }
+        return ng
     }
     
     
@@ -96,19 +150,23 @@ export class EditProxy {
             var t   = this.actionTemplates[act]
             var evt = {action : t.action, type : t.type, details : keyword_args}
             var id_name = evt.type + "_id"
+            var obj_id = null
             
             if (evt.action === "add" && (evt.details[id_name] === undefined || evt.details[id_name] === null)) {
-                evt.details[id_name] = this.generateID(evt.type)
+                obj_id = this.generateID(evt.type)
+                evt.details[id_name] = obj_id
+            } else {
+                obj_id = evt.details[id_name]
             }
             
             var ng = this.applyEvent(prevState.ng, evt)
             
-            if (ng === prevState.ng) {
-                return {}
-            } else {
-                this.enqueue(evt)
-                return {ng : ng}
+            // xxx: to eventually be done by the server.
+            if (evt.action === "add" && evt.type === "node") {
+                ng = this.addEntryExitNodes(ng, obj_id)
             }
+            
+            return {ng : ng}
         })
     }
     
