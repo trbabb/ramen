@@ -1,7 +1,7 @@
 import React from 'react'
 
 
-export class NodeSelectionList extends React.Component {
+export class SelectionList extends React.Component {
     
     
     componentDidMount() {
@@ -11,7 +11,7 @@ export class NodeSelectionList extends React.Component {
     
     
     setFirstItemSelected() {
-        var selectionKey = this.props.nodeList[0].key
+        var selectionKey = this.props.itemList[0].key
         this.props.onListSelectionChanged(selectionKey)
     }
     
@@ -23,7 +23,7 @@ export class NodeSelectionList extends React.Component {
     
     onKeyDown = (evt) => {
         if (evt.key === "ArrowDown" || evt.key === "ArrowUp") {
-            var curIdx = this.props.nodeList.findIndex(x => x.key === this.props.selectionKey)
+            var curIdx = this.props.itemList.findIndex(x => x.key === this.props.selectionKey)
             var newIdx = -1
             if (evt.key === "ArrowDown") {
                 newIdx = curIdx + 1
@@ -31,9 +31,9 @@ export class NodeSelectionList extends React.Component {
                 // pick previous key in list
                 newIdx = curIdx - 1
             }
-            var b = this.props.nodeList.length
+            var b = this.props.itemList.length
             newIdx = (newIdx % b + b) % b // newIdx in range [0, list.length)
-            this.props.onListSelectionChanged(this.props.nodeList[newIdx].key)
+            this.props.onListSelectionChanged(this.props.itemList[newIdx].key)
         }
     }
     
@@ -44,17 +44,17 @@ export class NodeSelectionList extends React.Component {
     
     
     render() {
-        var elems = this.props.nodeList.map((x,i) => {
-                var className = "NodeListElement"
+        var elems = this.props.itemList.map((x,i) => {
+                var className = "SelectionListElement"
                 if (x.key === this.props.selectionKey) {
                     className += " Selected"
                 }
                 return <tr key={i} 
                         className={className}
-                        onMouseOver={evt=>{this.onMouseOverElement(evt,x.key)}}
+                        onMouseOver={evt=>{this.onMouseOverElement(evt, x.key)}}
                         onKeyDown={this.onKeyDown}
                         onClick={this.props.onItemClicked}>
-                    <td>{x.node.name}</td>
+                    <td>{x.val}</td>
                 </tr>
             })
         return (

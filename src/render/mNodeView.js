@@ -85,9 +85,10 @@ export class NodeView extends React.PureComponent {
 
         // emit the nodes which are our direct children
         for (var node_id of this.props.ng.child_nodes) {
-            var n = this.props.ng.nodes.get(node_id);
-            var x = {}
-            if (n.hasBody()) {
+            var n   = this.props.ng.nodes.get(node_id)
+            var def = this.props.ng.defs.get(n.def_id)
+            var x   = {}
+            if (def.hasBody()) {
                 // these are heavy, so don't send them to
                 // the nodes which don't have inner nodes.
                 x.ng          = this.props.ng.ofNode(node_id)  // xxx: this is re-created on every frame D:
@@ -98,7 +99,8 @@ export class NodeView extends React.PureComponent {
                               paneID={this.props.id}
                               mutation_callbacks={this.props.mutation_callbacks}
                               node={n}
-                              {...x}/>);
+                              def={def}
+                              {...x}/>)
         }
 
         return (

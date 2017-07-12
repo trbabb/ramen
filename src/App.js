@@ -8,6 +8,9 @@ import {NodeGraph}     from './state/NodeGraph'
 import {TypeSignature} from './state/TypeSignature'
 import {EditProxy}     from './state/EditProxy'
 
+// for startup node creation. won't be necessary as app progresses.
+import {NODE_TYPE}     from './state/Def'
+
 import {NodeView}      from './render/mNodeView'
 import {Link}          from './render/mLink'
 import {NewNodeDialog} from './render/mNewNodeDialog'
@@ -40,15 +43,15 @@ const STANDIN_TYPE_SIGNATURE = new TypeSignature(['float', 'float', 'float'], [0
 
 // list of nodes read by the "place node" dialog.
 const availableNodes = [
-        new NodeData("+",           STANDIN_TYPE_SIGNATURE),
-        new NodeData("-",           STANDIN_TYPE_SIGNATURE),
-        new NodeData("*",           STANDIN_TYPE_SIGNATURE),
-        new NodeData("/",           STANDIN_TYPE_SIGNATURE),
-        new NodeData("function",    STANDIN_TYPE_SIGNATURE),
-        new NodeData("helloWorld",  STANDIN_TYPE_SIGNATURE),
-        new NodeData("sendHello",   STANDIN_TYPE_SIGNATURE),
-        new NodeData("createWorld", STANDIN_TYPE_SIGNATURE),
-        new NodeData("whatever",    STANDIN_TYPE_SIGNATURE)
+        ["+",           NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
+        ["-",           NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
+        ["*",           NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
+        ["/",           NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
+        ["function",    NODE_TYPE.NODE_FUNCTION, STANDIN_TYPE_SIGNATURE],
+        ["helloWorld",  NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
+        ["sendHello",   NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
+        ["createWorld", NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
+        ["whatever",    NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE]
     ]
 
 
@@ -101,37 +104,51 @@ class App extends React.Component {
 
 
     loadDefaultNodeGraph = () => {
-        this.addNode("wat",
+        this.addDef("wat",
+            NODE_TYPE.NODE_FNCALL,
             new TypeSignature(
                 ['float','float','float','float'],
                 [0,1,2]))
-        this.addNode("+",
+        this.addDef("+",
+            NODE_TYPE.NODE_FNCALL,
             new TypeSignature(
                 ['int','int','int'],
                 [0,1]))
-        this.addNode("a function named \"💩\"",
+        this.addDef("a function named \"💩\"",
+            NODE_TYPE.NODE_FNCALL,
             new TypeSignature(
                 ['float','float','float','float'],
                 [0,1,2]))
-        this.addNode("function",
+        this.addDef("function",
+            NODE_TYPE.NODE_FUNCTION,
             new TypeSignature(
                 ['str','str','str'],
                 [0,1]))
-        this.addNode("child node",
+        this.addDef("child node",
+            NODE_TYPE.NODE_FNCALL,
             new TypeSignature(
                 ['str','str'],
-                [0]),
-            3) // parent=3
-        this.addNode("another kid",
+                [0]))
+        this.addDef("another kid",
+            NODE_TYPE.NODE_FNCALL,
             new TypeSignature(
                 ['str','str','str'],
-                [0,1]),
-            3) // parent=3
-
-        this.addNode("type glyph demo",
+                [0,1]))
+        this.addDef("type glyph demo",
+            NODE_TYPE.NODE_FNCALL,
             new TypeSignature(
                 ['int','float','bool','type','str','list','proc','int'],
                 [0,1,2,3,4,5,6]))
+        
+        
+        for (var i = 0; i < 7; ++i) {
+            // parent nodes 4 and 5 to node 3 (the fn)
+            this.addNode(i, (i === 4 || i === 5) ? 3 : null)
+        }
+        
+        for (var d of availableNodes) {
+            this.addDef.apply(this, d)
+        }
 
         this.setPosition(0, [100,200])
         this.setPosition(1, [300,400])
@@ -151,8 +168,13 @@ class App extends React.Component {
     }
 
 
-    addNode(name, type_sig, parent_id=null) {
-        this.editProxy.action("addNode", [name, type_sig, parent_id])
+    addDef(name, node_type, type_sig) {
+        this.editProxy.action("addDef", [name, node_type, type_sig])
+    }
+    
+    
+    addNode(def_id, parent_id=null) {
+        this.editProxy.action("addNode", [def_id, parent_id])
     }
 
 
@@ -245,7 +267,8 @@ class App extends React.Component {
         }
         if (evt.key === 'Delete' && this.state.port_hovered.port_id !== null) {
           const ph = this.state.port_hovered;
-          this.editProxy.action("removePort", [ph.node_id, ph.port_id])
+          var n    = this.state.ng.nodes.get(ph.node_id)
+          this.editProxy.action("removePort", [n.def_id, ph.port_id])
         }
     }
     
@@ -306,12 +329,12 @@ class App extends React.Component {
     }
 
 
-    onNodeCreate = (node) => {
+    onNodeCreate = (def_id) => {
         this.setState(prevState => {
             return {showing_node_dialog : false}
         })
-        if (node !== null) {
-           this.editProxy.action("addNode", [node.name, node.type_sig])
+        if (def_id !== null) {
+           this.editProxy.action("addNode", [def_id])
         }
     }
 
@@ -338,8 +361,8 @@ class App extends React.Component {
         return (
             <NewNodeDialog
                 className="NewNodeDialog"
-                onNodeCreate={this.onNodeCreate}
-                availableNodes={availableNodes}/>
+                onAccept={this.onNodeCreate}
+                defs={this.state.ng.defs}/>
         )
     }
 

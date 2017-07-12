@@ -1,5 +1,5 @@
-import React               from 'react'
-import {NodeSelectionList} from './mNodeSelectionList'
+import React           from 'react'
+import {NarrowingList} from './mNarrowingList'
 
 
 export class NewNodeDialog extends React.Component {
@@ -7,96 +7,27 @@ export class NewNodeDialog extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            filterString : "",
-            selectionKey : -1
+            selected_def : -1,
         }
-        this.state.filteredList = this.makeFilteredList("", this.props.availableNodes)
-        this.inputElem = null
+        this.items = this.props.defs.map(def => def.name)
     }
     
     
-    makeFilteredList(filterString, nodeList) {
-        var filteredList = nodeList.map((x,i) => ({key:i, node:x}))
-        if (filterString !== "") {
-            filteredList = filteredList.filter(x => {
-                return x.node.name.toLowerCase().includes(filterString.toLowerCase())
-            })
-        }
-        return filteredList
-    }
-    
-    
-    componentDidMount() {
-        document.addEventListener('keydown', this.onKeyDown);
-        this.inputElem.focus()
-    }
-    
-    
-    componentWillUnmount() {
-        document.removeEventListener('keydown', this.onKeyDown)
-    }
-    
-    
-    onInputChanged = (evt) => {
-        var val = evt.target.value
-        this.setState(prevState => {
-            var s = {
-                filterString : val,
-                filteredList : this.makeFilteredList(val, this.props.availableNodes)
-            }
-            
-            if (s.filteredList.findIndex(x => x.key === prevState.selectionKey) < 0) {
-                if (s.filteredList.length > 0) {
-                    s.selectionKey = s.filteredList[0].key
-                } else {
-                    s.selectionKey = -1
-                }
-            }
-            
-            return s
+    onListSelectionChanged = (selection_key) => {
+        this.setState({
+            selected_def : selection_key
         })
-    }
-    
-    
-    onListSelectionChanged = (selectionKey) => {
-        this.setState({selectionKey : selectionKey})
-    }
-    
-    
-    accept = () => {
-        if (this.state.selectionKey >= 0) {
-            var retNode = this.props.availableNodes[this.state.selectionKey]
-            this.props.onNodeCreate(retNode)
-        } else {
-            // nothing selected
-            this.props.onNodeCreate(null)
-        }
-    }
-    
-    
-    onKeyDown = (evt) => {
-        if (evt.key === 'Enter') {
-            this.accept()
-        } else if (evt.key === 'Escape') {
-            // canceled by user
-            this.props.onNodeCreate(null)
-        }
     }
     
     
     render() {
         
         return (
-            <div className="NewNodeDialog" onKeyDown={this.onKeyDown}>
-                <input type="text" className="FunctionNameInput"
-                    onChange={this.onInputChanged}
-                    ref={elem => {this.inputElem = elem}}/>
-                <NodeSelectionList
-                    nodeList={this.state.filteredList}
-                    filterString={this.state.filterString}
-                    selectionKey={this.state.selectionKey}
-                    onListSelectionChanged={this.onListSelectionChanged}
-                    onItemClicked={this.accept}/>
+            <div className="NewNodeDialog">
+                <NarrowingList 
+                    items={this.items} 
+                    onAccept={this.props.onAccept}
+                    onListSelectionChanged={this.onListSelectionChanged}/>
             </div>
         )
     }

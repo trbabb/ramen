@@ -14,22 +14,19 @@ import * as _     from 'lodash'
 export class NodeData {
 
 
-    constructor(name, type_sig, parent=null, links_by_id=null) {
-        this.name        = name
-        this.type_sig    = type_sig
+    constructor(def_id, parent=null, links_by_id=null) {
+        this.def_id      = def_id
         this.parent      = parent
-        this.links_by_id = (links_by_id === null) ? new Map() : links_by_id;
-        this.child_nodes = new Set();
-        this.child_links = new Set();
+        this.links_by_id = ((links_by_id === null) ? new Map() : links_by_id)
+        this.child_nodes = new Set()
+        this.child_links = new Set()
+        this.entry_id    = null
+        this.exit_id     = null
         this.position    = [0,0]
     }
-
-
-    isPortSink(port_id) {
-        return this.type_sig.isSink(port_id);
-    }
-
-
+    
+    
+    // connect a link to one of the sources/sinks of this node.
     addLink(port_id, link_id) {
         var n = _.clone(this)
         n.links_by_id = this.links_by_id.update(
@@ -38,55 +35,42 @@ export class NodeData {
                 (s) => {return s.add(link_id)})
         return n
     }
-
-
+    
+    
+    // add a node which is a direct child of this node;
+    // i.e. add it to this node's "body".
     addChildNode(node_id) {
         var n = _.clone(this)
         n.child_nodes = this.child_nodes.add(node_id)
         return n
     }
-
-
+    
+    
+    // add a new link between nodes which are direct children.
     addChildLink(link_id) {
         var n = _.clone(this)
         n.child_links = this.child_links.add(link_id)
         return n
     }
-
-
+    
+    
+    // remove a node which is a direct child of this node.
     removeChildNode(node_id) {
         var n = _.clone(this)
         n.child_nodes = this.child_nodes.remove(node_id)
         return n
     }
-
-
+    
+    
+    // remove some link which connects two child nodes.
     removeChildLink(link_id) {
         var n = _.clone(this)
         n.child_links = this.child_links.remove(link_id)
         return n
     }
-
-
-    addPort(type_id, is_sink, port_id=null) {
-        var n   = _.clone(this)
-        port_id = (port_id === null || port_id === undefined) ?
-            // if port_id unspecified, choose largest id + 1
-            (_.max(n.type_sig.type_by_port_id.keySeq().toArray()) + 1) :
-            // else, use specified
-            port_id
-        n.type_sig = n.type_sig.addPort(port_id, type_id, is_sink)
-        return {node:n,id:port_id}
-    }
-
-
-    removePort(port_id) {
-        var n = _.clone(this)
-        n.type_sig = n.type_sig.removePort(port_id)
-        return {node:n,id:port_id}
-    }
-
-
+    
+    
+    // disconnect a link from a source/sink of this node.
     removeLink(port_id, link_id) {
         if (this.links_by_id.has(port_id) && this.links_by_id.get(port_id).includes(link_id)) {
             var n = _.clone(this);
@@ -96,26 +80,23 @@ export class NodeData {
             return this
         }
     }
-
-
+    
+    
+    // move this node to the specified position (relative to its parent).
     setPosition(position) {
         var n = _.clone(this)
         n.position = position
         return n
     }
-
-
+    
+    
+    // return the set of links which connect the direct children of this node.
     getLinks(port_id) {
         if (this.links_by_id.has(port_id)) {
             return this.links_by_id.get(port_id);
         } else {
             return new Set();
         }
-    }
-
-
-    hasBody() {
-        return (this.name === "function" || this.name === "loop")
     }
 
 

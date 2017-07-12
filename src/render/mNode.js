@@ -23,7 +23,7 @@ export class MNode extends React.PureComponent {
     
     
     makePorts(doSinks) {
-        var sig = this.props.node.type_sig;
+        var sig = this.props.def.type_sig;
         var z   = []
         
         // we HAVE to use function application here, because the body of a loop
@@ -37,6 +37,7 @@ export class MNode extends React.PureComponent {
                 key           = {port_id}
                 port_id       = {port_id}
                 node_id       = {that.props.node_id}
+                def_id        = {that.props.node.def_id}
                 type_id       = {type_id}
                 connected     = {links !== undefined && links.size > 0}
                 direction     = {doSinks ? [0,-1] : [0,1]}
@@ -54,7 +55,7 @@ export class MNode extends React.PureComponent {
         return (
             <div className="MNode Function">
                 <div className="FnHeader Function">
-                    <div className="CallName Function">{this.props.node.name}</div>
+                    <div className="CallName Function">{this.props.def.name}</div>
                     {this.makePorts(false)}
                     <PortConfig handlePortConfigClick={this.handlePortConfigClick}/>
                 </div>
@@ -79,7 +80,7 @@ export class MNode extends React.PureComponent {
                     <PortConfig handlePortConfigClick={this.handlePortConfigClick}/>
                 </div>
                 <div className="CallName">
-                    {this.props.node.name}
+                    {this.props.def.name}
                 </div>
                 <div className="PortGroup SourcePortGroup">
                   <PortConfig handlePortConfigClick={this.handlePortConfigClick}/>
@@ -97,7 +98,7 @@ export class MNode extends React.PureComponent {
                     position={{x : p[0], y : p[1]}}
                     cancel=".NodeView"
                     onDrag={this.onDrag}>
-                {this.props.node.hasBody() ? this.renderFunctionDefBody() : this.renderPlainBody()}
+                {this.props.def.hasBody() ? this.renderFunctionDefBody() : this.renderPlainBody()}
             </Draggable>
         );
     }

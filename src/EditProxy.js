@@ -1,6 +1,6 @@
 import io from 'socket.io-client'
 
-// EditProxy tattles on everything that's done to the node graph.
+// EditManager tattles on everything that's done to the node graph.
 // This is sent back to the server, so it can keep the AST in sync.
 
 // todo: the "action" key is redundant with the message key.
@@ -15,6 +15,8 @@ export class EditProxy {
             this.socket.on('connect', (socket) => {resolve()})
             this.socket.on('disconnect',    () => {reject()})
             this.socket.on('error',         () => {reject()})
+            this.socket.on('add',           this.processAction)
+            this.socket.on('remove',        this.processAction)
         }).then(() => {
             this.connected = true
             this.app.setConnected(true)
@@ -24,15 +26,16 @@ export class EditProxy {
             this.app.setConnected(false)
         })
         this.queued = []
+        
         this.actionTemplates = {
-            addNode    : {action : "add",    type : "node", args : ["name", "type_sig", "parent_id", "id"]},
+            addNode    : {action : "add",    type : "node", args : ["def_id", "parent_id", "id"]},
             removeNode : {action : "remove", type : "node", args : ["node_id"]},
-            addDef     : {action : "add",    type : "def",  args : ["name", "node_type", "type_sig", "def_id"]},
-            removeDef  : {action : "remove", type : "def",  args : ["def_id"]},
+            addDef     : {action : "add",    type : "def",  args : ["name", "node_type", "sig"]}
+            removeDef  : {action : "remove", type : "def",  args : ["def_id"]}
             addLink    : {action : "add",    type : "link", args : ["port_0", "port_1", "id"]},
             removeLink : {action : "remove", type : "link", args : ["link_id"]},
-            addPort    : {action : "add",    type : "port", args : ["def_id", "type_id", "is_sink", "id"]},
-            removePort : {action : "remove", type : "port", args : ["def_id", "port_id"]},
+            addPort    : {action : "add",    type : "port", args : ["node_id", "type_id", "is_sink", "id"]},
+            removePort : {action : "remove", type : "port", args : ["node_id", "port_id"]},
         }
     }
     
@@ -73,9 +76,8 @@ export class EditProxy {
         for (var i = 0; i < args.length; ++i) {
             var a = args[i]
             var argname = t.args[i]
-            // todo: mandate id
             if (argname === "id" && (a === null || a === undefined)) {
-                a = id
+                a = null
             }
             d[argname] = a
         }
@@ -85,17 +87,21 @@ export class EditProxy {
     
     
     action(act, args) {
-        this.app.setState(prevState => {
-            var f       = prevState.ng[act]
-            var {ng,id} = f.apply(prevState.ng, args) // kwargs like python would make this all nicer :[
-            if (ng === prevState.ng) {
-                return {}
-            } else {
-                var evt = this.actionForCall(act, args, id)
-                this.enqueue(evt)
-                return {ng : ng}
-            }
-        })
+        this.enqueue(this.actionForCall(act,args))
+        
+        // disabled now that we are deferring all state updates to the server:
+        
+        // this.app.setState(prevState => {
+        //     var f       = prevState.ng[act]
+        //     var {ng,id} = f.apply(prevState.ng, args) // kwargs like python would make this all nicer :[
+        //     if (ng === prevState.ng) {
+        //         return {}
+        //     } else {
+        //         var evt = this.actionForCall(act, args, id)
+        //         this.enqueue(evt)
+        //         return {ng : ng}
+        //     }
+        // })
     }
     
     

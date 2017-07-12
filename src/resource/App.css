@@ -121,6 +121,6 @@ img {
   background-color: blue;
 }
 
-.NodeListElement.Selected > * {
+.SelectionListElement.Selected > * {
   background-color: #ffdd00;
 }
