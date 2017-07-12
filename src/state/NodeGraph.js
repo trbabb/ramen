@@ -239,7 +239,7 @@ export class NodeGraph {
     }
 
 
-    addPort(port_id, def_id, type_id, is_sink) {
+    addPort(def_id, port_id, type_id, is_sink) {
         var def = this.defs.get(def_id)
         def     = def.addPort(port_id, type_id, is_sink)
         

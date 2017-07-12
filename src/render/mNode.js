@@ -61,7 +61,10 @@ export class MNode extends React.PureComponent {
                     <div className="CallName Function">{this.props.def.name}</div>
                     <div className="PortGroup SourcePortGroup BodyEntry">
                         {this.makePorts(this.props.node.entry_id, entry_node, entry_def.type_sig, false)}
-                        <PortConfig handlePortConfigClick={this.handlePortConfigClick}/>
+                        <PortConfig 
+                            is_sink={false}
+                            def_id={entry_node.def_id}
+                            handlePortConfigClick={this.props.mutation_callbacks.onPortConfigClick}/>
                     </div>
                 </div>
                 <NodeView
@@ -69,8 +72,11 @@ export class MNode extends React.PureComponent {
                     port_coords={this.props.port_coords}
                     mutation_callbacks={this.props.mutation_callbacks}/>
                 <div className="PortGroup SinkPortGroup BodyExit">
+                    <PortConfig 
+                        is_sink={true}
+                        def_id={exit_node.def_id}
+                        handlePortConfigClick={this.props.mutation_callbacks.onPortConfigClick}/>
                     {this.makePorts(this.props.node.exit_id, exit_node, exit_def.type_sig, true)}
-                    <PortConfig handlePortConfigClick={this.handlePortConfigClick}/>
                 </div>
                 <div className="PortGroup SinkPortGroup">
                     {this.makePorts(this.props.node_id, this.props.node, this.props.def.type_sig, false)}

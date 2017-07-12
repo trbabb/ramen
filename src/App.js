@@ -70,7 +70,8 @@ class App extends React.Component {
             onPortHovered         : this.onPortHovered,
             onPortMoved           : this.onPortMoved,
             onLinkEndpointClicked : this.onLinkEndpointClicked,
-            onNodeMove            : this.onNodeMove
+            onNodeMove            : this.onNodeMove,
+            onPortConfigClick     : this.onPortConfigClick,
         }
         this.editProxy = new EditProxy(this)
     }
@@ -314,6 +315,15 @@ class App extends React.Component {
             // cancel the active link.
             this.setState({partial_link : null});
         }
+    }
+    
+    
+    onPortConfigClick = ({def_id, is_sink}) => {
+        this.editProxy.action("addPort", {
+            def_id  : def_id, 
+            is_sink : is_sink,
+            type_id : "str",
+        })
     }
 
 

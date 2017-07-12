@@ -14,8 +14,8 @@ export class PortConfig extends React.PureComponent {
                 className={classes.join(" ")}
                 draggable="false"
                 onClick={(evt) => {
-                    var e = {node_id   : this.props.node_id,
-                             port_id   : this.props.port_id,
+                    var e = {def_id    : this.props.def_id,
+                             is_sink   : this.props.is_sink,
                              elem      : this.elem,
                              mouse_evt : evt}
                     this.props.handlePortConfigClick(e);
