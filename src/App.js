@@ -283,6 +283,7 @@ class App extends React.Component {
         this.setState(prevState => ({
             partial_link : port
         }));
+        
         this.editProxy.action("removeLink", {link_id:linkID})
     }
 

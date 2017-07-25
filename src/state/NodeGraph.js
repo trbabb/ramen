@@ -42,9 +42,7 @@ export class NodeGraph {
     addDef(def_id, name, node_type, sig) {
         var ng  = _.clone(this)
         if (!(sig instanceof TypeSignature)) {
-            let all_ports = Object.assign({}, sig.source_types, sig.sink_types)
-            let sink_ids  = sig.sink_types.keys()
-            sig = new TypeSignature(all_ports, sink_ids)
+            sig = new TypeSignature(sig.sink_types, sig.source_types)
         }
         ng.defs = this.defs.set(def_id, new Def(name, node_type, sig))
         

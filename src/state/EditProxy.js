@@ -101,52 +101,6 @@ export class EditProxy {
     }
     
     
-    // xxx: this should be done by the server, eventually.
-    addEntryExitNodes(ng, node_id) {
-        var new_def_id = ng.nodes.get(node_id).def_id
-        var new_def    = ng.defs.get(new_def_id)
-        if (new_def.hasBody()) {
-            var entry_def_id = this.generateID("def")
-            var exit_def_id  = this.generateID("def")
-            var evts = [{
-                action  : "add", 
-                type    : "def", 
-                details : {
-                    def_id    : entry_def_id,
-                    name      : "entry", 
-                    node_type : NODE_TYPE.NODE_ENTRY,
-                    type_sig  : new TypeSignature(),
-                }}, {
-                action  : "add", 
-                type    : "def", 
-                details : {
-                    def_id    : exit_def_id,
-                    name      : "exit", 
-                    node_type : NODE_TYPE.NODE_EXIT,
-                    type_sig  : new TypeSignature(),
-                }}, {
-                action  : "add", 
-                type    : "node", 
-                details : {
-                    node_id   : this.generateID("node"),
-                    def_id    : entry_def_id,
-                    parent_id : node_id,
-                }}, {
-                action  : "add", 
-                type    : "node", 
-                details : {
-                    node_id   : this.generateID("node"),
-                    def_id    : exit_def_id,
-                    parent_id : node_id,
-                }}]
-            for (var e of evts) {
-                ng = this.applyEvent(ng, e)
-            }
-        }
-        return ng
-    }
-    
-    
     // request an action be executed. After doing it, tell the server.
     action(act, keyword_args) {
         var f   = this.app.ng

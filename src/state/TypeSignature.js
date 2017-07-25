@@ -5,11 +5,10 @@ import * as _     from 'lodash'
 export class TypeSignature {
     
     
-    constructor(type_ids=[],sink_ids=[]) {
-        this.type_by_port_id = new Map(_.invert(type_ids))
-        this.sink_ids        = new Set(sink_ids)
-        this.src_ids         = new Set(this.type_by_port_id.keySeq().filter(
-                                    k => !this.sink_ids.has(k) ))
+    constructor(sink_ids={},src_ids={}) {
+        this.type_by_port_id = new Map(Object.assign({}, sink_ids, src_ids))
+        this.sink_ids        = new Set(Object.keys(sink_ids))
+        this.src_ids         = new Set(Object.keys(src_ids))
     }
     
     

@@ -51,6 +51,10 @@ export class MNode extends React.PureComponent {
     
     
    renderFunctionDefBody() {
+        if (!this.props.ng.nodes.has(this.props.node.entry_id) ||
+            !this.props.ng.nodes.has(this.props.node.exit_id)) {
+            return <div className = "MNode Function"></div>
+        }
         var entry_node = this.props.ng.nodes.get(this.props.node.entry_id)
         var exit_node  = this.props.ng.nodes.get(this.props.node.exit_id)
         var entry_def  = this.props.ng.defs.get(entry_node.def_id)
