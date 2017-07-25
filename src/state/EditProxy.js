@@ -30,7 +30,7 @@ export class EditProxy {
             removeNode : {action : "remove", type : "node", args : ["node_id"]},
             addDef     : {action : "add",    type : "def",  args : ["def_id", "name", "node_type", "type_sig"]},
             removeDef  : {action : "remove", type : "def",  args : ["def_id"]},
-            addLink    : {action : "add",    type : "link", args : ["link_id", "port_0", "port_1"]},
+            addLink    : {action : "add",    type : "link", args : ["link_id", "link"]},
             removeLink : {action : "remove", type : "link", args : ["link_id"]},
             addPort    : {action : "add",    type : "port", args : ["def_id", "port_id", "type_id", "is_sink"]},
             removePort : {action : "remove", type : "port", args : ["def_id", "port_id"]},

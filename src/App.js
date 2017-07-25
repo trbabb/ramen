@@ -200,11 +200,12 @@ class App extends React.Component {
             this.setState({partial_link : p})
         } else {
             // complete a partial link
-            var link = this.state.partial_link
+            var anchor_port = this.state.partial_link
             this.setState(prevState => ({
                 partial_link : null
             }))
-            this.editProxy.action("addLink", {port_0 : link, port_1 : p})
+            var link = this.state.ng.constructLink(anchor_port, p)
+            this.editProxy.action("addLink", {link})
         }
     }
 

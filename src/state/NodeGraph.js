@@ -132,9 +132,10 @@ export class NodeGraph {
         ng.nodes = ng.nodes.remove(node_id)
         return ng
     }
-
-
-    addLink(link_id, port_0, port_1) {
+    
+    
+    constructLink(port_0, port_1) {
+        // return a Link object for two ports, such that the source/sink are correctly identified.
         var p0_def  = this.defs.get(this.nodes.get(port_0.node_id).def_id)
         var p1_def  = this.defs.get(this.nodes.get(port_1.node_id).def_id)
         var p0_sink = p0_def.type_sig.isSink(port_0.port_id)
@@ -142,8 +143,7 @@ export class NodeGraph {
         
         if (p0_sink === p1_sink) {
             // can't connect a src to a src or a sink to a sink.
-            console.log("Rejected link; must connect source to sink.")
-            return this;
+            return null
         }
         
         // order the link source to sink.
@@ -159,62 +159,58 @@ export class NodeGraph {
                 src  : port_0
             }
         }
+        return new_link
+    }
+
+
+    addLink(link_id, link) {
+        
+        // invalid connection
+        if (link === null) return this;
         
         // get endpoint nodes
-        var sink_id    = new_link.sink.node_id;
-        var src_id     = new_link.src.node_id;
+        var sink_id    = link.sink.node_id;
+        var src_id     = link.src.node_id;
         var sink_node  = this.nodes.get(sink_id);
         var src_node   = this.nodes.get(src_id);
         // check for a link matching the one we're about to make.
-        var cxn_exists = sink_node.getLinks(new_link.sink.port_id)
+        var cxn_exists = sink_node.getLinks(link.sink.port_id)
         cxn_exists = cxn_exists.find(x => {
-            return _.isEqual(this.links.get(x), new_link);
+            return _.isEqual(this.links.get(x), link);
         });
         
         var src_parent  = src_node.parent;
         var sink_parent = sink_node.parent;
+    
+        // 'mutate' the nodes
+        src_node  =  src_node.addLink(link.src.port_id,  link_id);
+        sink_node = sink_node.addLink(link.sink.port_id, link_id);
         
-        if (cxn_exists !== undefined) {
-            // link exists; don't make a redundancy.
-            console.log("Rejected link; exists.");
-        } if (sink_parent !== src_parent &&
-              sink_parent !== src_id &&
-              src_parent  !== sink_id) {
-            console.log("Rejected link; links must be to siblings or parent-to-child.")
+        // clobber the old node entries
+        var ng   = _.clone(this)
+        ng.nodes = this.nodes.set(src_id,  src_node);
+        ng.nodes =   ng.nodes.set(sink_id, sink_node);
+        
+        // add the link
+        ng.links = this.links.set(link_id, link);
+        
+        // add the link to the parent
+        var parent_id = src_parent;
+        if (sink_parent !== src_parent && sink_parent === src_id) {
+            // in this case, the parent of the sink is the source.
+            // the link should belong to the source (outer) node,
+            // not the *parent* of the outer node.
+            parent_id = sink_parent;
+        }
+        if (parent_id === null) {
+            ng.child_links = this.child_links.add(link_id);
         } else {
-            console.log("Accepted link.");
-            // 'mutate' the nodes
-            src_node  =  src_node.addLink(new_link.src.port_id,  link_id);
-            sink_node = sink_node.addLink(new_link.sink.port_id, link_id);
-            
-            // clobber the old node entries
-            var ng   = _.clone(this)
-            ng.nodes = this.nodes.set(src_id,  src_node);
-            ng.nodes =   ng.nodes.set(sink_id, sink_node);
-            
-            // add the link
-            ng.links = this.links.set(link_id, new_link);
-            
-            // add the link to the parent
-            var parent_id = src_parent;
-            if (sink_parent !== src_parent && sink_parent === src_id) {
-                // in this case, the parent of the sink is the source.
-                // the link should belong to the source (outer) node,
-                // not the *parent* of the outer node.
-                parent_id = sink_parent;
-            }
-            if (parent_id === null) {
-                ng.child_links = this.child_links.add(link_id);
-            } else {
-                var parent_node = this.nodes.get(parent_id)
-                parent_node = parent_node.addChildLink(link_id)
-                ng.nodes = ng.nodes.set(parent_id, parent_node)
-            }
-            
-            return ng
+            var parent_node = this.nodes.get(parent_id)
+            parent_node = parent_node.addChildLink(link_id)
+            ng.nodes = ng.nodes.set(parent_id, parent_node)
         }
         
-        return this
+        return ng
     }
 
 
