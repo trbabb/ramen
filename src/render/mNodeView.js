@@ -88,7 +88,7 @@ export class NodeView extends React.PureComponent {
         for (var node_id of this.props.ng.child_nodes) {
             var n   = this.props.ng.nodes.get(node_id)
             var def = this.props.ng.defs.get(n.def_id)
-            if (def.node_type === NODE_TYPE.NODE_ENTRY || def.node_type == NODE_TYPE.NODE_EXIT) {
+            if (def.node_type === NODE_TYPE.NODE_ENTRY || def.node_type === NODE_TYPE.NODE_EXIT) {
                 // magic header / footer node. don't render.
                 continue
             }

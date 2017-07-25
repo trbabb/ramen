@@ -105,62 +105,7 @@ class App extends React.Component {
     }
 
 
-    loadDefaultNodeGraph = () => {
-        this.addDef("wat",
-            NODE_TYPE.NODE_FNCALL,
-            new TypeSignature(
-                ['float','float','float','float'],
-                [0,1,2]))
-        this.addDef("+",
-            NODE_TYPE.NODE_FNCALL,
-            new TypeSignature(
-                ['int','int','int'],
-                [0,1]))
-        this.addDef("a function named \"💩\"",
-            NODE_TYPE.NODE_FNCALL,
-            new TypeSignature(
-                ['float','float','float','float'],
-                [0,1,2]))
-        this.addDef("function",
-            NODE_TYPE.NODE_FUNCTION,
-            new TypeSignature(
-                ['proc'],
-                []))
-        this.addDef("child node",
-            NODE_TYPE.NODE_FNCALL,
-            new TypeSignature(
-                ['str','str'],
-                [0]))
-        this.addDef("another kid",
-            NODE_TYPE.NODE_FNCALL,
-            new TypeSignature(
-                ['str','str','str'],
-                [0,1]))
-        this.addDef("type glyph demo",
-            NODE_TYPE.NODE_FNCALL,
-            new TypeSignature(
-                ['int','float','bool','type','str','list','proc','int'],
-                [0,1,2,3,4,5,6]))
-        
-        
-        for (var i = 0; i < 7; ++i) {
-            // add a node for each def above.
-            // parent nodes 4 and 5 to node 3 (the fn node).
-            this.addNode(i, (i === 4 || i === 5) ? 3 : null)
-        }
-        
-        // add all the extra defs
-        for (var d of availableNodes) {
-            this.addDef.apply(this, d)
-        }
-
-        this.setPosition(0, [100,200])
-        this.setPosition(1, [300,400])
-    }
-
-
     componentDidMount = () => {
-        this.loadDefaultNodeGraph()
         document.addEventListener('keydown', this.onHotKeyPressed);
     }
 
@@ -347,7 +292,8 @@ class App extends React.Component {
             return {showing_node_dialog : false}
         })
         if (def_id !== null) {
-           this.editProxy.action("addNode", {def_id})
+            let parent_id = null    // xxx: get the node_id of the node the mouse is over
+            this.editProxy.action("addNode", {def_id, parent_id})
         }
     }
 

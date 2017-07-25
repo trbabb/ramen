@@ -6,7 +6,7 @@ export class TypeSignature {
     
     
     constructor(type_ids=[],sink_ids=[]) {
-        this.type_by_port_id = new Map(type_ids.map( (v,i) => [i,v] ))
+        this.type_by_port_id = new Map(_.invert(type_ids))
         this.sink_ids        = new Set(sink_ids)
         this.src_ids         = new Set(this.type_by_port_id.keySeq().filter(
                                     k => !this.sink_ids.has(k) ))

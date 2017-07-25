@@ -3,6 +3,7 @@ import * as _           from 'lodash'
 
 import {NodeData}       from './NodeData'
 import {Def, NODE_TYPE} from './Def'
+import {TypeSignature}  from './TypeSignature'
 
 
 // an "immutable" NodeGraph.
@@ -40,6 +41,11 @@ export class NodeGraph {
 
     addDef(def_id, name, node_type, sig) {
         var ng  = _.clone(this)
+        if (!(sig instanceof TypeSignature)) {
+            let all_ports = Object.assign({}, sig.source_types, sig.sink_types)
+            let sink_ids  = sig.sink_types.keys()
+            sig = new TypeSignature(all_ports, sink_ids)
+        }
         ng.defs = this.defs.set(def_id, new Def(name, node_type, sig))
         
         return ng
@@ -258,6 +264,18 @@ export class NodeGraph {
         ng.defs = ng.defs.set(def_id, def)
         
         return ng
+    }
+    
+    
+    addType(type_id, code) {
+        // xxx todo: this
+        return this
+    }
+    
+    
+    removeType(type_id) {
+        // xxx todo: this
+        return this
     }
 
 

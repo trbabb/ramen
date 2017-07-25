@@ -34,7 +34,9 @@ export class EditProxy {
             removeLink : {action : "remove", type : "link", args : ["link_id"]},
             addPort    : {action : "add",    type : "port", args : ["def_id", "port_id", "type_id", "is_sink"]},
             removePort : {action : "remove", type : "port", args : ["def_id", "port_id"]},
-        }
+            addType    : {action : "add",    type : "type", args : ["type_id", "code"]},
+            removeType : {action : "remove", type : "type", args : ["type_id"]}
+        } 
         this.max_id = {
             node : 0,
             link : 0,
@@ -70,7 +72,8 @@ export class EditProxy {
         var act  = {node : "Node",
                     def  : "Def",
                     link : "Link",
-                    port : "Port"}[evt.type]
+                    port : "Port",
+                    type : "Type"}[evt.type]
         act      = evt.action + act
         var fn   = ng[act]
         var args = this.unpackArgs(act, evt.details)
@@ -86,6 +89,7 @@ export class EditProxy {
     
     // handle and execute an edit action arriving from the server.
     processServerAction = (data) => {
+        console.log("got", data)
         this.app.setState(prevState => {
             var ng = this.applyEvent(prevState.ng, data, false)
             if (ng === prevState.ng) {
@@ -145,29 +149,10 @@ export class EditProxy {
     
     // request an action be executed. After doing it, tell the server.
     action(act, keyword_args) {
-        this.app.setState(prevState => {
-            var f   = prevState.ng[act]
-            var t   = this.actionTemplates[act]
-            var evt = {action : t.action, type : t.type, details : keyword_args}
-            var id_name = evt.type + "_id"
-            var obj_id = null
-            
-            if (evt.action === "add" && (evt.details[id_name] === undefined || evt.details[id_name] === null)) {
-                obj_id = this.generateID(evt.type)
-                evt.details[id_name] = obj_id
-            } else {
-                obj_id = evt.details[id_name]
-            }
-            
-            var ng = this.applyEvent(prevState.ng, evt)
-            
-            // xxx: to eventually be done by the server.
-            if (evt.action === "add" && evt.type === "node") {
-                ng = this.addEntryExitNodes(ng, obj_id)
-            }
-            
-            return {ng : ng}
-        })
+        var f   = this.app.ng
+        var t   = this.actionTemplates[act]
+        var evt = {action : t.action, type : t.type, details : keyword_args}
+        this.enqueue(evt)
     }
     
     
@@ -175,8 +160,10 @@ export class EditProxy {
     // If the server is not connected, remember it for later.
     enqueue(act) {
         if (this.connected) {
-            this.socket.emit(act.action, act)
+            this.socket.emit('graph_edit', act)
+            console.log('graph_edit', act)
         } else {
+            console.log('queued', act)
             this.queued.push(act)
         }
     }
@@ -188,7 +175,8 @@ export class EditProxy {
         if (this.connected) {
             while (this.queued.length > 0) {
                 var act = this.queued.pop()
-                this.socket.emit(act.action, act)
+                this.socket.emit('graph_edit', act)
+                console.log('graph_edit',act)
             }
         }
     }
