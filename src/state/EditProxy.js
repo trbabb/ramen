@@ -15,7 +15,7 @@ export class EditProxy {
             this.socket.on('connect', (socket) => {resolve()})
             this.socket.on('disconnect',    () => {reject()})
             this.socket.on('error',         () => {reject()})
-            this.socket.on('graph_edit', this.processServerAction)
+            this.socket.on('graph_edit', this.onNetworkEvent)
         }).then(() => {
             this.connected = true
             this.app.setConnected(true)
@@ -34,7 +34,7 @@ export class EditProxy {
             removeLink : {action : "remove", type : "link", args : ["link_id"]},
             addPort    : {action : "add",    type : "port", args : ["def_id", "port_id", "type_id", "is_sink"]},
             removePort : {action : "remove", type : "port", args : ["def_id", "port_id"]},
-            addType    : {action : "add",    type : "type", args : ["type_id", "code"]},
+            addType    : {action : "add",    type : "type", args : ["type_id", "type_info"]},
             removeType : {action : "remove", type : "type", args : ["type_id"]}
         } 
         this.max_id = {
@@ -88,8 +88,8 @@ export class EditProxy {
     
     
     // handle and execute an edit action arriving from the server.
-    processServerAction = (data) => {
-        console.log("got", data)
+    onNetworkEvent = (data) => {
+        console.log("from network:", data)
         this.app.setState(prevState => {
             var ng = this.applyEvent(prevState.ng, data, false)
             if (ng === prevState.ng) {
@@ -113,11 +113,10 @@ export class EditProxy {
     // Request that an event be sent back to the server.
     // If the server is not connected, remember it for later.
     enqueue(act) {
+        console.log("    EMIT: ", act)
         if (this.connected) {
             this.socket.emit('graph_edit', act)
-            console.log('graph_edit', act)
         } else {
-            console.log('queued', act)
             this.queued.push(act)
         }
     }
@@ -130,7 +129,6 @@ export class EditProxy {
             while (this.queued.length > 0) {
                 var act = this.queued.pop()
                 this.socket.emit('graph_edit', act)
-                console.log('graph_edit',act)
             }
         }
     }

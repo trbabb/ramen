@@ -107,7 +107,7 @@ img {
   margin: 0px;
 }
 
-.NewNodeDialog {
+.OverlayDialog {
   position: absolute;
   top: 30%;
   left: 50%;
@@ -115,10 +115,6 @@ img {
   background-color: #666;
   border: 1px solid #AAA;
   border-radius:3px;
-}
-
-.NewNodeDialog > *:active {
-  background-color: blue;
 }
 
 .SelectionListElement.Selected > * {

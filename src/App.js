@@ -14,6 +14,7 @@ import {NODE_TYPE}     from './state/Def'
 import {NodeView}      from './render/mNodeView'
 import {Link}          from './render/mLink'
 import {NewNodeDialog} from './render/mNewNodeDialog'
+import {NarrowingList} from './render/mNarrowingList'
 
 import './resource/App.css'
 
@@ -70,6 +71,7 @@ class App extends React.Component {
             port_coords  : new Map(),
 
             showing_node_dialog : false,
+            active_port_dialog  : null,
 
             selected_obj : null,  // xxx todo: not yet taken advantage of.
 
@@ -193,7 +195,7 @@ class App extends React.Component {
             this.setState({showing_node_dialog : true})
             evt.preventDefault()
         }
-        if (evt.key === 'Delete' && this.state.port_hovered.port_id !== null) {
+        if ((evt.key === 'Delete' || evt.key === 'Backspace') && this.state.port_hovered.port_id !== null) {
           const ph = this.state.port_hovered;
           var n    = this.state.ng.nodes.get(ph.node_id)
           this.editProxy.action("removePort", {def_id:n.def_id, port_id:ph.port_id})
@@ -243,11 +245,7 @@ class App extends React.Component {
     
     
     onPortConfigClick = ({def_id, is_sink}) => {
-        this.editProxy.action("addPort", {
-            def_id  : def_id, 
-            is_sink : is_sink,
-            type_id : "str",
-        })
+        this.setState({active_port_dialog : {def_id, is_sink}})
     }
 
 
@@ -276,6 +274,15 @@ class App extends React.Component {
             this.editProxy.action("addNode", {def_id, parent_id})
         }
     }
+    
+    
+    onPortCreated = (def_id, type_id, is_sink) => {
+        this.editProxy.action("addPort", {
+            def_id, 
+            type_id,
+            is_sink
+        })
+    }
 
 
     /****** Rendering functions ******/
@@ -296,18 +303,33 @@ class App extends React.Component {
     }
 
 
-    renderNewNodeDialog() {
-        return (
-            <NewNodeDialog
-                className="NewNodeDialog"
-                onAccept={this.onNodeCreate}
-                defs={this.state.ng.defs}/>
-        )
-    }
-
-
     render() {
         // xxx hack below: _.clone() to cause extra updates.
+        var new_node_dlg = this.state.showing_node_dialog ? 
+                (<NarrowingList
+                    className="OverlayDialog"
+                    items={this.state.ng.defs}
+                    onAccept={this.onNodeCreate}
+                    stringifier={def => def.name}/>)
+                : [];
+        var new_port_dlg = this.state.active_port_dialog != null ?
+                (<NarrowingList
+                    className="OverlayDialog"
+                    items={this.state.ng.types}
+                    stringifier={(type_info) => type_info.code}
+                    onAccept={(key) => {
+                        if (key !== null) {
+                            this.editProxy.action("addPort", {
+                                def_id  : this.state.active_port_dialog.def_id,
+                                type_id : key,
+                                is_sink : this.state.active_port_dialog.is_sink
+                            })
+                        }
+                        this.setState(prevState => {
+                            return {active_port_dialog : null}
+                        })
+                    }}/>)
+                : [];
         return (
             <div
                 onMouseMove={this.onMouseMove}
@@ -318,9 +340,8 @@ class App extends React.Component {
                     port_coords={this.state.port_coords}
                     mutation_callbacks={_.clone(this.mutation_callbacks)}/>
                 {this.renderPartialLink()}
-                {this.state.showing_node_dialog ?
-                    this.renderNewNodeDialog() :
-                    []}
+                {new_node_dlg}
+                {new_port_dlg}
                 {this.state.connected ? null : <p>NOT CONNECTED</p>}
             </div>
         );

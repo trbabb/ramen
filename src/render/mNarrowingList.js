@@ -17,7 +17,11 @@ export class NarrowingList extends React.Component {
     
     
     makeFilteredList(filterString, itemList) {
-        var filteredList = itemList.map((x,i) => ({key:i, val:x})).toArray()
+        var stringy = this.props.stringifier
+        if (!stringy) {
+            stringy = (v) => v
+        }
+        var filteredList = itemList.map((x,i) => ({key:i, val:stringy(x)})).toArray()
         if (filterString !== "") {
             filteredList = filteredList.filter(x => {
                 return x.val.toLowerCase().includes(filterString.toLowerCase())
@@ -99,7 +103,7 @@ export class NarrowingList extends React.Component {
     render() {
         
         return (
-            <div className="NarrowingList" onKeyDown={this.onKeyDown}>
+            <div className={"NarrowingList " + this.props.className} onKeyDown={this.onKeyDown}>
                 <input type="text" className="FilterInput"
                     onChange={this.onInputChanged}
                     ref={elem => {this.inputElem = elem}}/>

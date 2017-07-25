@@ -34,31 +34,9 @@ export class NodeGraph {
         this.nodes       = new Map()
         this.links       = new Map()
         this.defs        = new Map()
+        this.types       = new Map()
         this.child_nodes = new Set()
         this.child_links = new Set()
-    }
-
-
-    addDef(def_id, name, node_type, sig) {
-        var ng  = _.clone(this)
-        if (!(sig instanceof TypeSignature)) {
-            sig = new TypeSignature(sig.sink_types, sig.source_types)
-        }
-        ng.defs = this.defs.set(def_id, new Def(name, node_type, sig))
-        
-        return ng
-    }
-
-
-    removeDef(name, def_id) {
-        // this is a bit sketchy. what happens when we remove a def
-        // referred to by many functions? we'll provide a fn for this,
-        // but should maybe not use it for now.
-        var ng = _.clone(this)
-        if (!this.defs.has(def_id)) return this;
-        ng.defs = this.defs.remove(def_id)
-        // todo: redirect any functions pointing here?
-        return ng
     }
 
 
@@ -259,17 +237,42 @@ export class NodeGraph {
         
         return ng
     }
+
+
+    addDef(def_id, name, node_type, sig) {
+        var ng  = _.clone(this)
+        if (!(sig instanceof TypeSignature)) {
+            sig = new TypeSignature(sig.sink_types, sig.source_types)
+        }
+        ng.defs = this.defs.set(def_id, new Def(name, node_type, sig))
+        
+        return ng
+    }
+
+
+    removeDef(name, def_id) {
+        // this is a bit sketchy. what happens when we remove a def
+        // referred to by many functions? we'll provide a fn for this,
+        // but should maybe not use it for now.
+        var ng = _.clone(this)
+        if (!this.defs.has(def_id)) return this;
+        ng.defs = this.defs.remove(def_id)
+        // todo: redirect any functions pointing here?
+        return ng
+    }
     
     
-    addType(type_id, code) {
-        // xxx todo: this
-        return this
+    addType(type_id, type_info) {
+        var ng = _.clone(this)
+        ng.types = ng.types.set(type_id, type_info)
+        return ng
     }
     
     
     removeType(type_id) {
-        // xxx todo: this
-        return this
+        var ng = _.clone(this)
+        ng.types = ng.types.remove(type_id)
+        return ng
     }
 
 
@@ -283,6 +286,8 @@ export class NodeGraph {
 
 
     ofNode(node_id) {
+        // xxx todo: this introduces a performance penalty, since
+        // this is recreated on each "frame" D:
         if (!this.nodes.has(node_id)) {
             return this
         }

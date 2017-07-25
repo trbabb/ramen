@@ -11,7 +11,7 @@ export class SelectionList extends React.Component {
     
     
     setFirstItemSelected() {
-        var selectionKey = this.props.itemList[0].key
+        var selectionKey = this.props.itemList.length > 0 ? this.props.itemList[0].key : null
         this.props.onListSelectionChanged(selectionKey)
     }
     

@@ -67,7 +67,7 @@ export class MNode extends React.PureComponent {
                         {this.makePorts(this.props.node.entry_id, entry_node, entry_def.type_sig, false)}
                         <PortConfig 
                             is_sink={false}
-                            def_id={entry_node.def_id}
+                            def_id={this.props.node.def_id}
                             handlePortConfigClick={this.props.mutation_callbacks.onPortConfigClick}/>
                     </div>
                 </div>
@@ -78,7 +78,7 @@ export class MNode extends React.PureComponent {
                 <div className="PortGroup SinkPortGroup BodyExit">
                     <PortConfig 
                         is_sink={true}
-                        def_id={exit_node.def_id}
+                        def_id={this.props.node.def_id}
                         handlePortConfigClick={this.props.mutation_callbacks.onPortConfigClick}/>
                     {this.makePorts(this.props.node.exit_id, exit_node, exit_def.type_sig, true)}
                 </div>
