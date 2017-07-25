@@ -22,7 +22,7 @@ export class MNode extends React.PureComponent {
     }
     
     
-    makePorts(node_id, node, sig, doSinks) {
+    makePorts(node_id, node, sig, doSinks, editable=false) {
         var z = []
         
         // we HAVE to use function application here, because the body of a loop
@@ -32,15 +32,20 @@ export class MNode extends React.PureComponent {
         (doSinks?sig.getSinkIDs():sig.getSourceIDs()).forEach(function(port_id) {
             var type_id = sig.type_by_port_id.get(port_id)
             var links   = node.links_by_id.get(port_id)
+            var edit_target = {
+                def_id  : self.props.node.def_id,
+                port_id : port_id,
+                is_arg  : !doSinks,
+            }
             var p = <Port
                 key           = {port_id}
                 port_id       = {port_id}
                 node_id       = {node_id}
-                def_id        = {node.def_id}
                 type_id       = {type_id}
                 connected     = {links !== undefined && links.size > 0}
                 direction     = {doSinks ? [0,-1] : [0,1]}
                 is_sink       = {doSinks}
+                edit_target   = {editable ? edit_target : null}
                 onPortClicked = {self.props.mutation_callbacks.onPortClicked}
                 onPortMoved   = {self.props.mutation_callbacks.onPortMoved}
                 onPortHovered = {self.props.mutation_callbacks.onPortHovered} />
@@ -64,7 +69,7 @@ export class MNode extends React.PureComponent {
                 <div className="FnHeader Function">
                     <div className="CallName Function">{this.props.def.name}</div>
                     <div className="PortGroup SourcePortGroup BodyEntry">
-                        {this.makePorts(this.props.node.entry_id, entry_node, entry_def.type_sig, false)}
+                        {this.makePorts(this.props.node.entry_id, entry_node, entry_def.type_sig, false, true)}
                         <PortConfig 
                             is_sink={false}
                             def_id={this.props.node.def_id}
@@ -80,7 +85,7 @@ export class MNode extends React.PureComponent {
                         is_sink={true}
                         def_id={this.props.node.def_id}
                         handlePortConfigClick={this.props.mutation_callbacks.onPortConfigClick}/>
-                    {this.makePorts(this.props.node.exit_id, exit_node, exit_def.type_sig, true)}
+                    {this.makePorts(this.props.node.exit_id, exit_node, exit_def.type_sig, true, true)}
                 </div>
                 <div className="PortGroup SinkPortGroup">
                     {this.makePorts(this.props.node_id, this.props.node, this.props.def.type_sig, false)}

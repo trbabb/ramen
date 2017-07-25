@@ -77,11 +77,15 @@ export class Port extends React.PureComponent {
     }
 
     onMouseEnter = () => {
-      this.props.onPortHovered(this.props.node_id, this.props.port_id);
+        if (this.props.onPortHovered && this.props.edit_target) {
+            this.props.onPortHovered(this.props.edit_target);
+        }
     }
 
     onMouseLeave = () => {
-      this.props.onPortHovered(null, null);
+        if (this.props.onPortHovered) {
+            this.props.onPortHovered(null);
+        }
     }
 
     render() {

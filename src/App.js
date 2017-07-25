@@ -77,10 +77,7 @@ class App extends React.Component {
 
             connected    : false,
 
-            port_hovered: {
-              node_id: null,
-              port_id: null
-            }
+            port_hovered : null,
         }
     }
 
@@ -195,10 +192,8 @@ class App extends React.Component {
             this.setState({showing_node_dialog : true})
             evt.preventDefault()
         }
-        if ((evt.key === 'Delete' || evt.key === 'Backspace') && this.state.port_hovered.port_id !== null) {
-          const ph = this.state.port_hovered;
-          var n    = this.state.ng.nodes.get(ph.node_id)
-          this.editProxy.action("removePort", {def_id:n.def_id, port_id:ph.port_id})
+        if ((evt.key === 'Delete' || evt.key === 'Backspace') && this.state.port_hovered !== null) {
+            this.editProxy.action("removePort", this.state.port_hovered)
         }
     }
     
@@ -215,11 +210,8 @@ class App extends React.Component {
     }
     
     
-    onPortHovered = (node_id, port_id) => {
-      this.setState({ port_hovered: {
-        node_id,
-        port_id
-      }});
+    onPortHovered = (port) => {
+        this.setState({ port_hovered: port});
     }
 
 
@@ -245,7 +237,9 @@ class App extends React.Component {
     
     
     onPortConfigClick = ({def_id, is_sink}) => {
-        this.setState({active_port_dialog : {def_id, is_sink}})
+        this.setState({active_port_dialog : {
+            def_id : def_id, 
+            is_arg : !is_sink}})
     }
 
 
@@ -322,7 +316,7 @@ class App extends React.Component {
                             this.editProxy.action("addPort", {
                                 def_id  : this.state.active_port_dialog.def_id,
                                 type_id : key,
-                                is_sink : this.state.active_port_dialog.is_sink
+                                is_arg  : this.state.active_port_dialog.is_arg
                             })
                         }
                         this.setState(prevState => {

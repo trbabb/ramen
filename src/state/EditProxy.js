@@ -32,8 +32,8 @@ export class EditProxy {
             removeDef  : {action : "remove", type : "def",  args : ["def_id"]},
             addLink    : {action : "add",    type : "link", args : ["link_id", "link"]},
             removeLink : {action : "remove", type : "link", args : ["link_id"]},
-            addPort    : {action : "add",    type : "port", args : ["def_id", "port_id", "type_id", "is_sink"]},
-            removePort : {action : "remove", type : "port", args : ["def_id", "port_id"]},
+            addPort    : {action : "add",    type : "port", args : ["def_id", "port_id", "type_id", "is_arg"]},
+            removePort : {action : "remove", type : "port", args : ["def_id", "port_id", "is_arg"]},
             addType    : {action : "add",    type : "type", args : ["type_id", "type_info"]},
             removeType : {action : "remove", type : "type", args : ["type_id"]}
         } 
