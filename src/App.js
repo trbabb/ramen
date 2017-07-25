@@ -24,37 +24,15 @@ import './resource/App.css'
 // todo: function def ports and names should show up on the same line.
 // todo: link does not follow beyond the edge of the nodeview and this is bad for interaction
 // todo: nodes must accept initial position
-// todo: attempting a connection from outer node to inner behaves weirdly
-//       (that's because each nodeView has its own temporary link)
-//       (maybe that should be owned by the App)
 // todo: the above also makes it impossible to connect function args to function body.
 //       we should in general allow nodes to connect across nesting levels.
 // todo: should we override and re-implement or take advantage of browser native focus traversal?
 // todo: performance fix: only update port positions & node positions on drag stop.
 //       find some other way (pass a callback, edit DOM directly?) to get the links to track.
-// todo: xxx: links stopped updating after performancƒe fix. GOD DAMMIT.
+// todo: xxx: links stopped updating after performance fix. GOD DAMMIT.
 
 
 // someday: draw the type at the free end of the temporary link.
-
-
-// don't really care what this is, for now:
-const STANDIN_TYPE_SIGNATURE  = new TypeSignature(['float', 'float', 'float'], [0,1])
-const FUNCTION_TYPE_SIGNATURE = new TypeSignature(['proc'],[])
-
-// list of nodes read by the "place node" dialog.
-const availableNodes = [
-        ["+",           NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
-        ["-",           NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
-        ["*",           NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
-        ["/",           NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
-        ["function",    NODE_TYPE.NODE_FUNCTION, FUNCTION_TYPE_SIGNATURE],
-        ["helloWorld",  NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
-        ["sendHello",   NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
-        ["createWorld", NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE],
-        ["whatever",    NODE_TYPE.NODE_FNCALL,   STANDIN_TYPE_SIGNATURE]
-    ]
-
 
 
 class App extends React.Component {

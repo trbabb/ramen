@@ -9,7 +9,7 @@ export class NarrowingList extends React.Component {
         super(props)
         this.state = {
             filterString : "",
-            selectionKey : -1
+            selectionKey : null
         }
         this.state.filteredList = this.makeFilteredList("", this.props.items)
         this.inputElem = null
@@ -54,7 +54,7 @@ export class NarrowingList extends React.Component {
                     s.selectionKey = s.filteredList[0].key
                 } else {
                     // nothing in the list; select nothing
-                    s.selectionKey = -1
+                    s.selectionKey = null
                 }
             }
             
@@ -72,7 +72,7 @@ export class NarrowingList extends React.Component {
     
     
     accept = () => {
-        if (this.state.selectionKey >= 0) {
+        if (this.state.selectionKey !== null) {
             this.props.onAccept(this.state.selectionKey)
         } else {
             // nothing selected

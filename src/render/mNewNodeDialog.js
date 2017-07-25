@@ -7,7 +7,7 @@ export class NewNodeDialog extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            selected_def : -1,
+            selected_def : null,
         }
         this.items = this.props.defs.map(def => def.name)
     }
