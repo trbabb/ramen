@@ -110,7 +110,7 @@ export class Link extends React.PureComponent {
         } else {
             return [this.makeLineElement(p0, p1, 
                         {key:"_seg_0", 
-                        className:"LinkLine" + (this.state.src_endpt_selected ? " Selected" : ""),
+                        className:"LinkLine" + (this.state.src_endpt_selected ? " SelectedGraphElement" : ""),
                         style:style,
                         tabIndex:1,
                         onFocus:(e => {this.props.onElementFocused(this.getGraphElement())}),
@@ -119,7 +119,7 @@ export class Link extends React.PureComponent {
                 
                     this.makeLineElement(p1, p2, 
                         {key:"_seg_1", 
-                        className:"LinkLine" + (this.state.sink_endpt_selected ? " Selected" : ""),
+                        className:"LinkLine" + (this.state.sink_endpt_selected ? " SelectedGraphElement" : ""),
                         style:style,
                         tabIndex:1,
                         onFocus:(e => {this.props.onElementFocused(this.getGraphElement())}),

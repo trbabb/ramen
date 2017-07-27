@@ -102,12 +102,13 @@ export class MNode extends React.PureComponent {
             !this.props.ng.nodes.has(this.props.node.exit_id)) {
             return <div className = "MNode Function"></div>
         }
+        var className  = "MNode" + (this.state.selected ? " SelectedGraphElement" : "")
         var entry_node = this.props.ng.nodes.get(this.props.node.entry_id)
         var exit_node  = this.props.ng.nodes.get(this.props.node.exit_id)
         var entry_def  = this.props.ng.defs.get(entry_node.def_id)
         var exit_def   = this.props.ng.defs.get(exit_node.def_id)
         return (
-            <div className="MNode Function" tabIndex="1" 
+            <div className={className} tabIndex="1" 
                     onFocus={this.onFocus} 
                     ref={e => {this.elem = e}}>
                 <div className="FnHeader Function">
@@ -142,7 +143,7 @@ export class MNode extends React.PureComponent {
     renderPlainBody() {
         var className = "MNode"
         if (this.state.selected) {
-            className += " Selected"
+            className += " SelectedGraphElement"
         }
         return (
             <div className={className} tabIndex="1" 

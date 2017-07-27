@@ -14,6 +14,11 @@ import {GraphElement} from './GraphElement'
 //       i.e. a notion of "current parent"; when you descend inside, everything of the outer parent
 //       gets de-selected.
 
+// todo: is this a dumb class? should we just tell each element how to transfer its own focus?
+//       this class is has its tendrils in a lot of code. 
+//       >> yes, to a certain extent. this would be better:
+//          each element should have a getElement(direction) funciton.
+
 // todo: when nodes have "vertical" form, will have to switch neighbor logic.
 
 
@@ -24,6 +29,7 @@ export class SelectionModel {
         this.app               = app
         this.edge              = null
         this.listeners         = []
+        this.shift             = false
     }
     
     
@@ -209,7 +215,6 @@ export class SelectionModel {
     walk(direction) {
         if (this.edge !== null) {
             var new_guy = this.neighbor(this.edge, direction)
-            console.log("new guy is", new_guy)
             if (new_guy !== null) {
                 this.set_selection(new_guy)
             }
@@ -226,5 +231,41 @@ export class SelectionModel {
         }
     }
     
+    
+    onElementFocused = (elem) => {
+        if (this.shift) {
+            this.extend_selection(elem)
+        } else {
+            this.set_selection(elem)
+        }
+    }
+    
+    
+    onKeyDown = (evt) => {
+        if (evt.key === "Shift") {
+            console.log("shift down")
+            this.shift = true
+        }
+        if (evt.key === "ArrowUp" || evt.key === "ArrowDown" || evt.key === "ArrowLeft" || evt.key === "ArrowRight") {
+            // graph walking shortcuts
+            if (this.edge !== null) {
+                var direction =  evt.key.replace("Arrow", "").toLowerCase()
+                if (evt.shiftKey) {
+                    this.gather(direction)
+                } else {
+                    this.walk(direction)
+                }
+                evt.preventDefault()
+            }
+        }
+    }
+    
+    
+    onKeyUp = (evt) => {
+        if (evt.key === "Shift") {
+            console.log("shift up")
+            this.shift = false
+        }
+    }
     
 }

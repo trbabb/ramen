@@ -52,6 +52,10 @@ class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = this.getDefaultState();
+        this.editProxy = new EditProxy(this)
+        this.elements  = new Map()
+        this.selection = new SelectionModel(this)
+        
         // neccesary to store across frames, or else the entire app will
         // redraw on every frame D:
         this.mutation_callbacks = {
@@ -64,11 +68,8 @@ class App extends React.Component {
             onPortConfigClick     : this.onPortConfigClick,
             onElementMounted      : this.onElementMounted,
             onElementUnmounted    : this.onElementUnmounted,
-            onElementFocused      : this.onElementFocused,
+            onElementFocused      : this.selection.onElementFocused,
         }
-        this.editProxy   = new EditProxy(this)
-        this.elements    = new Map()
-        this.selection  = new SelectionModel(this)
     }
 
 
@@ -96,11 +97,6 @@ class App extends React.Component {
     }
 
 
-    componentDidMount = () => {
-        document.addEventListener('keydown', this.onHotKeyPressed);
-    }
-
-
     setPosition = (node_id, pos) => {
         this.setState(prevState => {
             return { ng : prevState.ng.setPosition(node_id, pos) }
@@ -111,6 +107,13 @@ class App extends React.Component {
     getElement = (elem) => {
         var elkey = elem.key()
         return this.elements.get(elkey)
+    }
+    
+    
+    componentDidMount() {
+        if (this.elem !== null) {
+            this.elem.focus()
+        }
     }
 
 
@@ -172,6 +175,7 @@ class App extends React.Component {
 
 
     onHotKeyPressed = (evt) => {
+        // todo: make a user-configurable map of these
         if (evt.key === " " && !this.state.showing_node_dialog) {
             this.setState({showing_node_dialog : true})
             evt.preventDefault()
@@ -185,20 +189,6 @@ class App extends React.Component {
                     // xxx todo: delete the things
                 }
             }
-        } else if (evt.key === "ArrowUp" || evt.key === "ArrowDown" || evt.key === "ArrowLeft" || evt.key === "ArrowRight") {
-            // graph walking shortcuts
-            if (this.selection.edge !== null) {
-                var direction =  evt.key.replace("Arrow","").toLowerCase()
-                if (evt.shiftKey) {
-                    this.selection.gather(direction)
-                } else {
-                    this.selection.walk(direction)
-                }
-                evt.preventDefault()
-            }
-        } else if (evt.key === "p" || evt.key === "i") {
-            // add a port
-            var edge = this.selection
         }
     }
     
@@ -304,6 +294,7 @@ class App extends React.Component {
 
     render() {
         // xxx hack below: _.clone() to cause extra updates.
+        
         var new_node_dlg = this.state.showing_node_dialog ? 
                 (<NarrowingList
                     className="OverlayDialog"
@@ -311,6 +302,7 @@ class App extends React.Component {
                     onAccept={this.onNodeCreate}
                     stringifier={def => def.name}/>)
                 : [];
+        
         var new_port_dlg = this.state.active_port_dialog != null ?
                 (<NarrowingList
                     className="OverlayDialog"
@@ -329,19 +321,25 @@ class App extends React.Component {
                         })
                     }}/>)
                 : [];
+        
         return (
             <div
-                onMouseMove={this.onMouseMove}
-                onClick={this.onClick}
-                ref={e => {this.elem = e}}>
-                <NodeView
-                    ng={this.state.ng}
-                    port_coords={this.state.port_coords}
-                    mutation_callbacks={_.clone(this.mutation_callbacks)}/>
-                {this.renderPartialLink()}
-                {new_node_dlg}
-                {new_port_dlg}
-                {this.state.connected ? null : <p>NOT CONNECTED</p>}
+                onMouseMove = {this.onMouseMove}
+                onClick     = {this.onClick}
+                onKeyPress  = {this.onHotKeyPressed}
+                onKeyDown   = {this.selection.onKeyDown}
+                onKeyUp     = {this.selection.onKeyUp}
+                tabIndex    = {1}
+                ref         = {e => {this.elem = e}}>
+                    <NodeView
+                        ng                = {this.state.ng}
+                        port_coords       = {this.state.port_coords}
+                        mutation_callbacks= {_.clone(this.mutation_callbacks)}/>
+                    
+                    {this.renderPartialLink()}
+                    {new_node_dlg}
+                    {new_port_dlg}
+                    {this.state.connected ? null : <p>NOT CONNECTED</p>}
             </div>
         );
     }

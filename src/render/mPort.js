@@ -16,7 +16,7 @@ const typeIcons = {
     'int64_t'   : int_img,
     'float32_t' : float_img,
     'float64_t' : float_img,
-    'strint_t'  : str_img,
+    'string_t'  : str_img,
     'bool_t'    : bool_img,
     'proc_t'    : proc_img,
     'array_t'   : list_img,
@@ -132,7 +132,7 @@ export class Port extends React.PureComponent {
             classes.push("Connected");
         }
         if (this.state.selected) {
-            classes.push("Selected")
+            classes.push("SelectedGraphElement")
         }
         return (
             <img
