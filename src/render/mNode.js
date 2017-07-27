@@ -55,6 +55,16 @@ export class MNode extends React.PureComponent {
     }
     
     
+    onFocus = (e) => {
+        // we have to check if the focus event is actually targeting us and not one of our children.
+        // if the latter, we don't want to steal focus/selection from them.
+        var self_dom = ReactDOM.findDOMNode(this.elem)
+        if (e.target === self_dom) {
+            this.props.mutation_callbacks.onElementFocused(this.getGraphElement())
+        }
+    }
+    
+    
     makePorts(node_id, node, sig, doSinks, editable=false) {
         var z = []
         
@@ -80,18 +90,14 @@ export class MNode extends React.PureComponent {
                 direction          = {doSinks ? [0,-1] : [0,1]}
                 is_sink            = {doSinks}
                 edit_target        = {editable ? edit_target : null}
-                onElementMounted   = {self.props.mutation_callbacks.onElementMounted}
-                onElementUnmounted = {self.props.mutation_callbacks.onElementUnmounted}
-                onPortClicked      = {self.props.mutation_callbacks.onPortClicked}
-                onPortMoved        = {self.props.mutation_callbacks.onPortMoved}
-                onPortHovered      = {self.props.mutation_callbacks.onPortHovered} />
+                mutation_callbacks = {self.props.mutation_callbacks} />
             z.push(p);
         });
         return z;
     }
     
     
-   renderFunctionDefBody() {
+    renderFunctionDefBody() {
         if (!this.props.ng.nodes.has(this.props.node.entry_id) ||
             !this.props.ng.nodes.has(this.props.node.exit_id)) {
             return <div className = "MNode Function"></div>
@@ -101,7 +107,9 @@ export class MNode extends React.PureComponent {
         var entry_def  = this.props.ng.defs.get(entry_node.def_id)
         var exit_def   = this.props.ng.defs.get(exit_node.def_id)
         return (
-            <div className="MNode Function" tabIndex="1">
+            <div className="MNode Function" tabIndex="1" 
+                    onFocus={this.onFocus} 
+                    ref={e => {this.elem = e}}>
                 <div className="FnHeader Function">
                     <div className="CallName Function">{this.props.def.name}</div>
                     <div className="PortGroup SourcePortGroup BodyEntry">
@@ -137,7 +145,9 @@ export class MNode extends React.PureComponent {
             className += " Selected"
         }
         return (
-            <div className={className} tabIndex="1" ref={e => {this.elem = e}}>
+            <div className={className} tabIndex="1" 
+                    onFocus={this.onFocus} 
+                    ref={e => {this.elem = e}}>
                 <div className="PortGroup SinkPortGroup">
                     {this.makePorts(this.props.node_id, this.props.node, this.props.def.type_sig, true)}
                 </div>

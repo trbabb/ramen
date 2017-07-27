@@ -1,24 +1,34 @@
-import React           from 'react'
-import * as _          from 'lodash'
-import {Map}           from 'immutable'
-import ReactDOM        from 'react-dom';
+import React            from 'react'
+import * as _           from 'lodash'
+import {Map}            from 'immutable'
+import ReactDOM         from 'react-dom';
 
-import {NodeData}      from './state/NodeData'
-import {NodeGraph}     from './state/NodeGraph'
-import {TypeSignature} from './state/TypeSignature'
-import {EditProxy}     from './state/EditProxy'
-import {GraphElement}  from './state/GraphElement'
+import {NodeData}       from './state/NodeData'
+import {NodeGraph}      from './state/NodeGraph'
+import {TypeSignature}  from './state/TypeSignature'
+import {EditProxy}      from './state/EditProxy'
+import {GraphElement}   from './state/GraphElement'
+import {SelectionModel} from './state/SelectionModel'
 
 // for startup node creation. won't be necessary as app progresses.
-import {NODE_TYPE}     from './state/Def'
+import {NODE_TYPE}      from './state/Def'
 
-import {NodeView}      from './render/mNodeView'
-import {Link}          from './render/mLink'
-import {NewNodeDialog} from './render/mNewNodeDialog'
-import {NarrowingList} from './render/mNarrowingList'
+import {NodeView}       from './render/mNodeView'
+import {Link}           from './render/mLink'
+import {NewNodeDialog}  from './render/mNewNodeDialog'
+import {NarrowingList}  from './render/mNarrowingList'
 
 import './resource/App.css'
 
+
+// todo: unify the two kinds of elements-- those used by the network and those used by the focus model.
+//       it is dumb that we repeat ourselves in this way.
+//       todo: it is also better to store the signature with every node. 
+//             internal handling will be simpler because everything is right there.
+//             it will also be easier to remove things from the selection when they are deleted,
+//             and delete things that are selected by just directly passing the element to the EditProxy.
+//       while refactoring this, it would be great if things were more directly translateable with the
+//       backed AST/module elements. (if we do away with the def thing, that might help with this too).
 
 // todo: use asMutable to speed up some of the edits.
 // todo: make nodeviews resize themselves to contain their nodes.
@@ -54,9 +64,11 @@ class App extends React.Component {
             onPortConfigClick     : this.onPortConfigClick,
             onElementMounted      : this.onElementMounted,
             onElementUnmounted    : this.onElementUnmounted,
+            onElementFocused      : this.onElementFocused,
         }
-        this.editProxy = new EditProxy(this)
-        this.elements  = new Map()
+        this.editProxy   = new EditProxy(this)
+        this.elements    = new Map()
+        this.selection  = new SelectionModel(this)
     }
 
 
@@ -76,8 +88,6 @@ class App extends React.Component {
 
             showing_node_dialog : false,
             active_port_dialog  : null,
-
-            selected_obj : null,  // xxx todo: not yet taken advantage of.
 
             connected    : false,
 
@@ -100,50 +110,7 @@ class App extends React.Component {
     
     getElement = (elem) => {
         var elkey = elem.key()
-        return this.elements(elkey)
-    }
-
-
-    /****** Object selection ******/
-    // (not yet respected)
-
-
-    selectNode(node_id) {
-        this.setState({selected_obj : {
-            kind : "node",
-            id   : node_id
-        }})
-    }
-
-
-    selectPort(node_id, port_id) {
-        this.setState({selected_obj: {
-            kind : "port",
-            id   : port_id
-        }})
-    }
-
-
-    selectLink(link_id) {
-        this.setState({ selected_obj:
-        {
-            kind : "link",
-            id   : link_id
-        }})
-    }
-
-
-    selectNodeBody(node_id) {
-        this.setState({ selected_obj :
-        {
-            kind : "node_body",
-            id   : node_id
-        }})
-    }
-
-
-    unselect() {
-        this.setState({ selected_obj : null })
+        return this.elements.get(elkey)
     }
 
 
@@ -179,6 +146,12 @@ class App extends React.Component {
         var elkey = elem.key()
         this.elements = this.elements.remove(elkey)
     }
+    
+    
+    onElementFocused = (elem) => {
+        // xxx need to know if shift is down to decide if to extend or not.
+        this.selection.set_selection(elem)
+    }
 
 
     onPortClicked = ({node_id, port_id, elem, mouse_evt}) => {
@@ -203,8 +176,29 @@ class App extends React.Component {
             this.setState({showing_node_dialog : true})
             evt.preventDefault()
         }
-        if ((evt.key === 'Delete' || evt.key === 'Backspace') && this.state.port_hovered !== null) {
-            this.editProxy.action("removePort", this.state.port_hovered)
+        if ((evt.key === 'Delete' || evt.key === 'Backspace')) {
+            // port deletion
+            if (this.state.port_hovered !== null) {
+                this.editProxy.action("removePort", this.state.port_hovered)
+            } else if (this.selection.selected_elements) {
+                for (let v of this.selection.selected_elements.values()) {
+                    // xxx todo: delete the things
+                }
+            }
+        } else if (evt.key === "ArrowUp" || evt.key === "ArrowDown" || evt.key === "ArrowLeft" || evt.key === "ArrowRight") {
+            // graph walking shortcuts
+            if (this.selection.edge !== null) {
+                var direction =  evt.key.replace("Arrow","").toLowerCase()
+                if (evt.shiftKey) {
+                    this.selection.gather(direction)
+                } else {
+                    this.selection.walk(direction)
+                }
+                evt.preventDefault()
+            }
+        } else if (evt.key === "p" || evt.key === "i") {
+            // add a port
+            var edge = this.selection
         }
     }
     

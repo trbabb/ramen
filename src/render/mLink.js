@@ -113,6 +113,7 @@ export class Link extends React.PureComponent {
                         className:"LinkLine" + (this.state.src_endpt_selected ? " Selected" : ""),
                         style:style,
                         tabIndex:1,
+                        onFocus:(e => {this.props.onElementFocused(this.getGraphElement())}),
                         ref:(e => {this.src_elem = e}),
                         onClick:this.onSourceEndpointClicked}),
                 
@@ -121,6 +122,7 @@ export class Link extends React.PureComponent {
                         className:"LinkLine" + (this.state.sink_endpt_selected ? " Selected" : ""),
                         style:style,
                         tabIndex:1,
+                        onFocus:(e => {this.props.onElementFocused(this.getGraphElement())}),
                         ref:(e => {this.sink_elem = e}),
                         onClick:this.onSinkEndpointClicked})]
         }

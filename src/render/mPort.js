@@ -69,7 +69,7 @@ export class Port extends React.PureComponent {
     
     componentDidMount() {
         this.doPortMoved();
-        this.props.onElementMounted(this.getGraphElement(), this)
+        this.props.mutation_callbacks.onElementMounted(this.getGraphElement(), this)
     }
     
     
@@ -79,7 +79,7 @@ export class Port extends React.PureComponent {
     
     
     componentWillUnmount() {
-        this.props.onElementUnmounted(this.getGraphElement())
+        this.props.mutation_callbacks.onElementUnmounted(this.getGraphElement())
     }
     
     
@@ -104,21 +104,21 @@ export class Port extends React.PureComponent {
                 new_pos : xy
             };
             this.cxnpt = xy;
-            this.props.onPortMoved(evt);
+            this.props.mutation_callbacks.onPortMoved(evt);
         }
     }
     
     
     onMouseEnter = () => {
-        if (this.props.onPortHovered && this.props.edit_target) {
-            this.props.onPortHovered(this.props.edit_target);
+        if (this.props.mutation_callbacks.onPortHovered && this.props.edit_target) {
+            this.props.mutation_callbacks.onPortHovered(this.props.edit_target);
         }
     }
     
     
     onMouseLeave = () => {
-        if (this.props.onPortHovered) {
-            this.props.onPortHovered(null);
+        if (this.props.mutation_callbacks.onPortHovered) {
+            this.props.mutation_callbacks.onPortHovered(null);
         }
     }
     
@@ -141,6 +141,7 @@ export class Port extends React.PureComponent {
                 className={classes.join(" ")}
                 draggable="false"
                 tabIndex="1"
+                onFocus={e => {this.props.mutation_callbacks.onElementFocused(this.getGraphElement())}}
                 onMouseEnter={this.onMouseEnter}
                 onMouseLeave={this.onMouseLeave}
                 onClick={(evt) => {
@@ -148,7 +149,7 @@ export class Port extends React.PureComponent {
                              port_id   : this.props.port_id,
                              elem      : this.elem,
                              mouse_evt : evt}
-                    this.props.onPortClicked(e);
+                    this.props.mutation_callbacks.onPortClicked(e);
                 }}
                 ref={(e) => {this.elem = e}} />
         );

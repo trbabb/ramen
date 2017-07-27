@@ -6,7 +6,8 @@ export class GraphElement {
     }
     
     key() {
-        return Symbol.for(this)
+        // i hate javascript. this is the dumbest goddamn thing.
+        return JSON.stringify(this)
     }
     
 }

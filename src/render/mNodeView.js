@@ -83,6 +83,7 @@ export class NodeView extends React.PureComponent {
                 link_id={link_id}
                 onElementMounted={this.props.mutation_callbacks.onElementMounted}
                 onElementUnmounted={this.props.mutation_callbacks.onElementUnmounted}
+                onElementFocused={this.props.mutation_callbacks.onElementFocused}
                 onLinkEndpointClicked={this.props.mutation_callbacks.onLinkEndpointClicked}/>);
         }
 
