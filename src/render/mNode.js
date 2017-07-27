@@ -1,9 +1,10 @@
-import React        from 'react';
-import Draggable    from 'react-draggable';
-import {Port}       from './mPort';
-import {NodeView}   from './mNodeView';
-import {PortConfig} from './mPortConfig';
-
+import React          from 'react';
+import Draggable      from 'react-draggable';
+import ReactDOM       from 'react-dom';
+import {Port}         from './mPort';
+import {NodeView}     from './mNodeView';
+import {PortConfig}   from './mPortConfig';
+import {GraphElement} from '../state/GraphElement'
 
 // MNode is the React element for a language node.
 
@@ -13,7 +14,39 @@ export class MNode extends React.PureComponent {
     
     constructor(props) {
         super(props);
+        this.state = {
+            selected : false
+        }
         var p = props.node.position
+        this.elem = null
+    }
+    
+    
+    getGraphElement() {
+        return new GraphElement("node", this.props.node_id)
+    }
+    
+    
+    componentDidMount() {
+        this.props.mutation_callbacks.onElementMounted(this.getGraphElement(), this)
+    }
+    
+    
+    componentWillUnmount() {
+        this.props.mutation_callbacks.onElementUnmounted(this.getGraphElement())
+    }
+    
+    
+    setSelected(selected) {
+        this.setState({selected : selected})
+    }
+    
+    
+    grabFocus() {
+        if (this.elem) {
+            var dom_e = ReactDOM.findDOMNode(this.elem)
+            if (dom_e) dom_e.focus()
+        }
     }
     
     
@@ -37,18 +70,21 @@ export class MNode extends React.PureComponent {
                 port_id : port_id,
                 is_arg  : !doSinks,
             }
+            
             var p = <Port
-                key           = {port_id}
-                port_id       = {port_id}
-                node_id       = {node_id}
-                type_id       = {type_id}
-                connected     = {links !== undefined && links.size > 0}
-                direction     = {doSinks ? [0,-1] : [0,1]}
-                is_sink       = {doSinks}
-                edit_target   = {editable ? edit_target : null}
-                onPortClicked = {self.props.mutation_callbacks.onPortClicked}
-                onPortMoved   = {self.props.mutation_callbacks.onPortMoved}
-                onPortHovered = {self.props.mutation_callbacks.onPortHovered} />
+                key                = {port_id}
+                port_id            = {port_id}
+                node_id            = {node_id}
+                type_id            = {self.props.types.get(type_id).code}
+                connected          = {links !== undefined && links.size > 0}
+                direction          = {doSinks ? [0,-1] : [0,1]}
+                is_sink            = {doSinks}
+                edit_target        = {editable ? edit_target : null}
+                onElementMounted   = {self.props.mutation_callbacks.onElementMounted}
+                onElementUnmounted = {self.props.mutation_callbacks.onElementUnmounted}
+                onPortClicked      = {self.props.mutation_callbacks.onPortClicked}
+                onPortMoved        = {self.props.mutation_callbacks.onPortMoved}
+                onPortHovered      = {self.props.mutation_callbacks.onPortHovered} />
             z.push(p);
         });
         return z;
@@ -65,7 +101,7 @@ export class MNode extends React.PureComponent {
         var entry_def  = this.props.ng.defs.get(entry_node.def_id)
         var exit_def   = this.props.ng.defs.get(exit_node.def_id)
         return (
-            <div className="MNode Function">
+            <div className="MNode Function" tabIndex="1">
                 <div className="FnHeader Function">
                     <div className="CallName Function">{this.props.def.name}</div>
                     <div className="PortGroup SourcePortGroup BodyEntry">
@@ -96,8 +132,12 @@ export class MNode extends React.PureComponent {
     
     
     renderPlainBody() {
+        var className = "MNode"
+        if (this.state.selected) {
+            className += " Selected"
+        }
         return (
-            <div className="MNode">
+            <div className={className} tabIndex="1" ref={e => {this.elem = e}}>
                 <div className="PortGroup SinkPortGroup">
                     {this.makePorts(this.props.node_id, this.props.node, this.props.def.type_sig, true)}
                 </div>

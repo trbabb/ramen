@@ -28,7 +28,7 @@ export class EditProxy {
         this.actionTemplates = {
             addNode    : {action : "add",    type : "node", args : ["node_id", "def_id", "parent_id"]},
             removeNode : {action : "remove", type : "node", args : ["node_id"]},
-            addDef     : {action : "add",    type : "def",  args : ["def_id", "name", "node_type", "type_sig"]},
+            addDef     : {action : "add",    type : "def",  args : ["def_id", "name", "node_type", "type_sig", "placeable"]},
             removeDef  : {action : "remove", type : "def",  args : ["def_id"]},
             addLink    : {action : "add",    type : "link", args : ["link_id", "link"]},
             removeLink : {action : "remove", type : "link", args : ["link_id"]},

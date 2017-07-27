@@ -80,7 +80,9 @@ export class NodeView extends React.PureComponent {
             links.push(<Link
                 points={[p0_c, p1_c]}
                 key={"__link_" + link_id}
-                linkID={link_id}
+                link_id={link_id}
+                onElementMounted={this.props.mutation_callbacks.onElementMounted}
+                onElementUnmounted={this.props.mutation_callbacks.onElementUnmounted}
                 onLinkEndpointClicked={this.props.mutation_callbacks.onLinkEndpointClicked}/>);
         }
 
@@ -105,6 +107,7 @@ export class NodeView extends React.PureComponent {
                               mutation_callbacks={this.props.mutation_callbacks}
                               node={n}
                               def={def}
+                              types={this.props.ng.types}
                               {...x}/>)
         }
 

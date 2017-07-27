@@ -31,12 +31,13 @@ export class NodeGraph {
 
 
     constructor() {
-        this.nodes       = new Map()
-        this.links       = new Map()
-        this.defs        = new Map()
-        this.types       = new Map()
-        this.child_nodes = new Set()
-        this.child_links = new Set()
+        this.nodes          = new Map()
+        this.links          = new Map()
+        this.defs           = new Map()
+        this.types          = new Map()
+        this.child_nodes    = new Set()
+        this.child_links    = new Set()
+        this.placeable_defs = new Set()
     }
 
 
@@ -239,12 +240,16 @@ export class NodeGraph {
     }
 
 
-    addDef(def_id, name, node_type, sig) {
+    addDef(def_id, name, node_type, sig, placeable) {
         var ng  = _.clone(this)
         if (!(sig instanceof TypeSignature)) {
             sig = new TypeSignature(sig.sink_types, sig.source_types)
         }
         ng.defs = this.defs.set(def_id, new Def(name, node_type, sig))
+        
+        if (placeable) {
+            ng.placeable_defs = ng.placeable_defs.add(def_id)
+        }
         
         return ng
     }

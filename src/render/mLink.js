@@ -1,4 +1,6 @@
 import React from 'react';
+import ReactDOM       from 'react-dom';
+import {GraphElement} from '../state/GraphElement'
 
 
 // Link is the React element for rendering a link between two node ports.
@@ -6,6 +8,16 @@ import React from 'react';
 
 
 export class Link extends React.PureComponent {
+    
+    constructor(props) {
+        super(props)
+        this.state = {
+            src_endpt_selected  : false,
+            sink_endpt_selected : false
+        }
+        this.sink_elem = null
+        this.src_elem  = null
+    }
     
     
     bounds() {
@@ -30,14 +42,53 @@ export class Link extends React.PureComponent {
     }
     
     
+    getGraphElement() {
+        return new GraphElement("link", this.props.link_id)
+    }
+    
+    
+    componentDidMount() {
+        if (!this.props.partial) {
+            this.props.onElementMounted(this.getGraphElement(), this)
+        }
+    }
+    
+    
+    componentWillUnmount() {
+        if (!this.props.partial) {
+            this.props.onElementUnmounted(this.getGraphElement())
+        }
+    }
+    
+    
+    setSelected(selected, src_side=null) {
+        if (src_side || src_side === null) {
+            this.setState({src_endpt_selected : selected})
+        }
+        if (!src_side) {
+            this.setState({sink_endpt_selected : selected})
+        }
+    }
+    
+    
+    grabFocus(src_side) {
+        var e = this.sink_elem
+        if (src_side) {
+            e = this.src_elem
+        }
+        var domnode = ReactDOM.findDOMNode(e)
+        domnode.focus()
+    }
+    
+    
     onSourceEndpointClicked = (e) => {
-        var evt = {mouseEvt : e, linkID: this.props.linkID, isSource:true}
+        var evt = {mouseEvt : e, link_id: this.props.link_id, isSource:true}
         this.props.onLinkEndpointClicked(evt)
     }
     
     
     onSinkEndpointClicked = (e) => {
-        var evt = {mouseEvt : e, linkID: this.props.linkID, isSource:false}
+        var evt = {mouseEvt : e, link_id: this.props.link_id, isSource:false}
         this.props.onLinkEndpointClicked(evt)
     }
     
@@ -59,14 +110,18 @@ export class Link extends React.PureComponent {
         } else {
             return [this.makeLineElement(p0, p1, 
                         {key:"_seg_0", 
-                        className:"LinkLine",
+                        className:"LinkLine" + (this.state.src_endpt_selected ? " Selected" : ""),
                         style:style,
+                        tabIndex:1,
+                        ref:(e => {this.src_elem = e}),
                         onClick:this.onSourceEndpointClicked}),
                 
                     this.makeLineElement(p1, p2, 
                         {key:"_seg_1", 
-                        className:"LinkLine",
+                        className:"LinkLine" + (this.state.sink_endpt_selected ? " Selected" : ""),
                         style:style,
+                        tabIndex:1,
+                        ref:(e => {this.sink_elem = e}),
                         onClick:this.onSinkEndpointClicked})]
         }
     }

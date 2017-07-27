@@ -1,6 +1,7 @@
-import React    from 'react';
-import ReactDOM from 'react-dom';
-import * as _   from 'lodash'
+import React          from 'react';
+import ReactDOM       from 'react-dom';
+import * as _         from 'lodash'
+import {GraphElement} from '../state/GraphElement'
 
 import float_img from '../resource/float.png'
 import int_img   from '../resource/int.png'
@@ -11,13 +12,15 @@ import list_img  from '../resource/list.png'
 import str_img   from '../resource/str.png'
 
 const typeIcons = {
-    'int'   : int_img,
-    'float' : float_img,
-    'str'   : str_img,
-    'bool'  : bool_img,
-    'proc'  : proc_img,
-    'list'  : list_img,
-    'type'  : type_img
+    'int32_t'   : int_img,
+    'int64_t'   : int_img,
+    'float32_t' : float_img,
+    'float64_t' : float_img,
+    'strint_t'  : str_img,
+    'bool_t'    : bool_img,
+    'proc_t'    : proc_img,
+    'array_t'   : list_img,
+    'type_t'    : type_img
 };
 
 
@@ -33,11 +36,14 @@ export class Port extends React.PureComponent {
 
     constructor(props) {
         super(props);
+        this.state = {
+            selected : false
+        }
         this.elem  = null;
         this.cxnpt = [0,0]
     }
-
-
+    
+    
     // get the connection point in "window" coordinates.
     getConnectionPoint() {
         if (this.elem === null) return [0,0];
@@ -50,18 +56,44 @@ export class Port extends React.PureComponent {
 
         return xy;
     }
-
-
+    
+    
+    getGraphElement() {
+        return new GraphElement("port", {
+            node_id : this.props.node_id, 
+            port_id : this.props.port_id, 
+            is_sink : this.props.is_sink
+        })
+    }
+    
+    
     componentDidMount() {
         this.doPortMoved();
+        this.props.onElementMounted(this.getGraphElement(), this)
     }
-
-
+    
+    
     componentDidUpdate() {
         this.doPortMoved();
     }
-
-
+    
+    
+    componentWillUnmount() {
+        this.props.onElementUnmounted(this.getGraphElement())
+    }
+    
+    
+    setSelected(selected) {
+        this.setState({selected : selected})
+    }
+    
+    
+    grabFocus() {
+        var eDom = ReactDOM.findDOMNode(this.elem);
+        eDom.focus()
+    }
+    
+    
     doPortMoved() {
         var xy = this.getConnectionPoint();
         if (!_.isEqual(xy, this.cxnpt)) {
@@ -75,23 +107,32 @@ export class Port extends React.PureComponent {
             this.props.onPortMoved(evt);
         }
     }
-
+    
+    
     onMouseEnter = () => {
         if (this.props.onPortHovered && this.props.edit_target) {
             this.props.onPortHovered(this.props.edit_target);
         }
     }
-
+    
+    
     onMouseLeave = () => {
         if (this.props.onPortHovered) {
             this.props.onPortHovered(null);
         }
     }
-
+    
+    
     render() {
-        var classes = ["Port", this.props.is_sink ? "Sink" : "Source"]
+        var classes = [
+            "Port", 
+            this.props.is_sink ? "Sink" : "Source"
+        ]
         if (this.props.connnected) {
             classes.push("Connected");
+        }
+        if (this.state.selected) {
+            classes.push("Selected")
         }
         return (
             <img
@@ -99,6 +140,7 @@ export class Port extends React.PureComponent {
                 width={16} height={16}
                 className={classes.join(" ")}
                 draggable="false"
+                tabIndex="1"
                 onMouseEnter={this.onMouseEnter}
                 onMouseLeave={this.onMouseLeave}
                 onClick={(evt) => {
@@ -108,9 +150,7 @@ export class Port extends React.PureComponent {
                              mouse_evt : evt}
                     this.props.onPortClicked(e);
                 }}
-                ref={(e) => {
-                    this.elem = e;
-                }} />
+                ref={(e) => {this.elem = e}} />
         );
     }
 }

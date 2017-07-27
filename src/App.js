@@ -7,6 +7,7 @@ import {NodeData}      from './state/NodeData'
 import {NodeGraph}     from './state/NodeGraph'
 import {TypeSignature} from './state/TypeSignature'
 import {EditProxy}     from './state/EditProxy'
+import {GraphElement}  from './state/GraphElement'
 
 // for startup node creation. won't be necessary as app progresses.
 import {NODE_TYPE}     from './state/Def'
@@ -51,8 +52,11 @@ class App extends React.Component {
             onLinkEndpointClicked : this.onLinkEndpointClicked,
             onNodeMove            : this.onNodeMove,
             onPortConfigClick     : this.onPortConfigClick,
+            onElementMounted      : this.onElementMounted,
+            onElementUnmounted    : this.onElementUnmounted,
         }
         this.editProxy = new EditProxy(this)
+        this.elements  = new Map()
     }
 
 
@@ -92,17 +96,12 @@ class App extends React.Component {
             return { ng : prevState.ng.setPosition(node_id, pos) }
         })
     }
-
-
-    addDef(name, node_type, type_sig) {
-        this.editProxy.action("addDef", {name, node_type, type_sig})
-    }
     
     
-    addNode(def_id, parent_id=null) {
-        this.editProxy.action("addNode", {def_id, parent_id})
+    getElement = (elem) => {
+        var elkey = elem.key()
+        return this.elements(elkey)
     }
-
 
 
     /****** Object selection ******/
@@ -168,6 +167,18 @@ class App extends React.Component {
 
 
     /****** Callback functions ******/
+    
+    
+    onElementMounted = (elem, component) => {
+        var elkey = elem.key()
+        this.elements = this.elements.set(elkey, component)
+    }
+    
+    
+    onElementUnmounted = (elem) => {
+        var elkey = elem.key()
+        this.elements = this.elements.remove(elkey)
+    }
 
 
     onPortClicked = ({node_id, port_id, elem, mouse_evt}) => {
@@ -243,8 +254,8 @@ class App extends React.Component {
     }
 
 
-    onLinkEndpointClicked = ({mouseEvt, linkID, isSource}) => {
-        var link = this.state.ng.links.get(linkID)
+    onLinkEndpointClicked = ({mouseEvt, link_id, isSource}) => {
+        var link = this.state.ng.links.get(link_id)
         // we want the endpoint that *wasn't* grabbed
         var port = isSource ? link.sink : link.src
 
@@ -255,7 +266,7 @@ class App extends React.Component {
             partial_link : port
         }));
         
-        this.editProxy.action("removeLink", {link_id:linkID})
+        this.editProxy.action("removeLink", {link_id})
     }
 
 
@@ -302,7 +313,7 @@ class App extends React.Component {
         var new_node_dlg = this.state.showing_node_dialog ? 
                 (<NarrowingList
                     className="OverlayDialog"
-                    items={this.state.ng.defs}
+                    items={this.state.ng.defs.filter((def, def_id) => this.state.ng.placeable_defs.has(def_id))}
                     onAccept={this.onNodeCreate}
                     stringifier={def => def.name}/>)
                 : [];
