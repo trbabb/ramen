@@ -15,8 +15,9 @@ export class Link extends React.PureComponent {
             src_endpt_selected  : false,
             sink_endpt_selected : false
         }
-        this.sink_elem = null
-        this.src_elem  = null
+        this.sink_elem  = null
+        this.src_elem   = null
+        this.whole_elem = null
     }
     
     
@@ -72,12 +73,13 @@ export class Link extends React.PureComponent {
     
     
     grabFocus(src_side) {
-        var e = this.sink_elem
-        if (src_side) {
-            e = this.src_elem
-        }
-        var domnode = ReactDOM.findDOMNode(e)
-        domnode.focus()
+        // var e = this.sink_elem
+        // if (src_side) {
+        //     e = this.src_elem
+        // }
+        var e = this.whole_elem
+        var eDom = ReactDOM.findDOMNode(e)
+        if (eDom) eDom.focus()
     }
     
     
@@ -110,7 +112,7 @@ export class Link extends React.PureComponent {
         } else {
             return [this.makeLineElement(p0, p1, 
                         {key:"_seg_0", 
-                        className:"LinkLine" + (this.state.src_endpt_selected ? " SelectedGraphElement" : ""),
+                        className:"LinkLine",
                         style:style,
                         tabIndex:1,
                         onFocus:(e => {this.props.onElementFocused(this.getGraphElement())}),
@@ -119,7 +121,7 @@ export class Link extends React.PureComponent {
                 
                     this.makeLineElement(p1, p2, 
                         {key:"_seg_1", 
-                        className:"LinkLine" + (this.state.sink_endpt_selected ? " SelectedGraphElement" : ""),
+                        className:"LinkLine",
                         style:style,
                         tabIndex:1,
                         onFocus:(e => {this.props.onElementFocused(this.getGraphElement())}),
@@ -160,10 +162,15 @@ export class Link extends React.PureComponent {
             pointerEvents: 'none'  // we don't want the svg's bounding rect to capture events.
         }
         
+        var seld = this.state.src_endpt_selected || this.state.sink_endpt_selected
+        
+        // NOTE: TODO: when endpoint picking is ready, rm tabindex from below:
         return (
-            <svg className="Link" 
+            <svg className={"Link" + (seld ? " SelectedGraphElement" : "")}
                 width ={bnds.hi[0] - bnds.lo[0] + 2 * pad}
                 height={bnds.hi[1] - bnds.lo[1] + 2 * pad}
+                ref={e => {this.whole_elem = e}}
+                tabIndex={1}
                 style={style}>
                 {this.makeLine(xf_pts, this.props.partial)}
                 {dots}

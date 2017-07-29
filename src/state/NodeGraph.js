@@ -106,6 +106,8 @@ export class NodeGraph {
             }
             
             ng.nodes = ng.nodes.set(n.parent, parent)
+        } else {
+            ng.child_nodes = ng.child_nodes.remove(node_id)
         }
         
         ng.nodes = ng.nodes.remove(node_id)

@@ -1,6 +1,7 @@
 import {OrderedMap}   from 'immutable'
 import * as _         from 'lodash'
 import {GraphElement} from './GraphElement'
+import {NODE_TYPE}    from './Def'
 
 
 // xxx: todo: have to remove elements from selection when they're removed from the NG.
@@ -72,7 +73,12 @@ export class SelectionModel {
         for (let [k,e] of this.selected_elements) {
             if (!_.isEqual(e, elem)) {
                 var o = this.app.getElement(e)
-                o.setSelected(false)
+                if (o === undefined) {
+                    // xxx fixme. as elememts are deleted, they are not removed from selection
+                    console.log("DEBUG: Object not found:", e)
+                } else {
+                    o.setSelected(false)
+                }
             } else {
                 // don't de-select the already-selected elem
                 found = true
@@ -117,7 +123,7 @@ export class SelectionModel {
             obj.setSelected(false)
             if (this.selected_elements.size > 0) {
                 this.edge = this.selected_elements.last()
-                this.edge.grabFocus()
+                this.app.getElement(this.edge).grabFocus()
             } else {
                 this.edge = null
             }
@@ -131,7 +137,14 @@ export class SelectionModel {
             var inward = elem.id.is_sink ^ up
             if (inward) {
                 // the element "inward" of a port is the node it belongs to
-                return new GraphElement("node", elem.id.node_id)
+                let node = this.app.state.ng.nodes.get(elem.id.node_id)
+                let def  = this.app.state.ng.defs.get(node.def_id)
+                if (def.node_type === NODE_TYPE.NODE_ENTRY || def.node_type === NODE_TYPE.NODE_EXIT) {
+                    // node is not an individual thing that can be selected :\
+                    return null
+                } else {
+                    return new GraphElement("node", elem.id.node_id)
+                }
             } else {
                 // the element "outward" of a port is the first link connected to it
                 var node = this.app.state.ng.nodes.get(elem.id.node_id)

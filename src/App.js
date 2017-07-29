@@ -1,7 +1,8 @@
 import React            from 'react'
 import * as _           from 'lodash'
 import {Map}            from 'immutable'
-import ReactDOM         from 'react-dom';
+import ReactDOM         from 'react-dom'
+import crypto           from 'crypto'
 
 import {NodeData}       from './state/NodeData'
 import {NodeGraph}      from './state/NodeGraph'
@@ -87,8 +88,8 @@ class App extends React.Component {
             // in window coords
             port_coords  : new Map(),
 
-            showing_node_dialog : false,
-            active_port_dialog  : null,
+            active_node_dialog : null,
+            active_port_dialog : null,
 
             connected    : false,
 
@@ -147,6 +148,7 @@ class App extends React.Component {
     
     onElementUnmounted = (elem) => {
         var elkey = elem.key()
+        this.selection.unselect(elem)
         this.elements = this.elements.remove(elkey)
     }
     
@@ -159,7 +161,7 @@ class App extends React.Component {
 
     onPortClicked = ({node_id, port_id, elem, mouse_evt}) => {
         // create or complete the "partial" link
-        var p = {node_id : node_id, port_id : port_id}
+        var p = {node_id, port_id}
         if (this.state.partial_link === null) {
             this.setState({partial_link : p})
         } else {
@@ -169,32 +171,50 @@ class App extends React.Component {
                 partial_link : null
             }))
             var link = this.state.ng.constructLink(anchor_port, p)
-            this.editProxy.action("addLink", {link})
+            this.editProxy.action("add", "link", {link})
         }
     }
 
 
-    onHotKeyPressed = (evt) => {
+    onKeyDown = (evt) => {
         // todo: make a user-configurable map of these
-        if (evt.key === " " && !this.state.showing_node_dialog) {
-            this.setState({showing_node_dialog : true})
+        if (evt.key === " " && this.state.active_node_dialog === null) {
+            this.setState({active_node_dialog : {
+                selected_elem : this.selection.edge
+            }})
             evt.preventDefault()
-        }
-        if ((evt.key === 'Delete' || evt.key === 'Backspace')) {
+        } else if ((evt.key === 'Delete' || evt.key === 'Backspace')) {
             // port deletion
             if (this.state.port_hovered !== null) {
-                this.editProxy.action("removePort", this.state.port_hovered)
-            } else if (this.selection.selected_elements) {
-                for (let v of this.selection.selected_elements.values()) {
-                    // xxx todo: delete the things
+                this.editProxy.action("remove", "port", this.state.port_hovered)
+            } else if (this.selection.selected_elements.size > 0) {
+                // todo: push these to a composite action
+                // todo: make editProxy accept the element type
+                var sel = this.selection.selected_elements.valueSeq()
+                var link_elems = sel.filter(e => (e.type === "link"))
+                var port_elems = sel.filter(e => (e.type === "port"))
+                var node_elems = sel.filter(e => (e.type === "node"))
+                for (let e of link_elems) {
+                    this.editProxy.action("remove", "link", {link_id:e.id})
+                }
+                // todo: handle ports after we do the def/signature refactoring.
+                for (let e of node_elems) {
+                    this.editProxy.action("remove", "node", {node_id:e.id})
                 }
             }
+        } else {
+            this.selection.onKeyDown(evt)
         }
+    }
+    
+    
+    onKeyUp = (evt) => {
+        this.selection.onKeyUp(evt)
     }
     
     
     onLinkDisconnected = (link_id) => {
-        this.editProxy.action("removeLink", {link_id})
+        this.editProxy.action("remove", "link", {link_id})
     }
     
     
@@ -205,8 +225,8 @@ class App extends React.Component {
     }
     
     
-    onPortHovered = (port) => {
-        this.setState({ port_hovered: port});
+    onPortHovered = (target) => {
+        this.setState({ port_hovered: target});
     }
 
 
@@ -250,23 +270,79 @@ class App extends React.Component {
             partial_link : port
         }));
         
-        this.editProxy.action("removeLink", {link_id})
+        this.editProxy.action("remove", "link", {link_id})
     }
 
 
     onNodeCreate = (def_id) => {
+        var elem = this.state.active_node_dialog.selected_elem
         this.setState(prevState => {
-            return {showing_node_dialog : false}
+            return { active_node_dialog : null }
         })
+        
         if (def_id !== null) {
-            let parent_id = null    // xxx: get the node_id of the node the mouse is over
-            this.editProxy.action("addNode", {def_id, parent_id})
+            let parent_id    = null
+            let connect_port = null
+            
+            // the selected elem at the time of placement determines any auto-parenting/auto-connect:
+            if (elem !== null) {
+                if (elem.type === "node") {
+                    let node = this.state.ng.nodes.get(elem.id)
+                    let def  = this.state.ng.defs.get(node.def_id)
+                    if (def.hasBody()) {
+                        // make new node a child of the selected node
+                        parent_id = elem.id
+                    } else {
+                        // make the new node a sibling of the selected node
+                        parent_id = node.parent
+                        // connect the new node to the first output port of the selected node
+                        let sig = def.type_sig
+                        connect_port = {
+                            node_id : elem.id,
+                            port_id : sig.getSourceIDs().first(),
+                            is_sink : false,
+                        }
+                    }
+                } else if (elem.type === "port") {
+                    let node = this.state.ng.nodes.get(elem.id.node_id)
+                    parent_id   = node.parent
+                    connect_port = elem.id
+                } else if (elem.type === "link") {
+                    // xxx todo: insert the node along the selected link.
+                    //     implement composite actions; do [rm link, add node, add link, add link].
+                }
+            }
+            
+            // will be unique with atronomical probability:
+            let node_id = crypto.randomBytes(8).toString('hex')
+            
+            // add the node
+            this.editProxy.action("add", "node", {
+                node_id   : node_id,
+                def_id    : def_id,
+                parent_id : parent_id,
+            })
+            
+            // complete the auto-connect, if necessary:
+            if (connect_port !== null) {
+                let new_sig  = this.state.ng.defs.get(def_id).type_sig
+                let new_port = {
+                    node_id : node_id,
+                    port_id : (connect_port.is_sink ? new_sig.getSourceIDs() : new_sig.getSinkIDs()).first(),
+                    is_sink : !connect_port.is_sink
+                }
+                let link = {
+                    src  : connect_port.is_sink ? new_port : connect_port,
+                    sink : connect_port.is_sink ? connect_port : new_port,
+                }
+                this.editProxy.action("add", "link", {link})
+            }
         }
     }
     
     
     onPortCreated = (def_id, type_id, is_sink) => {
-        this.editProxy.action("addPort", {
+        this.editProxy.action("add", "port", {
             def_id, 
             type_id,
             is_sink
@@ -295,7 +371,7 @@ class App extends React.Component {
     render() {
         // xxx hack below: _.clone() to cause extra updates.
         
-        var new_node_dlg = this.state.showing_node_dialog ? 
+        var new_node_dlg = this.state.active_node_dialog !== null ? 
                 (<NarrowingList
                     className="OverlayDialog"
                     items={this.state.ng.defs.filter((def, def_id) => this.state.ng.placeable_defs.has(def_id))}
@@ -310,7 +386,7 @@ class App extends React.Component {
                     stringifier={(type_info) => type_info.code}
                     onAccept={(key) => {
                         if (key !== null) {
-                            this.editProxy.action("addPort", {
+                            this.editProxy.action("add", "port", {
                                 def_id  : this.state.active_port_dialog.def_id,
                                 type_id : key,
                                 is_arg  : this.state.active_port_dialog.is_arg
@@ -325,18 +401,18 @@ class App extends React.Component {
         return (
             <div
                 onMouseMove = {this.onMouseMove}
-                onClick     = {this.onClick}
-                onKeyPress  = {this.onHotKeyPressed}
-                onKeyDown   = {this.selection.onKeyDown}
-                onKeyUp     = {this.selection.onKeyUp}
-                tabIndex    = {1}
-                ref         = {e => {this.elem = e}}>
-                    <NodeView
-                        ng                = {this.state.ng}
-                        port_coords       = {this.state.port_coords}
-                        mutation_callbacks= {_.clone(this.mutation_callbacks)}/>
-                    
-                    {this.renderPartialLink()}
+                onClick     = {this.onClick}>
+                    <div
+                        onKeyDown   = {this.onKeyDown}
+                        onKeyUp     = {this.onKeyUp}
+                        tabIndex    = {1}
+                        ref         = {e => {this.elem = e}}>
+                            <NodeView
+                                ng                = {this.state.ng}
+                                port_coords       = {this.state.port_coords}
+                                mutation_callbacks= {_.clone(this.mutation_callbacks)}/>
+                            {this.renderPartialLink()}
+                    </div>
                     {new_node_dlg}
                     {new_port_dlg}
                     {this.state.connected ? null : <p>NOT CONNECTED</p>}

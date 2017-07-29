@@ -90,7 +90,7 @@ export class Port extends React.PureComponent {
     
     grabFocus() {
         var eDom = ReactDOM.findDOMNode(this.elem);
-        eDom.focus()
+        if (eDom) eDom.focus()
     }
     
     

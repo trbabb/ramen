@@ -68,7 +68,7 @@ export class EditProxy {
     
     
     // apply an add/remove event to the given nodegraph
-    applyEvent(ng, evt, do_enqueue=true) {
+    applyEvent(ng, evt) {
         var act  = {node : "Node",
                     def  : "Def",
                     link : "Link",
@@ -79,10 +79,6 @@ export class EditProxy {
         var args = this.unpackArgs(act, evt.details)
         var new_ng = fn.apply(ng, args)
         
-        if (do_enqueue && new_ng !== ng) {
-            this.enqueue(evt)
-        }
-        
         return new_ng
     }
     
@@ -91,7 +87,7 @@ export class EditProxy {
     onNetworkEvent = (data) => {
         console.log("from network:", data)
         this.app.setState(prevState => {
-            var ng = this.applyEvent(prevState.ng, data, false)
+            var ng = this.applyEvent(prevState.ng, data)
             if (ng === prevState.ng) {
                 return {}
             } else {
@@ -101,23 +97,15 @@ export class EditProxy {
     }
     
     
-    // request an action be executed. After doing it, tell the server.
-    action(act, keyword_args) {
-        var f   = this.app.ng
-        var t   = this.actionTemplates[act]
-        var evt = {action : t.action, type : t.type, details : keyword_args}
-        this.enqueue(evt)
-    }
-    
-    
     // Request that an event be sent back to the server.
     // If the server is not connected, remember it for later.
-    enqueue(act) {
-        console.log("    EMIT: ", act)
+    action(act, type, args) {
+        let a = {action : act, type : type, details : args}
+        console.log("    EMIT: ", a)
         if (this.connected) {
-            this.socket.emit('graph_edit', act)
+            this.socket.emit('graph_edit', a)
         } else {
-            this.queued.push(act)
+            this.queued.push(a)
         }
     }
     
