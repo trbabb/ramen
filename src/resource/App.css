@@ -120,3 +120,11 @@ img {
 .SelectionListElement.Selected > * {
   background-color: #ffdd00;
 }
+
+.SelectedGraphElement {
+  outline: 1px dashed white;
+}
+
+.SelectedGraphElement:focus {
+  outline: 3px dashed orange;
+}

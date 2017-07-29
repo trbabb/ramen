@@ -151,12 +151,6 @@ class App extends React.Component {
         this.selection.unselect(elem)
         this.elements = this.elements.remove(elkey)
     }
-    
-    
-    onElementFocused = (elem) => {
-        // xxx need to know if shift is down to decide if to extend or not.
-        this.selection.set_selection(elem)
-    }
 
 
     onPortClicked = ({node_id, port_id, elem, mouse_evt}) => {
