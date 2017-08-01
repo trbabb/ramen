@@ -70,6 +70,7 @@ class App extends React.Component {
             onElementUnmounted    : this.onElementUnmounted,
             onElementFocused      : this.selection.onElementFocused,
             clearSelection        : this.selection.clear_selection,
+            dispatchCommand       : this.dispatchCommand,
         }
     }
     
@@ -243,6 +244,11 @@ class App extends React.Component {
             var link = this.state.ng.constructLink(anchor_port, p)
             this.editProxy.action("add", "link", {link})
         }
+    }
+    
+    
+    dispatchCommand = (action, type, details) => {
+        this.editProxy.action(action, type, details)
     }
     
     

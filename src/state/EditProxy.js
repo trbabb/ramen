@@ -26,17 +26,18 @@ export class EditProxy {
         })
         this.queued = []
         this.actionTemplates = {
-            addNode    : {action : "add",    type : "node", args : ["node_id", "def_id", "parent_id"]},
-            removeNode : {action : "remove", type : "node", args : ["node_id"]},
-            addDef     : {action : "add",    type : "def",  args : ["def_id", "name", "node_type", "type_sig", "placeable"]},
-            removeDef  : {action : "remove", type : "def",  args : ["def_id"]},
-            addLink    : {action : "add",    type : "link", args : ["link_id", "link"]},
-            removeLink : {action : "remove", type : "link", args : ["link_id"]},
-            addPort    : {action : "add",    type : "port", args : ["def_id", "port_id", "type_id", "is_arg"]},
-            removePort : {action : "remove", type : "port", args : ["def_id", "port_id", "is_arg"]},
-            addType    : {action : "add",    type : "type", args : ["type_id", "type_info"]},
-            removeType : {action : "remove", type : "type", args : ["type_id"]}
-        } 
+            addNode    : {action : "add",    type : "node",    args : ["node_id", "def_id", "parent_id", "value"]},
+            removeNode : {action : "remove", type : "node",    args : ["node_id"]},
+            addDef     : {action : "add",    type : "def",     args : ["def_id", "name", "node_type", "type_sig", "placeable"]},
+            removeDef  : {action : "remove", type : "def",     args : ["def_id"]},
+            addLink    : {action : "add",    type : "link",    args : ["link_id", "link"]},
+            removeLink : {action : "remove", type : "link",    args : ["link_id"]},
+            addPort    : {action : "add",    type : "port",    args : ["def_id", "port_id", "type_id", "is_arg"]},
+            removePort : {action : "remove", type : "port",    args : ["def_id", "port_id", "is_arg"]},
+            addType    : {action : "add",    type : "type",    args : ["type_id", "type_info"]},
+            removeType : {action : "remove", type : "type",    args : ["type_id"]},
+            setLiteral : {action : "set",    type : "literal", args : ["node_id", "value"]},
+        }
         this.max_id = {
             node : 0,
             link : 0,
@@ -69,11 +70,12 @@ export class EditProxy {
     
     // apply an add/remove event to the given nodegraph
     applyEvent(ng, evt) {
-        var act  = {node : "Node",
-                    def  : "Def",
-                    link : "Link",
-                    port : "Port",
-                    type : "Type"}[evt.type]
+        var act  = {node    : "Node",
+                    def     : "Def",
+                    link    : "Link",
+                    port    : "Port",
+                    type    : "Type",
+                    literal : "Literal"}[evt.type]
         act      = evt.action + act
         var fn   = ng[act]
         var args = this.unpackArgs(act, evt.details)

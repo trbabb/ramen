@@ -98,7 +98,27 @@ export class LiteralNodeBody extends React.PureComponent {
     
     constructor(props) {
         super(props)
+        this.state = {
+            value : this.props.node.value
+        }
     }
+    
+    
+    componentWillReceiveProps(nextProps) {
+        this.setState({value : nextProps.node.value})
+    }
+    
+    
+    commitValue = (v) => {
+        this.props.cbacks.dispatchCommand(
+            "set", 
+            "literal", 
+            {
+                value   : v,
+                node_id : this.props.node_id,
+            })
+    }
+    
     
     render() {
         // not sure if "clear selection" is the right behavior, but 
@@ -110,9 +130,17 @@ export class LiteralNodeBody extends React.PureComponent {
             <div className="LiteralNode">
                 <div className="Handle"> </div>
                 <input 
-                    className = "NodeInput"
-                    name      = {this.props.node_id}
-                    onFocus   = {e => {this.props.cbacks.clearSelection()}}/>
+                    className  = "NodeInput"
+                    name       = {this.props.node_id}
+                    value      = {this.state.value}
+                    onChange   = {e => {this.setState({value : e.target.value})}}
+                    onFocus    = {e => {this.props.cbacks.clearSelection()}}
+                    onBlur     = {e => {this.commitValue(e.target.value)}}
+                    onKeyPress = {e => {
+                        if (e.key === "Enter" || e.key === "Return") {
+                            this.commitValue(e.target.value)
+                        }
+                    }}/>
                 <Port
                     port_id   = {port_id}
                     node_id   = {this.props.node_id}

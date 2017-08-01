@@ -41,9 +41,13 @@ export class NodeGraph {
     }
 
 
-    addNode(node_id, def_id, parent_id=null) {
+    addNode(node_id, def_id, parent_id=null, value=null) {
         var ng   = _.clone(this)
-        ng.nodes = this.nodes.set(node_id, new NodeData(def_id, parent_id))
+        var node = new NodeData(def_id, parent_id)
+        if (value !== null && value !== undefined) {
+            node.value = value
+        }
+        ng.nodes = this.nodes.set(node_id, node)
         
         if (parent_id === null || parent_id === undefined) {
             ng.child_nodes  = this.child_nodes.add(node_id)
@@ -279,6 +283,14 @@ export class NodeGraph {
     removeType(type_id) {
         var ng = _.clone(this)
         ng.types = ng.types.remove(type_id)
+        return ng
+    }
+    
+    
+    setLiteral(node_id, value) {
+        var ng   = _.clone(this)
+        var node = ng.nodes.get(node_id)
+        ng.nodes = ng.nodes.set(node_id, node.setValue(value))
         return ng
     }
 

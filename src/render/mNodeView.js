@@ -8,15 +8,7 @@ import {NODE_TYPE}    from '../state/Def'
 import {GraphElement} from '../state/GraphElement'
 
 
-// NodeView holds nodes and links, and ensures that the two stay visually connected.
-
-// need moved() events when the port moves in the coordinate space of the drawn links.
-// it is more efficient to store points because then the endpoints are only re-computed
-// for nodes that have moved.
-
-// however this is a problem because the parent elems will NOT see changes when some intermediate
-// element moves.
-
+// NodeView holds nodes and links, and renders them both.
 
 export class NodeView extends React.PureComponent {
 

@@ -23,6 +23,7 @@ export class NodeData {
         this.entry_id    = null
         this.exit_id     = null
         this.position    = [0,0]
+        this.value       = null
     }
     
     
@@ -86,6 +87,13 @@ export class NodeData {
     setPosition(position) {
         var n = _.clone(this)
         n.position = position
+        return n
+    }
+    
+    
+    setValue(v) {
+        var n = _.clone(this)
+        n.value = v
         return n
     }
     
