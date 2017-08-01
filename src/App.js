@@ -141,13 +141,14 @@ class App extends React.Component {
     }
     
     
+    // parent_corner in local (top-level nodeview) coordinates
     updateConnectedPortLinks(node_id, port_id, is_sink, parent_corner=null) {
         var node = this.state.ng.nodes.get(node_id)
         
         if (!parent_corner) {
-            var parent_view = this.getElement(new GraphElement("view", node.parent))
-            parent_corner = parent_view.getCorner()
-            console.log("getting corner for", node.parent)
+            var parent_view   = this.getElement(new GraphElement("view", node.parent))
+            var master_view   = this.getElement(new GraphElement("view", null))
+            parent_corner     = parent_view.getCorner()
         }
         
         var partial_link = this.state.partial_link_anchor
@@ -162,12 +163,14 @@ class App extends React.Component {
             // set the endpoint in the coordinate space of the object it belongs to
             link_elem.setEndpoint([xy[0] - uv[0], xy[1] - uv[1]], is_sink)
         }
+        
         // is the partial link connected to this port?
         if (partial_link && partial_link.node_id === node_id && partial_link.port_id === port_id) {
             let ge = new GraphElement("partial_link", this.state.partial_link_anchor)
             let partial_elem = this.getElement(ge)
             // coordinate space is OUR coordinate space.
-            partial_elem.setEndpoint([xy[0], xy[1]], false)
+            var st = master_view.getCorner()
+            partial_elem.setEndpoint([xy[0] - st[0], xy[1] - st[1]], false)
         }
     }
     
