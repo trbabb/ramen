@@ -1,10 +1,14 @@
-import React          from 'react';
-import Draggable      from 'react-draggable';
-import ReactDOM       from 'react-dom';
-import {Port}         from './mPort';
-import {NodeView}     from './mNodeView';
-import {PortConfig}   from './mPortConfig';
+import React          from 'react'
+import Draggable      from 'react-draggable'
+import ReactDOM       from 'react-dom'
+import {Port}         from './mPort'
+import {NodeView}     from './mNodeView'
+import {PortConfig}   from './mPortConfig'
 import {GraphElement} from '../state/GraphElement'
+import {NODE_TYPE}    from '../state/Def'
+import {CallNodeBody, 
+        FunctionNodeBody, 
+        LiteralNodeBody} from './NodeBody.js'
 
 // MNode is the React element for a language node.
 
@@ -31,9 +35,9 @@ export class MNode extends React.PureComponent {
     onRef = (e) => {
         this.elem = e
         if (e) {
-            this.props.mutation_callbacks.onElementMounted(this.getGraphElement(), this)
+            this.props.cbacks.onElementMounted(this.getGraphElement(), this)
         } else {
-            this.props.mutation_callbacks.onElementUnmounted(this.getGraphElement())
+            this.props.cbacks.onElementUnmounted(this.getGraphElement())
         }
     }
     
@@ -53,7 +57,7 @@ export class MNode extends React.PureComponent {
     
     onDrag = (e, position) => {
         this.setState({xy: [position.x, position.y]})
-        this.props.mutation_callbacks.onNodeMove(this.props.node_id, [position.x, position.y])
+        this.props.cbacks.onNodeMove(this.props.node_id, [position.x, position.y])
     }
     
     
@@ -62,7 +66,7 @@ export class MNode extends React.PureComponent {
         // if the latter, we don't want to steal focus/selection from them.
         var self_dom = ReactDOM.findDOMNode(this.elem)
         if (e.target === self_dom) {
-            this.props.mutation_callbacks.onElementFocused(this.getGraphElement())
+            this.props.cbacks.onElementFocused(this.getGraphElement())
         }
     }
     
@@ -92,7 +96,7 @@ export class MNode extends React.PureComponent {
                 direction          = {doSinks ? [0,-1] : [0,1]}
                 is_sink            = {doSinks}
                 edit_target        = {editable ? edit_target : null}
-                mutation_callbacks = {self.props.mutation_callbacks} />
+                cbacks = {self.props.cbacks} />
             z.push(p);
         });
         return z;
@@ -120,19 +124,18 @@ export class MNode extends React.PureComponent {
                         <PortConfig 
                             is_sink={false}
                             def_id={this.props.node.def_id}
-                            handlePortConfigClick={this.props.mutation_callbacks.onPortConfigClick}/>
+                            handlePortConfigClick={this.props.cbacks.onPortConfigClick}/>
                     </div>
                 </div>
                 <NodeView
                     parent_id={this.props.node_id}
                     ng={this.props.ng}
-                    port_coords={this.props.port_coords}
-                    mutation_callbacks={this.props.mutation_callbacks}/>
+                    cbacks={this.props.cbacks}/>
                 <div className="PortGroup SinkPortGroup BodyExit">
                     <PortConfig 
                         is_sink={true}
                         def_id={this.props.node.def_id}
-                        handlePortConfigClick={this.props.mutation_callbacks.onPortConfigClick}/>
+                        handlePortConfigClick={this.props.cbacks.onPortConfigClick}/>
                     {this.makePorts(this.props.node.exit_id, exit_node, exit_def.type_sig, true, true)}
                 </div>
                 <div className="PortGroup SinkPortGroup">
@@ -167,13 +170,37 @@ export class MNode extends React.PureComponent {
     
     
     render() {
-        var p = this.props.node.position
+        var p    = this.props.node.position
+        var body = null
+        var t    = this.props.def.node_type
+        var subprops = {
+            node    : this.props.node,
+            node_id : this.props.node_id,
+            def     : this.props.def,
+            types   : this.props.types,
+            cbacks  : this.props.cbacks,
+        }
+        if (t === NODE_TYPE.NODE_CALL ||
+            t === NODE_TYPE.NODE_BUILTIN) {
+            body = <CallNodeBody     {...subprops}/>
+        } else if (t === NODE_TYPE.NODE_FUNCTION) {
+            body = <FunctionNodeBody {...subprops} ng={this.props.ng}/>
+        } else if (t === NODE_TYPE.NODE_LITERAL) {
+            body = <LiteralNodeBody  {...subprops}/>
+        } else {
+            console.log("beh")
+        }
         return (
-            <Draggable 
+            <Draggable
                     position={{x : this.state.xy[0], y : this.state.xy[1]}}
-                    cancel=".NodeView"
-                    onDrag={this.onDrag}>
-                {this.props.def.hasBody() ? this.renderFunctionDefBody() : this.renderPlainBody()}
+                    onDrag={this.onDrag}
+                    cancel=".NodeView">
+                <div className={"MNode" + (this.state.selected ? " SelectedGraphElement" : "")}
+                        onFocus={this.onFocus}
+                        ref={this.onRef}
+                        tabIndex={1}>
+                    {body}
+                </div>
             </Draggable>
         );
     }

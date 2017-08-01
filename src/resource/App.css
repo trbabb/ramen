@@ -44,9 +44,8 @@ img {
   text-align: center;
 }
 
-.CallName.Function {
+.FunctionNode > .CallName {
   border-radius: 4px 4px 0px 0px;
-  padding: 8px;
 }
 
 .Link * {
@@ -67,13 +66,10 @@ img {
   stroke-dasharray: 5,5;
 }
 
-.PortGroup {
+.PortRack {
   padding: 0px;
   margin: 0px;
-}
-
-.SourcePortGroup {
-  text-align: right;
+  text-align: center;
 }
 
 .Port {

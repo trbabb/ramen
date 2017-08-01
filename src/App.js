@@ -212,8 +212,6 @@ class App extends React.Component {
             var link = this.state.ng.links.get(elem.id)
             this.updateConnectedPortLinks(link.src.node_id,  link.src.port_id,  false)
             this.updateConnectedPortLinks(link.sink.node_id, link.sink.port_id, true)
-        } else if (elem.type === "node") {
-            this.updateConnectedNodeLinks(elem.id)
         } else if (elem.type === "port") {
             this.updateConnectedPortLinks(elem.id.node_id, elem.id.port_id, elem.id.is_sink)
         } else if (elem.type === "partial_link") {
@@ -449,8 +447,6 @@ class App extends React.Component {
     
     
     render() {
-        // xxx hack below: _.clone() to cause extra updates.
-        
         var new_node_dlg = this.state.active_node_dialog !== null ? 
                 (<NarrowingList
                     className="OverlayDialog"
@@ -488,9 +484,9 @@ class App extends React.Component {
                         tabIndex    = {1}
                         ref         = {e => {this.elem = e}}>
                             <NodeView
-                                parent_id         = {null}
-                                ng                = {this.state.ng}
-                                mutation_callbacks= {this.mutation_callbacks}/>
+                                parent_id = {null}
+                                ng        = {this.state.ng}
+                                cbacks    = {this.mutation_callbacks}/>
                             {this.renderPartialLink()}
                     </div>
                     {new_node_dlg}

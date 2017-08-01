@@ -37,9 +37,9 @@ export class NodeView extends React.PureComponent {
     onRef = (e) => {
         this.elem = e
         if (e) {
-            this.props.mutation_callbacks.onElementMounted(this.getGraphElement(), this)
+            this.props.cbacks.onElementMounted(this.getGraphElement(), this)
         } else {
-            this.props.mutation_callbacks.onElementUnmounted(this.getGraphElement())
+            this.props.cbacks.onElementUnmounted(this.getGraphElement())
         }
     }
     
@@ -75,10 +75,10 @@ export class NodeView extends React.PureComponent {
             links.push(<Link
                 key={"__link_" + link_id}
                 link_id={link_id}
-                onElementMounted={this.props.mutation_callbacks.onElementMounted}
-                onElementUnmounted={this.props.mutation_callbacks.onElementUnmounted}
-                onElementFocused={this.props.mutation_callbacks.onElementFocused}
-                onLinkEndpointClicked={this.props.mutation_callbacks.onLinkEndpointClicked}/>);
+                onElementMounted={this.props.cbacks.onElementMounted}
+                onElementUnmounted={this.props.cbacks.onElementUnmounted}
+                onElementFocused={this.props.cbacks.onElementFocused}
+                onLinkEndpointClicked={this.props.cbacks.onLinkEndpointClicked}/>);
         }
         
         // emit the nodes which are our direct children
@@ -93,16 +93,14 @@ export class NodeView extends React.PureComponent {
             if (def.hasBody()) {
                 // these are heavy, so don't send them to
                 // the nodes which don't have inner nodes.
-                x.ng          = this.props.ng.ofNode(node_id)  // xxx: this is re-created on every frame D:
-                x.port_coords = this.props.port_coords
+                x.ng = this.props.ng.ofNode(node_id)  // xxx: this is re-created on every frame D:
             }
-            nodes.push(<MNode node_id={node_id}
-                              key={"__node_" + node_id}
-                              paneID={this.props.id}
-                              mutation_callbacks={this.props.mutation_callbacks}
-                              node={n}
-                              def={def}
-                              types={this.props.ng.types}
+            nodes.push(<MNode node_id = {node_id}
+                              key     = {"__node_" + node_id}
+                              cbacks  = {this.props.cbacks}
+                              node    = {n}
+                              def     = {def}
+                              types   = {this.props.ng.types}
                               {...x}/>)
         }
         

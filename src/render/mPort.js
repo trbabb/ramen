@@ -72,9 +72,9 @@ export class Port extends React.PureComponent {
     onRef = (e) => {
         this.elem = e
         if (e) {
-            this.props.mutation_callbacks.onElementMounted(this.getGraphElement(), this)
+            this.props.cbacks.onElementMounted(this.getGraphElement(), this)
         } else {
-            this.props.mutation_callbacks.onElementUnmounted(this.getGraphElement())
+            this.props.cbacks.onElementUnmounted(this.getGraphElement())
         }
     }
     
@@ -91,15 +91,15 @@ export class Port extends React.PureComponent {
     
     
     onMouseEnter = () => {
-        if (this.props.mutation_callbacks.onPortHovered && this.props.edit_target) {
-            this.props.mutation_callbacks.onPortHovered(this.props.edit_target);
+        if (this.props.cbacks.onPortHovered && this.props.edit_target) {
+            this.props.cbacks.onPortHovered(this.props.edit_target);
         }
     }
     
     
     onMouseLeave = () => {
-        if (this.props.mutation_callbacks.onPortHovered) {
-            this.props.mutation_callbacks.onPortHovered(null);
+        if (this.props.cbacks.onPortHovered) {
+            this.props.cbacks.onPortHovered(null);
         }
     }
     
@@ -122,7 +122,7 @@ export class Port extends React.PureComponent {
                 className={classes.join(" ")}
                 draggable="false"
                 tabIndex="1"
-                onFocus={e => {this.props.mutation_callbacks.onElementFocused(this.getGraphElement())}}
+                onFocus={e => {this.props.cbacks.onElementFocused(this.getGraphElement())}}
                 onMouseEnter={this.onMouseEnter}
                 onMouseLeave={this.onMouseLeave}
                 onClick={(evt) => {
@@ -130,7 +130,7 @@ export class Port extends React.PureComponent {
                              port_id   : this.props.port_id,
                              is_sink   : this.props.is_sink,
                              mouse_evt : evt}
-                    this.props.mutation_callbacks.onPortClicked(e);
+                    this.props.cbacks.onPortClicked(e);
                 }}
                 ref={this.onRef} />
         );

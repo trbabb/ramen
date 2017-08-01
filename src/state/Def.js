@@ -4,8 +4,9 @@ import * as _ from 'lodash'
 
 export var NODE_TYPE = {
     NODE_LITERAL  : "literal",
+    NODE_BUILTIN  : "builtin",
+    NODE_CALL     : "fncall",
     NODE_FUNCTION : "function",
-    NODE_FNCALL   : "fncall",
     NODE_LOOP     : "loop",
     NODE_BRANCH   : "branch",
     NODE_ENTRY    : "entry",
