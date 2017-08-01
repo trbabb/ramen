@@ -25,6 +25,10 @@ import {NODE_TYPE}    from './Def'
 
 // todo: when nodes have "vertical" form, will have to switch neighbor logic.
 
+function positive_mod(a,b) {
+    return (a % b + b) % b
+}
+
 
 export class SelectionModel {
     
@@ -44,7 +48,7 @@ export class SelectionModel {
     }
     
     
-    clear_selection() {
+    clear_selection = () => {
         if (this.selected_elements.size > 0) {
             for (let [k,e] of this.selected_elements) {
                 var obj = this.app.getElement(e)
@@ -57,7 +61,7 @@ export class SelectionModel {
     }
     
     
-    unselect(elem) {
+    unselect = (elem) => {
         var key = elem.key()
         if (this.selected_elements.has(key)) {
             if (this.edge.key() === key) {
@@ -71,7 +75,7 @@ export class SelectionModel {
     }
     
     
-    set_selection(elem) {
+    set_selection = (elem) => {
         var found = false
         for (let [k,e] of this.selected_elements) {
             if (!_.isEqual(e, elem)) {
@@ -106,7 +110,7 @@ export class SelectionModel {
     }
     
     
-    extend_selection(elem) {
+    extend_selection = (elem) => {
         if (!_.isEqual(elem, this.edge)) {
             var obj = this.app.getElement(elem)
             this.selected_elements = this.selected_elements.set(elem.key(), elem)
@@ -118,7 +122,7 @@ export class SelectionModel {
     }
     
     
-    retract_selection() {
+    retract_selection = () => {
         if (this.selected_elements.size > 0) {
             var obj = this.app.getElement(this.edge)
             // remove last element:
@@ -135,7 +139,7 @@ export class SelectionModel {
     }
     
     
-    vertical_neighbor(elem, up) {
+    vertical_neighbor = (elem, up) => {
         if (elem.type === "port") {
             var inward = elem.id.is_sink ^ up
             if (inward) {
@@ -188,7 +192,7 @@ export class SelectionModel {
     }
     
     
-    horizontal_neighbor(elem, left) {
+    horizontal_neighbor = (elem, left) => {
         if (elem.type === "port") {
             // the adjacent port is one on the same edge of the node, to the left or right.
             var node  = this.app.state.ng.nodes.get(elem.id.node_id)
@@ -205,15 +209,23 @@ export class SelectionModel {
                 })
             }
         } else if (elem.type === "link") {
-            // todo: when half-edges are selectable, this will mean something.
-            return null
+            // todo: when half-edges are selectable, find the neighbords on this port
+            //       for sources, and find the adjacent ports' links on sinks.
+            // todo: links should be ordered by their visual ordering on screen
+            var link  = this.app.state.ng.links.get(elem.id)
+            var node  = this.app.state.ng.nodes.get(link.src.node_id)
+            var links = node.getLinks(link.src.port_id)
+            var lseq  = links.toList()
+            var idx   = lseq.indexOf(elem.id) + (left ? -1 : 1)
+            idx = positive_mod(idx, lseq.size)
+            return new GraphElement("link", lseq.get(idx))
         } else if (elem.type === "node") {
             return null
         }
     }
     
     
-    neighbor(elem, direction) {
+    neighbor = (elem, direction) => {
         if (direction === "up") {
             return this.vertical_neighbor(elem, true)
         } else if (direction === "down") {
@@ -228,7 +240,7 @@ export class SelectionModel {
     }
     
     
-    walk(direction) {
+    walk = (direction) => {
         if (this.edge !== null) {
             var new_guy = this.neighbor(this.edge, direction)
             if (new_guy !== null) {
@@ -238,7 +250,7 @@ export class SelectionModel {
     }
     
     
-    gather(direction) {
+    gather = (direction) => {
         if (this.edge !== null) {
             var new_guy = this.neighbor(this.edge, direction)
             if (new_guy !== null) {
@@ -259,7 +271,6 @@ export class SelectionModel {
     
     onKeyDown = (evt) => {
         if (evt.key === "Shift") {
-            console.log("shift down")
             this.shift = true
         }
         if (evt.key === "ArrowUp" || evt.key === "ArrowDown" || evt.key === "ArrowLeft" || evt.key === "ArrowRight") {
@@ -279,7 +290,6 @@ export class SelectionModel {
     
     onKeyUp = (evt) => {
         if (evt.key === "Shift") {
-            console.log("shift up")
             this.shift = false
         }
     }

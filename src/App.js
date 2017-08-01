@@ -69,6 +69,7 @@ class App extends React.Component {
             onElementMounted      : this.onElementMounted,
             onElementUnmounted    : this.onElementUnmounted,
             onElementFocused      : this.selection.onElementFocused,
+            clearSelection        : this.selection.clear_selection,
         }
     }
     

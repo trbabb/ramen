@@ -104,9 +104,24 @@ export class LiteralNodeBody extends React.PureComponent {
     }
     
     render() {
+        // not sure if "clear selection" is the right behavior, but 
+        // we need /something/ for now so that backspace doesn't baleet everthang
+        var sig     = this.props.def.type_sig
+        var port_id = sig.getSourceIDs().toSeq().first()
+        var type_id = sig.type_by_port_id.get(port_id)
         return (
             <div className="LiteralNode">
-                <input name={this.props.node_id}/>
+                <div className="Handle"> </div>
+                <input 
+                    name      = {this.props.node_id}
+                    onFocus   = {e => {this.props.cbacks.clearSelection()}}/>
+                <Port
+                    port_id   = {port_id}
+                    node_id   = {this.props.node_id}
+                    is_sink   = {false}
+                    type_id   = {this.props.types.get(type_id).code}
+                    direction = {[1,0]}
+                    cbacks    = {this.props.cbacks}/>
             </div>
         )
     }
