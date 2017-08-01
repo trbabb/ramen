@@ -65,8 +65,7 @@ export class FunctionNodeBody extends React.PureComponent {
                     def     = {this.props.ng.defs.get(entry.def_id)}
                     is_sink = {false}
                     target  = {this.props.node.def_id}
-                    cbacks  = {this.props.cbacks}
-                    types   = {this.props.types}/>
+                    cbacks  = {this.props.cbacks}/>
                 
                 {/* function body */}
                 <NodeView
@@ -80,16 +79,14 @@ export class FunctionNodeBody extends React.PureComponent {
                     def     = {this.props.ng.defs.get(exit.def_id)}
                     is_sink = {true}
                     target  = {this.props.node.def_id}
-                    cbacks  = {this.props.cbacks}
-                    types   = {this.props.types}/>
+                    cbacks  = {this.props.cbacks}/>
                 
                 {/* definition output */}
                 <PortRack
                     node_id = {this.props.node_id}
                     def     = {this.props.def}
                     is_sink = {false}
-                    cbacks  = {this.props.cbacks}
-                    types   = {this.props.types}/>
+                    cbacks  = {this.props.cbacks}/>
             </div>
         )
     }
@@ -106,9 +103,9 @@ export class LiteralNodeBody extends React.PureComponent {
     render() {
         // not sure if "clear selection" is the right behavior, but 
         // we need /something/ for now so that backspace doesn't baleet everthang
-        var sig     = this.props.def.type_sig
-        var port_id = sig.getSourceIDs().toSeq().first()
-        var type_id = sig.type_by_port_id.get(port_id)
+        var sig      = this.props.def.type_sig
+        var port_id  = sig.getSourceIDs().toSeq().first()
+        var type_obj = sig.type_by_port_id.get(port_id)
         return (
             <div className="LiteralNode">
                 <div className="Handle"> </div>
@@ -120,7 +117,7 @@ export class LiteralNodeBody extends React.PureComponent {
                     port_id   = {port_id}
                     node_id   = {this.props.node_id}
                     is_sink   = {false}
-                    type_id   = {this.props.types.get(type_id).code}
+                    type_id   = {type_obj.code}
                     direction = {[1,0]}
                     cbacks    = {this.props.cbacks}/>
             </div>

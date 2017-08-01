@@ -100,7 +100,6 @@ export class NodeView extends React.PureComponent {
                               cbacks  = {this.props.cbacks}
                               node    = {n}
                               def     = {def}
-                              types   = {this.props.ng.types}
                               {...x}/>)
         }
         

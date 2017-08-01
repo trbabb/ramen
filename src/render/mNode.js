@@ -79,7 +79,6 @@ export class MNode extends React.PureComponent {
             node    : this.props.node,
             node_id : this.props.node_id,
             def     : this.props.def,
-            types   : this.props.types,
             cbacks  : this.props.cbacks,
         }
         if (t === NODE_TYPE.NODE_CALL ||

@@ -13,7 +13,7 @@ export class PortRack extends React.PureComponent {
         
         // emit all the ports
         ids.forEach(port_id => {
-            var type_id     = sig.type_by_port_id.get(port_id)
+            var type_obj    = sig.type_by_port_id.get(port_id)
             var edit_target = null
             if (this.props.target) {
                 edit_target = {
@@ -27,7 +27,7 @@ export class PortRack extends React.PureComponent {
                     key         = {port_id}
                     port_id     = {port_id}
                     node_id     = {self.props.node_id}
-                    type_id     = {self.props.types.get(type_id).code}
+                    type_id     = {type_obj.code}
                     direction   = {self.props.is_sink ? [0,-1] : [0, 1]}
                     is_sink     = {self.props.is_sink}
                     edit_target = {edit_target}
