@@ -105,7 +105,7 @@ export class NodeView extends React.PureComponent {
         }
         
         return (
-            <div className="NodeView"
+            <div className="NodeView NodeInput"
                     id={this.props.id}
                     style={{position:"relative"}}
                     onMouseMove={this.onMouseMove}

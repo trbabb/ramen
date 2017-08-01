@@ -113,6 +113,7 @@ export class LiteralNodeBody extends React.PureComponent {
             <div className="LiteralNode">
                 <div className="Handle"> </div>
                 <input 
+                    className = "NodeInput"
                     name      = {this.props.node_id}
                     onFocus   = {e => {this.props.cbacks.clearSelection()}}/>
                 <Port

@@ -94,7 +94,7 @@ export class MNode extends React.PureComponent {
             <Draggable
                     position={{x : this.state.xy[0], y : this.state.xy[1]}}
                     onDrag={this.onDrag}
-                    cancel=".NodeView input">
+                    cancel=".NodeInput">
                 <div className={"MNode" + (this.state.selected ? " SelectedGraphElement" : "")}
                         onFocus={this.onFocus}
                         ref={this.onRef}
