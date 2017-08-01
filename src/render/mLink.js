@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM       from 'react-dom';
 import {GraphElement} from '../state/GraphElement'
+import * as _         from 'lodash'
 
 
 // Link is the React element for rendering a link between two node ports.
@@ -13,7 +14,8 @@ export class Link extends React.PureComponent {
         super(props)
         this.state = {
             src_endpt_selected  : false,
-            sink_endpt_selected : false
+            sink_endpt_selected : false,
+            points              : [[0,0],[0,0]]
         }
         this.sink_elem  = null
         this.src_elem   = null
@@ -24,8 +26,8 @@ export class Link extends React.PureComponent {
     bounds() {
         let mins = [ Infinity,  Infinity];
         let maxs = [-Infinity, -Infinity];
-        for (var i = 0; i < this.props.points.length; ++i) {
-            let p = this.props.points[i];
+        for (var i = 0; i < this.state.points.length; ++i) {
+            let p = this.state.points[i];
             mins = [Math.min(p[0], mins[0]), Math.min(p[1], mins[1])];
             maxs = [Math.max(p[0], maxs[0]), Math.max(p[1], maxs[1])];
         }
@@ -44,19 +46,19 @@ export class Link extends React.PureComponent {
     
     
     getGraphElement() {
-        return new GraphElement("link", this.props.link_id)
-    }
-    
-    
-    componentDidMount() {
-        if (!this.props.partial) {
-            this.props.onElementMounted(this.getGraphElement(), this)
+        if (this.props.partial) {
+            return new GraphElement("partial_link", this.props.anchor)
+        } else {
+            return new GraphElement("link", this.props.link_id)
         }
     }
     
     
-    componentWillUnmount() {
-        if (!this.props.partial) {
+    onRef = (e) => {
+        this.whole_elem = e
+        if (e) {
+            this.props.onElementMounted(this.getGraphElement(), this)
+        } else {
             this.props.onElementUnmounted(this.getGraphElement())
         }
     }
@@ -69,6 +71,15 @@ export class Link extends React.PureComponent {
         if (!src_side) {
             this.setState({sink_endpt_selected : selected})
         }
+    }
+    
+    
+    setEndpoint(xy, is_sink) {
+        this.setState(prevState => {
+            var s = _.clone(prevState.points)
+            s[is_sink ? 1 : 0] = xy
+            return {points : s}
+        })
     }
     
     
@@ -138,7 +149,7 @@ export class Link extends React.PureComponent {
         var cbaks = {0 : this.onSourceEndpointClicked, 1 : this.onSinkEndpointClicked};
         
         // put the points into the coordsys of this svg element.
-        var xf_pts = this.props.points.map(p => {
+        var xf_pts = this.state.points.map(p => {
             return [p[0] - bnds.lo[0] + pad, p[1] - bnds.lo[1] + pad];
         });
         
@@ -169,7 +180,7 @@ export class Link extends React.PureComponent {
             <svg className={"Link" + (seld ? " SelectedGraphElement" : "")}
                 width ={bnds.hi[0] - bnds.lo[0] + 2 * pad}
                 height={bnds.hi[1] - bnds.lo[1] + 2 * pad}
-                ref={e => {this.whole_elem = e}}
+                ref={this.onRef}
                 tabIndex={1}
                 style={style}>
                 {this.makeLine(xf_pts, this.props.partial)}

@@ -15,7 +15,8 @@ export class MNode extends React.PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            selected : false
+            selected : false,
+            xy       : [0,0]
         }
         var p = props.node.position
         this.elem = null
@@ -27,13 +28,13 @@ export class MNode extends React.PureComponent {
     }
     
     
-    componentDidMount() {
-        this.props.mutation_callbacks.onElementMounted(this.getGraphElement(), this)
-    }
-    
-    
-    componentWillUnmount() {
-        this.props.mutation_callbacks.onElementUnmounted(this.getGraphElement())
+    onRef = (e) => {
+        this.elem = e
+        if (e) {
+            this.props.mutation_callbacks.onElementMounted(this.getGraphElement(), this)
+        } else {
+            this.props.mutation_callbacks.onElementUnmounted(this.getGraphElement())
+        }
     }
     
     
@@ -51,6 +52,7 @@ export class MNode extends React.PureComponent {
     
     
     onDrag = (e, position) => {
+        this.setState({xy: [position.x, position.y]})
         this.props.mutation_callbacks.onNodeMove(this.props.node_id, [position.x, position.y])
     }
     
@@ -110,7 +112,7 @@ export class MNode extends React.PureComponent {
         return (
             <div className={className} tabIndex="1" 
                     onFocus={this.onFocus} 
-                    ref={e => {this.elem = e}}>
+                    ref={this.onRef}>
                 <div className="FnHeader Function">
                     <div className="CallName Function">{this.props.def.name}</div>
                     <div className="PortGroup SourcePortGroup BodyEntry">
@@ -122,6 +124,7 @@ export class MNode extends React.PureComponent {
                     </div>
                 </div>
                 <NodeView
+                    parent_id={this.props.node_id}
                     ng={this.props.ng}
                     port_coords={this.props.port_coords}
                     mutation_callbacks={this.props.mutation_callbacks}/>
@@ -148,7 +151,7 @@ export class MNode extends React.PureComponent {
         return (
             <div className={className} tabIndex="1" 
                     onFocus={this.onFocus} 
-                    ref={e => {this.elem = e}}>
+                    ref={this.onRef}>
                 <div className="PortGroup SinkPortGroup">
                     {this.makePorts(this.props.node_id, this.props.node, this.props.def.type_sig, true)}
                 </div>
@@ -167,7 +170,7 @@ export class MNode extends React.PureComponent {
         var p = this.props.node.position
         return (
             <Draggable 
-                    position={{x : p[0], y : p[1]}}
+                    position={{x : this.state.xy[0], y : this.state.xy[1]}}
                     cancel=".NodeView"
                     onDrag={this.onDrag}>
                 {this.props.def.hasBody() ? this.renderFunctionDefBody() : this.renderPlainBody()}

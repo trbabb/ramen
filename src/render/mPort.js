@@ -46,7 +46,9 @@ export class Port extends React.PureComponent {
     
     // get the connection point in "window" coordinates.
     getConnectionPoint() {
-        if (this.elem === null) return [0,0];
+        if (this.elem === null) {
+            return [0,0]
+        }
 
         var eDom = ReactDOM.findDOMNode(this.elem);
         var box  = eDom.getBoundingClientRect();
@@ -67,19 +69,13 @@ export class Port extends React.PureComponent {
     }
     
     
-    componentDidMount() {
-        this.doPortMoved();
-        this.props.mutation_callbacks.onElementMounted(this.getGraphElement(), this)
-    }
-    
-    
-    componentDidUpdate() {
-        this.doPortMoved();
-    }
-    
-    
-    componentWillUnmount() {
-        this.props.mutation_callbacks.onElementUnmounted(this.getGraphElement())
+    onRef = (e) => {
+        this.elem = e
+        if (e) {
+            this.props.mutation_callbacks.onElementMounted(this.getGraphElement(), this)
+        } else {
+            this.props.mutation_callbacks.onElementUnmounted(this.getGraphElement())
+        }
     }
     
     
@@ -91,21 +87,6 @@ export class Port extends React.PureComponent {
     grabFocus() {
         var eDom = ReactDOM.findDOMNode(this.elem);
         if (eDom) eDom.focus()
-    }
-    
-    
-    doPortMoved() {
-        var xy = this.getConnectionPoint();
-        if (!_.isEqual(xy, this.cxnpt)) {
-            var evt = {
-                node_id : this.props.node_id,
-                port_id : this.props.port_id,
-                is_sink : this.props.is_sink,
-                new_pos : xy
-            };
-            this.cxnpt = xy;
-            this.props.mutation_callbacks.onPortMoved(evt);
-        }
     }
     
     
@@ -147,11 +128,11 @@ export class Port extends React.PureComponent {
                 onClick={(evt) => {
                     var e = {node_id   : this.props.node_id,
                              port_id   : this.props.port_id,
-                             elem      : this.elem,
+                             is_sink   : this.props.is_sink,
                              mouse_evt : evt}
                     this.props.mutation_callbacks.onPortClicked(e);
                 }}
-                ref={(e) => {this.elem = e}} />
+                ref={this.onRef} />
         );
     }
 }

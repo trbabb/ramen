@@ -49,7 +49,7 @@ import './resource/App.css'
 
 
 class App extends React.Component {
-
+    
     constructor(props) {
         super(props);
         this.state = this.getDefaultState();
@@ -63,7 +63,6 @@ class App extends React.Component {
             onLinkDisconnected    : this.onLinkDisconnected,
             onPortClicked         : this.onPortClicked,
             onPortHovered         : this.onPortHovered,
-            onPortMoved           : this.onPortMoved,
             onLinkEndpointClicked : this.onLinkEndpointClicked,
             onNodeMove            : this.onNodeMove,
             onPortConfigClick     : this.onPortConfigClick,
@@ -72,32 +71,28 @@ class App extends React.Component {
             onElementFocused      : this.selection.onElementFocused,
         }
     }
-
-
+    
+    
     /****** Setup / init ******/
-
-
+    
+    
     getDefaultState() {
         return {
             ng : new NodeGraph(),
-
-            // "partial link" logic:
-            mouse_pos    : [0,0], // in local coords
-            partial_link : null,  // anchor port
-
-            // in window coords
-            port_coords  : new Map(),
-
+            
+            partial_link_anchor : null,
+            partial_link_endpt  : [0,0],
+            
             active_node_dialog : null,
             active_port_dialog : null,
-
+            
             connected    : false,
-
+            
             port_hovered : null,
         }
     }
-
-
+    
+    
     setPosition = (node_id, pos) => {
         this.setState(prevState => {
             return { ng : prevState.ng.setPosition(node_id, pos) }
@@ -116,33 +111,104 @@ class App extends React.Component {
             this.elem.focus()
         }
     }
-
-
+    
+    
     /****** Callback functions ******/
-
-
+    
+    
     setConnected = (connected) => {
         this.setState({connected : connected})
     }
-
-
+    
+    
+    setLinkEndpoint = (xy) => {
+        if (!_.isEqual(this.state.partial_link_endpt)) {
+            this.setState({partial_link_endpt : xy})
+            if (this.state.partial_link_anchor) {
+                var ge = new GraphElement("partial_link", this.state.partial_link_anchor)
+                var link_el = this.getElement(ge)
+                link_el.setEndpoint(xy, true)
+            }
+        }
+    }
+    
+    
     updateMouse = (x, y) => {
         var eDom    = ReactDOM.findDOMNode(this.elem);
         var box     = eDom.getBoundingClientRect()
         var new_pos = [x - box.left, y - box.top]
-        // update the mouse position so that the partial link can follow it.
-        if (!_.isEqual(this.state.mouse_mos, new_pos)) {
-            this.setState({mouse_pos : new_pos});
+        this.setLinkEndpoint(new_pos)
+    }
+    
+    
+    updateConnectedPortLinks(node_id, port_id, is_sink, parent_corner=null) {
+        var node = this.state.ng.nodes.get(node_id)
+        
+        if (!parent_corner) {
+            var parent_view = this.getElement(new GraphElement("view", node.parent))
+            parent_corner = parent_view.getCorner()
+            console.log("getting corner for", node.parent)
+        }
+        
+        var partial_link = this.state.partial_link_anchor
+        var pe    = new GraphElement("port", {node_id, port_id, is_sink})
+        var port  = this.getElement(pe)
+        var links = node.getLinks(port_id)
+        var xy    = port.getConnectionPoint()
+        var uv    = parent_corner
+        
+        for (let link_id of links) {
+            let link_elem = this.getElement(new GraphElement("link", link_id))
+            // set the endpoint in the coordinate space of the object it belongs to
+            link_elem.setEndpoint([xy[0] - uv[0], xy[1] - uv[1]], is_sink)
+        }
+        // is the partial link connected to this port?
+        if (partial_link && partial_link.node_id === node_id && partial_link.port_id === port_id) {
+            let ge = new GraphElement("partial_link", this.state.partial_link_anchor)
+            let partial_elem = this.getElement(ge)
+            // coordinate space is OUR coordinate space.
+            partial_elem.setEndpoint([xy[0], xy[1]], false)
         }
     }
-
-
+    
+    
+    updateConnectedNodeLinks(node_id) {
+        var node         = this.state.ng.nodes.get(node_id)
+        var sig          = this.state.ng.defs.get(node.def_id).type_sig
+        var parent_view  = this.getElement(new GraphElement("view", node.parent))
+        var c            = parent_view.getCorner()
+        var partial_link = this.state.partial_link_anchor
+        for (let port_id of sig.type_by_port_id.keySeq()) {
+            let is_sink  = false
+            if (sig.sink_ids.has(port_id)) {
+                is_sink  = true
+            }
+            this.updateConnectedPortLinks(node_id, port_id, is_sink, c)
+        }
+    }
+    
+    
     /****** Callback functions ******/
     
     
     onElementMounted = (elem, component) => {
         var elkey = elem.key()
         this.elements = this.elements.set(elkey, component)
+        
+        // we do a lot of updating to ensure
+        // the links stay connected to the ports :|
+        if (elem.type === "link") {
+            var link = this.state.ng.links.get(elem.id)
+            this.updateConnectedPortLinks(link.src.node_id,  link.src.port_id,  false)
+            this.updateConnectedPortLinks(link.sink.node_id, link.sink.port_id, true)
+        } else if (elem.type === "node") {
+            this.updateConnectedNodeLinks(elem.id)
+        } else if (elem.type === "port") {
+            this.updateConnectedPortLinks(elem.id.node_id, elem.id.port_id, elem.id.is_sink)
+        } else if (elem.type === "partial_link") {
+            this.setLinkEndpoint(this.state.partial_link_endpt)
+            this.updateConnectedPortLinks(elem.id.node_id, elem.id.port_id, elem.id.is_sink)
+        }
     }
     
     
@@ -151,25 +217,25 @@ class App extends React.Component {
         this.selection.unselect(elem)
         this.elements = this.elements.remove(elkey)
     }
-
-
-    onPortClicked = ({node_id, port_id, elem, mouse_evt}) => {
+    
+    
+    onPortClicked = ({node_id, port_id, is_sink, mouse_evt}) => {
         // create or complete the "partial" link
         var p = {node_id, port_id}
-        if (this.state.partial_link === null) {
-            this.setState({partial_link : p})
+        if (this.state.partial_link_anchor === null) {
+            this.setState({partial_link_anchor : {node_id, port_id, is_sink}})
         } else {
             // complete a partial link
-            var anchor_port = this.state.partial_link
+            var anchor_port = this.state.partial_link_anchor
             this.setState(prevState => ({
-                partial_link : null
+                partial_link_anchor : null
             }))
             var link = this.state.ng.constructLink(anchor_port, p)
             this.editProxy.action("add", "link", {link})
         }
     }
-
-
+    
+    
     onKeyDown = (evt) => {
         // todo: make a user-configurable map of these
         if (evt.key === " " && this.state.active_node_dialog === null) {
@@ -188,10 +254,15 @@ class App extends React.Component {
                 var link_elems = sel.filter(e => (e.type === "link"))
                 var port_elems = sel.filter(e => (e.type === "port"))
                 var node_elems = sel.filter(e => (e.type === "node"))
+                
+                // delete links
                 for (let e of link_elems) {
                     this.editProxy.action("remove", "link", {link_id:e.id})
                 }
-                // todo: handle ports after we do the def/signature refactoring.
+                
+                // TODO: handle ports after we do the def/signature refactoring.
+                
+                // delete nodes
                 for (let e of node_elems) {
                     this.editProxy.action("remove", "node", {node_id:e.id})
                 }
@@ -212,35 +283,29 @@ class App extends React.Component {
     }
     
     
-    onPortMoved = ({node_id, port_id, is_sink, new_pos}) => {
-        this.setState(prevState => {
-            return {port_coords : prevState.port_coords.setIn([node_id, port_id], new_pos)}
-        })
-    }
-    
-    
     onPortHovered = (target) => {
         this.setState({ port_hovered: target});
     }
-
-
+    
+    
     onNodeMove = (node_id, new_pos) => {
-        this.setPosition(node_id, new_pos)
+        //this.setPosition(node_id, new_pos)
+        this.updateConnectedNodeLinks(node_id)
     }
-
-
+    
+    
     onMouseMove = (evt) => {
-        if (this.state.partial_link !== null) {
+        if (this.state.partial_link_anchor !== null) {
             this.updateMouse(evt.clientX, evt.clientY)
         }
     }
-
-
+    
+    
     onClick = (evt) => {
         this.updateMouse(evt.clientX, evt.clientY)
-        if (this.state.partial_link !== null) {
+        if (this.state.partial_link_anchor !== null) {
             // cancel the active link.
-            this.setState({partial_link : null});
+            this.setState({partial_link_anchor : null});
         }
     }
     
@@ -250,24 +315,28 @@ class App extends React.Component {
             def_id : def_id, 
             is_arg : !is_sink}})
     }
-
-
+    
+    
     onLinkEndpointClicked = ({mouseEvt, link_id, isSource}) => {
         var link = this.state.ng.links.get(link_id)
         // we want the endpoint that *wasn't* grabbed
         var port = isSource ? link.sink : link.src
-
-        console.assert(this.state.partial_link === null);
-
+        
+        console.assert(this.state.partial_link_anchor === null);
+        
         // "pick up" the link
-        this.setState(prevState => ({
-            partial_link : port
-        }));
+        this.setState({
+            partial_link_anchor : {
+                node_id : port.node_id,
+                port_id : port.port_id,
+                is_sink : isSource,
+            }
+        })
         
         this.editProxy.action("remove", "link", {link_id})
     }
-
-
+    
+    
     onNodeCreate = (def_id) => {
         var elem = this.state.active_node_dialog.selected_elem
         this.setState(prevState => {
@@ -307,7 +376,7 @@ class App extends React.Component {
                 }
             }
             
-            // will be unique with atronomical probability:
+            // will be unique with astronomical probability:
             let node_id = crypto.randomBytes(8).toString('hex')
             
             // add the node
@@ -342,26 +411,23 @@ class App extends React.Component {
             is_sink
         })
     }
-
-
+    
+    
     /****** Rendering functions ******/
-
-
+    
+    
     renderPartialLink() {
-        if (this.state.partial_link !== null) {
-            var port  = this.state.partial_link
-            var i     = [port.node_id, port.port_id]
-            var cxnPt = this.state.port_coords.getIn(i)
-            var myDom = ReactDOM.findDOMNode(this.elem) // XXX update this in compDid{Update,Mount}
-            var myBox = myDom.getBoundingClientRect()
-            var pt    = [cxnPt[0] - myBox.left, cxnPt[1] - myBox.top]
+        if (this.state.partial_link_anchor !== null) {
+            var port  = this.state.partial_link_anchor
             return (<Link
-                points={[this.state.mouse_pos, pt]}
-                partial={true}/>);
+                partial={true}
+                anchor={this.state.partial_link_anchor}
+                onElementMounted={this.mutation_callbacks.onElementMounted}
+                onElementUnmounted={this.mutation_callbacks.onElementUnmounted}/>);
         }
     }
-
-
+    
+    
     render() {
         // xxx hack below: _.clone() to cause extra updates.
         
@@ -402,9 +468,9 @@ class App extends React.Component {
                         tabIndex    = {1}
                         ref         = {e => {this.elem = e}}>
                             <NodeView
+                                parent_id         = {null}
                                 ng                = {this.state.ng}
-                                port_coords       = {this.state.port_coords}
-                                mutation_callbacks= {_.clone(this.mutation_callbacks)}/>
+                                mutation_callbacks= {this.mutation_callbacks}/>
                             {this.renderPartialLink()}
                     </div>
                     {new_node_dlg}
@@ -413,7 +479,7 @@ class App extends React.Component {
             </div>
         );
     }
-
+    
 }
 
 export default App;

@@ -12,13 +12,16 @@ import {NODE_TYPE}    from './Def'
 //      def elsewhere whenever I need to know the signature. overall this turned out to be an annoying design change.
 
 // todo: need a way to navigate to stuff inside a function node.
-//       i.e. a notion of "current parent"; when you descend inside, everything of the outer parent
-//       gets de-selected.
+
+// todo: a notion of "current parent"; when you descend inside, everything of the outer parent
+//       gets de-selected. sweep-selecting should not pick things across parents.
 
 // todo: is this a dumb class? should we just tell each element how to transfer its own focus?
 //       this class is has its tendrils in a lot of code. 
-//       >> yes, to a certain extent. this would be better:
-//          each element should have a getElement(direction) funciton.
+//       > yes, to a certain extent. this would be better:
+//         each element should have a getElement(direction) funciton.
+//         > however, each element may then have to have "global" information about its 
+//           neighbors. :|
 
 // todo: when nodes have "vertical" form, will have to switch neighbor logic.
 
