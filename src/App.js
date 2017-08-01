@@ -113,7 +113,7 @@ class App extends React.Component {
     }
     
     
-    /****** Callback functions ******/
+    /****** Update functions ******/
     
     
     setConnected = (connected) => {
@@ -121,7 +121,9 @@ class App extends React.Component {
     }
     
     
-    setLinkEndpoint = (xy) => {
+    setPartialLinkEndpoint = (xy) => {
+        // move the endpoint of the partial link to the specified position,
+        // specified in the coordinates of the top-level nodeview.
         if (!_.isEqual(this.state.partial_link_endpt)) {
             this.setState({partial_link_endpt : xy})
             if (this.state.partial_link_anchor) {
@@ -134,21 +136,22 @@ class App extends React.Component {
     
     
     updateMouse = (x, y) => {
+        // the partial link tracks the mouse. update its position.
         var eDom    = ReactDOM.findDOMNode(this.elem);
         var box     = eDom.getBoundingClientRect()
         var new_pos = [x - box.left, y - box.top]
-        this.setLinkEndpoint(new_pos)
+        this.setPartialLinkEndpoint(new_pos)
     }
     
     
     // parent_corner in local (top-level nodeview) coordinates
     updateConnectedPortLinks(node_id, port_id, is_sink, parent_corner=null) {
+        // update the endpoint positions of all the links connected to the given port.
         var node = this.state.ng.nodes.get(node_id)
         
         if (!parent_corner) {
-            var parent_view   = this.getElement(new GraphElement("view", node.parent))
-            var master_view   = this.getElement(new GraphElement("view", null))
-            parent_corner     = parent_view.getCorner()
+            var parent_view = this.getElement(new GraphElement("view", node.parent))
+            parent_corner   = parent_view.getCorner()
         }
         
         var partial_link = this.state.partial_link_anchor
@@ -169,13 +172,15 @@ class App extends React.Component {
             let ge = new GraphElement("partial_link", this.state.partial_link_anchor)
             let partial_elem = this.getElement(ge)
             // coordinate space is OUR coordinate space.
-            var st = master_view.getCorner()
+            var master_view  = this.getElement(new GraphElement("view", null))
+            var st           = master_view.getCorner()
             partial_elem.setEndpoint([xy[0] - st[0], xy[1] - st[1]], false)
         }
     }
     
     
     updateConnectedNodeLinks(node_id) {
+        // update the endpoint positions of all the links connected to the given node. 
         var node         = this.state.ng.nodes.get(node_id)
         var sig          = this.state.ng.defs.get(node.def_id).type_sig
         var parent_view  = this.getElement(new GraphElement("view", node.parent))
@@ -195,6 +200,9 @@ class App extends React.Component {
     
     
     onElementMounted = (elem, component) => {
+        // some child graph element has just created a DOM node for itself.
+        // keep track of it (the element, not the DOM node) because
+        // we frequently need to go find them to tell them to do stuff.
         var elkey = elem.key()
         this.elements = this.elements.set(elkey, component)
         
@@ -209,7 +217,7 @@ class App extends React.Component {
         } else if (elem.type === "port") {
             this.updateConnectedPortLinks(elem.id.node_id, elem.id.port_id, elem.id.is_sink)
         } else if (elem.type === "partial_link") {
-            this.setLinkEndpoint(this.state.partial_link_endpt)
+            this.setPartialLinkEndpoint(this.state.partial_link_endpt)
             this.updateConnectedPortLinks(elem.id.node_id, elem.id.port_id, elem.id.is_sink)
         }
     }
@@ -223,7 +231,7 @@ class App extends React.Component {
     
     
     onPortClicked = ({node_id, port_id, is_sink, mouse_evt}) => {
-        // create or complete the "partial" link
+        // either create or complete the "partial" link
         var p = {node_id, port_id}
         if (this.state.partial_link_anchor === null) {
             this.setState({partial_link_anchor : {node_id, port_id, is_sink}})
@@ -292,12 +300,14 @@ class App extends React.Component {
     
     
     onNodeMove = (node_id, new_pos) => {
-        //this.setPosition(node_id, new_pos)
+        // all the endpoints of the connected links need to be updated
+        // to match the node's new position.
         this.updateConnectedNodeLinks(node_id)
     }
     
     
     onMouseMove = (evt) => {
+        // currently used to make the "partial link" track the cursor.
         if (this.state.partial_link_anchor !== null) {
             this.updateMouse(evt.clientX, evt.clientY)
         }
@@ -305,15 +315,17 @@ class App extends React.Component {
     
     
     onClick = (evt) => {
+        // if the user clicks on the empty space outside of a node,
+        // let go of the partial link.
         this.updateMouse(evt.clientX, evt.clientY)
         if (this.state.partial_link_anchor !== null) {
-            // cancel the active link.
             this.setState({partial_link_anchor : null});
         }
     }
     
     
     onPortConfigClick = ({def_id, is_sink}) => {
+        // bring up the type selection dialog for adding a port
         this.setState({active_port_dialog : {
             def_id : def_id, 
             is_arg : !is_sink}})
@@ -321,13 +333,14 @@ class App extends React.Component {
     
     
     onLinkEndpointClicked = ({mouseEvt, link_id, isSource}) => {
+        // if the user grabs the endpoint of a link, "pick it up" 
+        // by disconnecting the grabbed link and creating a partial link.
         var link = this.state.ng.links.get(link_id)
-        // we want the endpoint that *wasn't* grabbed
+        // we want to keep the endpoint that *wasn't* grabbed
         var port = isSource ? link.sink : link.src
         
         console.assert(this.state.partial_link_anchor === null);
         
-        // "pick up" the link
         this.setState({
             partial_link_anchor : {
                 node_id : port.node_id,
@@ -341,6 +354,10 @@ class App extends React.Component {
     
     
     onNodeCreate = (def_id) => {
+        // drop a new node into the nodegraph with the prototype given by `def_id`.
+        // where the node should be connected, and what its parent should be
+        // both depend on what's selected. try to do a good job of being convenient.
+        // called by the node placement dialog when it is closed.
         var elem = this.state.active_node_dialog.selected_elem
         this.setState(prevState => {
             return { active_node_dialog : null }
