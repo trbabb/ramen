@@ -5,15 +5,13 @@ import portAddImage from '../resource/gear.png'
 export class PortRack extends React.PureComponent {
     
     render() {
-        var sig   = this.props.def.type_sig
-        var ids   = this.props.is_sink ? sig.sink_ids : sig.src_ids
+        var port_objs = this.props.ports
         var ports = []
         var self  = this
         var prtadd = null
         
         // emit all the ports
-        ids.forEach(port_id => {
-            var type_obj    = sig.type_by_port_id.get(port_id)
+        port_objs.forEach((type_obj, port_id) => {
             var edit_target = null
             if (this.props.target) {
                 edit_target = {
@@ -42,6 +40,7 @@ export class PortRack extends React.PureComponent {
                 width={16} height={16}
                 className="PortConfig"
                 draggable="false"
+                alt={"add a port"}
                 onClick={e => {
                     this.props.cbacks.onPortConfigClick({
                         def_id : this.props.target,

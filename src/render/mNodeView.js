@@ -1,7 +1,5 @@
 import React          from 'react';
 import ReactDOM       from 'react-dom';
-import * as _         from 'lodash'
-
 import {MNode}        from './mNode';
 import {Link}         from './mLink';
 import {NODE_TYPE}    from '../state/Def'
@@ -14,9 +12,9 @@ export class NodeView extends React.PureComponent {
 
 
     constructor(props) {
-        super(props);
-        this.state = this.getInitialState();
-        this.elem  = null;
+        super(props)
+        this.state = this.getInitialState()
+        this.elem  = null
     }
     
     
@@ -59,10 +57,6 @@ export class NodeView extends React.PureComponent {
         
         // emit the links which are our direct children
         for (var link_id of this.props.ng.child_links) {
-            var lnk = this.props.ng.links.get(link_id)
-            var p0  = [lnk.src.node_id,  lnk.src.port_id]
-            var p1  = [lnk.sink.node_id, lnk.sink.port_id]
-            
             // make the link
             links.push(<Link
                 key={"__link_" + link_id}
@@ -83,9 +77,8 @@ export class NodeView extends React.PureComponent {
             }
             var x   = {}
             if (def.hasBody()) {
-                // these are heavy, so don't send them to
-                // the nodes which don't have inner nodes.
-                x.ng = this.props.ng.ofNode(node_id)  // xxx: this is re-created on every frame D:
+                // todo: this is regenerated on every render, which ain't great
+                x.ng = this.props.ng.ofNode(node_id)
             }
             nodes.push(<MNode node_id = {node_id}
                               key     = {"__node_" + node_id}

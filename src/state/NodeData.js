@@ -15,25 +15,33 @@ export class NodeData {
 
 
     constructor(def_id, parent=null, links_by_id=null) {
-        this.def_id      = def_id
-        this.parent      = parent
-        this.links_by_id = ((links_by_id === null) ? new Map() : links_by_id)
-        this.child_nodes = new Set()
-        this.child_links = new Set()
-        this.entry_id    = null
-        this.exit_id     = null
-        this.position    = [0,0]
-        this.value       = null
+        this.def_id       = def_id
+        this.parent       = parent
+        this.source_links = new Map()
+        this.sink_links   = new Map()
+        this.child_nodes  = new Set()
+        this.child_links  = new Set()
+        this.entry_id     = null
+        this.exit_id      = null
+        this.position     = [0,0]
+        this.value        = null
     }
     
     
     // connect a link to one of the sources/sinks of this node.
-    addLink(port_id, link_id) {
+    addLink(port_id, is_sink, link_id) {
         var n = _.clone(this)
-        n.links_by_id = this.links_by_id.update(
+        var update_thing = n.source_links
+        if (is_sink) update_thing = n.sink_links
+        update_thing = update_thing.update(
                 port_id,
                 new Set(),
                 (s) => {return s.add(link_id)})
+        if (is_sink) {
+            n.sink_links = update_thing
+        } else {
+            n.source_links = update_thing
+        }
         return n
     }
     
@@ -55,6 +63,24 @@ export class NodeData {
     }
     
     
+    // disconnect a link from a source/sink of this node.
+    removeLink(port_id, is_sink, link_id) {        
+        var update_thing = this.source_links
+        if (is_sink) update_thing = this.sink_links
+            
+        if (!update_thing.has(port_id) || !update_thing.get(port_id).includes(link_id)) {
+            // object not here; nothing to do.
+            return this
+        }
+        
+        var n = _.clone(this);
+        update_thing = update_thing.update(port_id, s => { return s.remove(link_id) })
+        if (is_sink) n.sink_links   = update_thing
+        else         n.source_links = update_thing
+        return n
+    }
+    
+    
     // remove a node which is a direct child of this node.
     removeChildNode(node_id) {
         var n = _.clone(this)
@@ -68,18 +94,6 @@ export class NodeData {
         var n = _.clone(this)
         n.child_links = this.child_links.remove(link_id)
         return n
-    }
-    
-    
-    // disconnect a link from a source/sink of this node.
-    removeLink(port_id, link_id) {
-        if (this.links_by_id.has(port_id) && this.links_by_id.get(port_id).includes(link_id)) {
-            var n = _.clone(this);
-            n.links_by_id = this.links_by_id.update(port_id, s => { return s.remove(link_id) })
-            return n
-        } else {
-            return this
-        }
     }
     
     
@@ -99,12 +113,38 @@ export class NodeData {
     
     
     // return the set of links which connect the direct children of this node.
-    getLinks(port_id) {
-        if (this.links_by_id.has(port_id)) {
-            return this.links_by_id.get(port_id);
+    getLinks(port_id, is_sink) {
+        var getty_thing          = this.source_links
+        if (is_sink) getty_thing = this.sink_links
+        if (getty_thing.has(port_id)) {
+            return getty_thing.get(port_id)
         } else {
-            return new Set();
+            return new Set()
         }
+    }
+    
+    
+    getAllLinks() {
+        return (
+            this.source_links.entrySeq().map(
+                ([linkset, port_id]) => {
+                    return {
+                        port_id : port_id,
+                        is_sink : false,
+                        cxns    : linkset,
+                    }
+                }
+        ).concat(
+            this.sink_links.entrySeq().map(
+                ([linkset, port_id]) => {
+                    return {
+                        port_id : port_id,
+                        is_sink : true,
+                        cxns    : linkset
+                    }
+                })
+            )
+        )
     }
 
 

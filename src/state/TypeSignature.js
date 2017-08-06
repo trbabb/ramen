@@ -1,39 +1,36 @@
-import {Map, Set} from 'immutable'
-import * as _     from 'lodash'
+import {Map, List} from 'immutable'
+import * as _      from 'lodash'
 
 
 export class TypeSignature {
     
     
-    constructor(sink_ids={},src_ids={}) {
-        this.type_by_port_id = new Map(Object.assign({}, sink_ids, src_ids))
-        this.sink_ids        = new Set(Object.keys(sink_ids))
-        this.src_ids         = new Set(Object.keys(src_ids))
+    constructor(sink_types={},source_types={}) {
+        this.sink_types   = new Map(sink_types)
+        this.source_types = new Map(source_types)
     }
     
     
     // "mutators"
     
     
-    addPort(port_id, type_id, is_sink=false) {
+    addPort(port_id, type_obj, is_sink=false) {
         var ts = _.clone(this)
-        ts.type_by_port_id = ts.type_by_port_id.set(port_id, type_id)
         if (is_sink) {
-            ts.sink_ids = ts.sink_ids.add(port_id)
+            ts.sink_types = ts.sink_types.add(port_id)
         } else {
-            ts.src_ids  = ts.src_ids.add(port_id)
+            ts.source_types  = ts.source_types.add(port_id)
         }
         return ts
     }
     
     
-    removePort(port_id) {
+    removePort(port_id, is_sink) {
         var ts = _.clone(this)
-        ts.type_by_port_id = ts.type_by_port_id.remove(port_id)
-        if (ts.sink_ids.has(port_id)) {
-            ts.sink_ids = ts.sink_ids.remove(port_id)
+        if (is_sink) {
+            ts.sink_types = ts.sink_types.remove(port_id)
         } else {
-            ts.src_ids = ts.src_ids.remove(port_id)
+            ts.source_types = ts.source_types.remove(port_id)
         }
         return ts
     }
@@ -42,15 +39,32 @@ export class TypeSignature {
     // getters
     
     
-    getSourceIDs()  { return this.src_ids }
+    getSourceIDs()  { return this.source_types.keySeq() }
     
-    getSinkIDs()    { return this.sink_ids }
+    getSinkIDs()    { return this.sink_types.keySeq() }
     
-    isSink(port_id) { return this.sink_ids.has(port_id) }
+    numSinks()      { return this.sink_types.size }
     
-    numSinks()      { return this.sink_ids.size }
+    numSources()    { return this.source_types.size }
     
-    numSources()    { return this.src_ids.size }
+    getAllPorts() {
+        var m = new List().asMutable()
+        for (let [port_id, t] of this.sink_types) {
+            m.push({
+                port_id : port_id,
+                is_sink : true,
+                type    : t,
+            })
+        }
+        for (let [port_id, t] of this.source_types) {
+            m.push({
+                port_id : port_id,
+                is_sink : false,
+                type    : t,
+            })
+        }
+        return m.asImmutable()
+    }
     
     
 }

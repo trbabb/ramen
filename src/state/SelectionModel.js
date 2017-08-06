@@ -154,8 +154,8 @@ export class SelectionModel {
                 }
             } else {
                 // the element "outward" of a port is the first link connected to it
-                var node = this.app.state.ng.nodes.get(elem.id.node_id)
-                var connected_links = node.getLinks(elem.id.port_id)
+                let node = this.app.state.ng.nodes.get(elem.id.node_id)
+                var connected_links = node.getLinks(elem.id.port_id, elem.id.is_sink)
                 if (connected_links.size > 0)
                     // todo: order the links by their visual left-to-right ordering.
                     return new GraphElement("link", connected_links.first())
@@ -175,7 +175,7 @@ export class SelectionModel {
             })
         } else if (elem.type === "node") {
             // the element above/below a node is its first input/output port
-            var node = this.app.state.ng.nodes.get(elem.id)
+            let node = this.app.state.ng.nodes.get(elem.id)
             var sig  = this.app.state.ng.defs.get(node.def_id).type_sig
             var ports = up ? sig.getSinkIDs() : sig.getSourceIDs()
             if (ports.size > 0) {
@@ -195,7 +195,7 @@ export class SelectionModel {
     horizontal_neighbor = (elem, left) => {
         if (elem.type === "port") {
             // the adjacent port is one on the same edge of the node, to the left or right.
-            var node  = this.app.state.ng.nodes.get(elem.id.node_id)
+            let node  = this.app.state.ng.nodes.get(elem.id.node_id)
             var sig   = this.app.state.ng.defs.get(node.def_id).type_sig
             var ports = (elem.id.is_sink ? sig.getSinkIDs() : sig.getSourceIDs()).toIndexedSeq()
             var p_idx = ports.indexOf(elem.id.port_id) + (left ? -1 : 1)
@@ -213,8 +213,8 @@ export class SelectionModel {
             //       for sources, and find the adjacent ports' links on sinks.
             // todo: links should be ordered by their visual ordering on screen
             var link  = this.app.state.ng.links.get(elem.id)
-            var node  = this.app.state.ng.nodes.get(link.src.node_id)
-            var links = node.getLinks(link.src.port_id)
+            let node  = this.app.state.ng.nodes.get(link.src.node_id)
+            var links = node.getLinks(link.src.port_id, false)
             var lseq  = links.toList()
             var idx   = lseq.indexOf(elem.id) + (left ? -1 : 1)
             idx = positive_mod(idx, lseq.size)

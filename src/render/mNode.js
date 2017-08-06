@@ -1,14 +1,12 @@
 import React          from 'react'
 import Draggable      from 'react-draggable'
 import ReactDOM       from 'react-dom'
-import {Port}         from './mPort'
-import {NodeView}     from './mNodeView'
-import {PortConfig}   from './mPortConfig'
 import {GraphElement} from '../state/GraphElement'
 import {NODE_TYPE}    from '../state/Def'
 import {CallNodeBody, 
         FunctionNodeBody, 
-        LiteralNodeBody} from './NodeBody.js'
+        LiteralNodeBody,
+        LoopNodeBody} from './NodeBody.js'
 
 // MNode is the React element for a language node.
 
@@ -22,7 +20,6 @@ export class MNode extends React.PureComponent {
             selected : false,
             xy       : [0,0]
         }
-        var p = props.node.position
         this.elem = null
     }
     
@@ -72,7 +69,6 @@ export class MNode extends React.PureComponent {
     
     
     render() {
-        var p    = this.props.node.position
         var body = null
         var t    = this.props.def.node_type
         var subprops = {
@@ -88,6 +84,8 @@ export class MNode extends React.PureComponent {
             body = <FunctionNodeBody {...subprops} ng={this.props.ng}/>
         } else if (t === NODE_TYPE.NODE_LITERAL) {
             body = <LiteralNodeBody  {...subprops}/>
+        } else if (t === NODE_TYPE.NODE_LOOP) {
+            body = <LoopNodeBody {...subprops} ng={this.props.ng}/>
         }
         return (
             <Draggable

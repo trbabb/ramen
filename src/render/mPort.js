@@ -1,6 +1,5 @@
-import React          from 'react';
-import ReactDOM       from 'react-dom';
-import * as _         from 'lodash'
+import React          from 'react'
+import ReactDOM       from 'react-dom'
 import {GraphElement} from '../state/GraphElement'
 
 import float_img from '../resource/float.png'
@@ -119,6 +118,7 @@ export class Port extends React.PureComponent {
             <img
                 src={typeIcons[this.props.type_id]}
                 width={16} height={16}
+                alt={this.props.port_id }
                 className={classes.join(" ")}
                 draggable="false"
                 tabIndex="1"

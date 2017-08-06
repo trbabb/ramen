@@ -9,9 +9,9 @@ export class NarrowingList extends React.Component {
         super(props)
         this.state = {
             filterString : "",
-            selectionKey : null
+            selectionKey : null,
+            filteredList : this.makeFilteredList("", this.props.items),
         }
-        this.state.filteredList = this.makeFilteredList("", this.props.items)
         this.inputElem = null
     }
     

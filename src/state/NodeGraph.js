@@ -53,7 +53,7 @@ export class NodeGraph {
             ng.child_nodes  = this.child_nodes.add(node_id)
         } else {
             var parent_node = this.nodes.get(parent_id)
-            parent_node     = parent_node.addChildNode(node_id);
+            parent_node     = parent_node.addChildNode(node_id)
             
             // should the parent be updated to refer to a new entry/exit?
             // see footnote [1] if it's unclear why this happens here.
@@ -64,7 +64,7 @@ export class NodeGraph {
                 parent_node.exit_id  = node_id
             }
             
-            ng.nodes = ng.nodes.set(parent_id, parent_node);
+            ng.nodes = ng.nodes.set(parent_id, parent_node)
         }
         
         return ng
@@ -77,7 +77,7 @@ export class NodeGraph {
         var  n = this.nodes.get(node_id)
         
         // remove all existing links
-        for (var cxns of n.links_by_id.valueSeq()) {
+        for (var {cxns} of n.getAllLinks()) {
             for (var link_id of cxns.valueSeq()) {
                 ng = ng.removeLink(link_id)
             }
@@ -120,20 +120,17 @@ export class NodeGraph {
     
     
     constructLink(port_0, port_1) {
-        // return a Link object for two ports, such that the source/sink are correctly identified.
-        var p0_def  = this.defs.get(this.nodes.get(port_0.node_id).def_id)
-        var p1_def  = this.defs.get(this.nodes.get(port_1.node_id).def_id)
-        var p0_sink = p0_def.type_sig.isSink(port_0.port_id)
-        var p1_sink = p1_def.type_sig.isSink(port_1.port_id)
+        // return a Link object for two ports, 
+        // such that the source/sink are correctly identified.
         
-        if (p0_sink === p1_sink) {
+        if (port_0.is_sink === port_1.is_sink) {
             // can't connect a src to a src or a sink to a sink.
             return null
         }
         
         // order the link source to sink.
-        var new_link;
-        if (p0_sink) {
+        var new_link
+        if (port_0.is_sink) {
             new_link = {
                 sink : port_0,
                 src  : port_1
@@ -151,44 +148,38 @@ export class NodeGraph {
     addLink(link_id, link) {
         
         // invalid connection
-        if (link === null) return this;
+        if (link === null) return this
         
         // get endpoint nodes
-        var sink_id    = link.sink.node_id;
-        var src_id     = link.src.node_id;
-        var sink_node  = this.nodes.get(sink_id);
-        var src_node   = this.nodes.get(src_id);
-        // check for a link matching the one we're about to make.
-        var cxn_exists = sink_node.getLinks(link.sink.port_id)
-        cxn_exists = cxn_exists.find(x => {
-            return _.isEqual(this.links.get(x), link);
-        });
-        
-        var src_parent  = src_node.parent;
-        var sink_parent = sink_node.parent;
+        var sink_id     = link.sink.node_id
+        var src_id      = link.src.node_id
+        var sink_node   = this.nodes.get(sink_id)
+        var src_node    = this.nodes.get(src_id)
+        var src_parent  = src_node.parent
+        var sink_parent = sink_node.parent
     
         // 'mutate' the nodes
-        src_node  =  src_node.addLink(link.src.port_id,  link_id);
-        sink_node = sink_node.addLink(link.sink.port_id, link_id);
+        src_node  =  src_node.addLink(link.src.port_id,  false, link_id)
+        sink_node = sink_node.addLink(link.sink.port_id, true,  link_id)
         
         // clobber the old node entries
         var ng   = _.clone(this)
-        ng.nodes = this.nodes.set(src_id,  src_node);
-        ng.nodes =   ng.nodes.set(sink_id, sink_node);
+        ng.nodes = this.nodes.set(src_id,  src_node)
+        ng.nodes =   ng.nodes.set(sink_id, sink_node)
         
         // add the link
-        ng.links = this.links.set(link_id, link);
+        ng.links = this.links.set(link_id, link)
         
         // add the link to the parent
-        var parent_id = src_parent;
+        var parent_id = src_parent
         if (sink_parent !== src_parent && sink_parent === src_id) {
             // in this case, the parent of the sink is the source.
             // the link should belong to the source (outer) node,
             // not the *parent* of the outer node.
-            parent_id = sink_parent;
+            parent_id = sink_parent
         }
         if (parent_id === null) {
-            ng.child_links = this.child_links.add(link_id);
+            ng.child_links = this.child_links.add(link_id)
         } else {
             var parent_node = this.nodes.get(parent_id)
             parent_node = parent_node.addChildLink(link_id)
@@ -200,24 +191,24 @@ export class NodeGraph {
 
 
     removeLink(link_id) {
-        var link      = this.links.get(link_id);
-        var src_node  = this.nodes.get(link.src.node_id);
-        var sink_node = this.nodes.get(link.sink.node_id);
-        src_node      =  src_node.removeLink(link.src.port_id,  link_id);
-        sink_node     = sink_node.removeLink(link.sink.port_id, link_id);
+        var link      = this.links.get(link_id)
+        var src_node  = this.nodes.get(link.src.node_id)
+        var sink_node = this.nodes.get(link.sink.node_id)
+        src_node      =  src_node.removeLink(link.src.port_id,  true,  link_id)
+        sink_node     = sink_node.removeLink(link.sink.port_id, false, link_id)
         
         var ng   = _.clone(this)
         ng.links = this.links.remove(link_id)
         ng.nodes = this.nodes.set(link.src.node_id, src_node).set(link.sink.node_id, sink_node)
         
         // remove link from its parent
-        var parent_id = src_node.parent;
+        var parent_id = src_node.parent
         if (parent_id === null || parent_id === undefined) {
-            ng.child_links = this.child_links.remove(link_id);
+            ng.child_links = this.child_links.remove(link_id)
         } else {
-            var parent_node = this.nodes.get(parent_id);
-            parent_node     = parent_node.removeChildLink(link_id);
-            ng.nodes        = ng.nodes.set(parent_id, parent_node);
+            var parent_node = this.nodes.get(parent_id)
+            parent_node     = parent_node.removeChildLink(link_id)
+            ng.nodes        = ng.nodes.set(parent_id, parent_node)
         }
         
         return ng
@@ -266,7 +257,7 @@ export class NodeGraph {
         // referred to by many functions? we'll provide a fn for this,
         // but should maybe not use it for now.
         var ng = _.clone(this)
-        if (!this.defs.has(def_id)) return this;
+        if (!this.defs.has(def_id)) return this
         ng.defs = this.defs.remove(def_id)
         // todo: redirect any functions pointing here?
         return ng

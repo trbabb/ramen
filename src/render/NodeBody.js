@@ -12,17 +12,14 @@ import {PortRack} from './mPortRack'
 
 export class CallNodeBody extends React.PureComponent {
     
-    constructor(props) {
-        super(props)
-    }
-    
     render() {
+        console.log("sinks:", this.props.def.type_sig.sink_types.toJS())
         return (
             <div className="CallNode">
                 {/* call inputs */}
                 <PortRack 
                     node_id = {this.props.node_id}
-                    def     = {this.props.def}
+                    ports   = {this.props.def.type_sig.sink_types}
                     cbacks  = {this.props.cbacks}
                     is_sink = {true}
                     types   = {this.props.types}/>
@@ -33,7 +30,7 @@ export class CallNodeBody extends React.PureComponent {
                 {/* call outputs */}
                 <PortRack
                     node_id = {this.props.node_id}
-                    def     = {this.props.def}
+                    ports   = {this.props.def.type_sig.source_types}
                     cbacks  = {this.props.cbacks}
                     is_sink = {false}
                     types   = {this.props.types}/>
@@ -44,10 +41,6 @@ export class CallNodeBody extends React.PureComponent {
 
 
 export class FunctionNodeBody extends React.PureComponent {
-    
-    constructor(props) {
-        super(props)
-    }
     
     render() {
         if (!this.props.node.entry_id || !this.props.node.exit_id) {
@@ -62,7 +55,7 @@ export class FunctionNodeBody extends React.PureComponent {
                 {/* body entry */}
                 <PortRack
                     node_id = {this.props.node.entry_id}
-                    def     = {this.props.ng.defs.get(entry.def_id)}
+                    ports   = {this.props.ng.defs.get(entry.def_id).type_sig.source_types}
                     is_sink = {false}
                     target  = {this.props.node.def_id}
                     cbacks  = {this.props.cbacks}/>
@@ -76,7 +69,7 @@ export class FunctionNodeBody extends React.PureComponent {
                 {/* body exit */}
                 <PortRack
                     node_id = {this.props.node.exit_id}
-                    def     = {this.props.ng.defs.get(exit.def_id)}
+                    ports   = {this.props.ng.defs.get(exit.def_id).type_sig.sink_types}
                     is_sink = {true}
                     target  = {this.props.node.def_id}
                     cbacks  = {this.props.cbacks}/>
@@ -84,8 +77,62 @@ export class FunctionNodeBody extends React.PureComponent {
                 {/* definition output */}
                 <PortRack
                     node_id = {this.props.node_id}
-                    def     = {this.props.def}
+                    ports   = {this.props.def.type_sig.source_types}
                     is_sink = {false}
+                    cbacks  = {this.props.cbacks}/>
+            </div>
+        )
+    }
+    
+}
+
+
+export class LoopNodeBody extends React.PureComponent {
+    
+    constructor(props) {
+        super(props)
+        this.exit_ports = null
+    }
+    
+    
+    render() {
+        if (!this.props.node.entry_id || !this.props.node.exit_id) {
+            return (<div></div>)
+        }
+        var entry = this.props.ng.nodes.get(this.props.node.entry_id)
+        var exit  = this.props.ng.nodes.get(this.props.node.exit_id)
+        return (
+            <div className="LoopNode">
+                {/* parent node entry */}
+                <PortRack
+                    node_id = {this.props.node_id}
+                    ports   = {this.props.def.type_sig.sink_types}
+                    is_sink = {true}
+                    target  = {this.props.node.def_id}
+                    cbacks  = {this.props.cbacks}/>
+                {/* body entry */}
+                <PortRack
+                    node_id = {this.props.node.entry_id}
+                    ports   = {this.props.ng.defs.get(entry.def_id).type_sig.source_types}
+                    is_sink = {false}
+                    cbacks  = {this.props.cbacks}/>
+                {/* function body */}
+                <NodeView
+                    parent_id = {this.props.node_id}
+                    ng        = {this.props.ng}
+                    cbacks    = {this.props.cbacks}/>
+                {/* body exit */}
+                <PortRack
+                    node_id = {this.props.node.exit_id}
+                    ports   = {this.props.ng.defs.get(exit.def_id).type_sig.sink_types}
+                    is_sink = {true}
+                    cbacks  = {this.props.cbacks}/>
+                {/* parent node exit */}
+                <PortRack
+                    node_id = {this.props.node_id}
+                    ports   = {this.props.def.type_sig.source_types}
+                    is_sink = {false}
+                    target  = {this.props.node.def_id}
                     cbacks  = {this.props.cbacks}/>
             </div>
         )
@@ -125,7 +172,7 @@ export class LiteralNodeBody extends React.PureComponent {
         // we need /something/ for now so that backspace doesn't baleet everthang
         var sig      = this.props.def.type_sig
         var port_id  = sig.getSourceIDs().toSeq().first()
-        var type_obj = sig.type_by_port_id.get(port_id)
+        var type_obj = sig.source_types.get(port_id)
         return (
             <div className="LiteralNode">
                 <div className="Handle"> </div>

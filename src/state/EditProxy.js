@@ -1,6 +1,4 @@
-import io              from 'socket.io-client'
-import {NODE_TYPE}     from './Def'
-import {TypeSignature} from './TypeSignature'  // todo: not needed after server handles entry/exits
+import io from 'socket.io-client'
 
 // EditProxy tattles on everything that's done to the node graph.
 // This is sent back to the server, so it can keep the AST in sync.
@@ -10,20 +8,6 @@ export class EditProxy {
     constructor(app) {
         this.app       = app
         this.connected = false
-        var prms = new Promise((resolve, reject) => {
-            this.socket = io()
-            this.socket.on('connect', (socket) => {resolve()})
-            this.socket.on('disconnect',    () => {reject()})
-            this.socket.on('error',         () => {reject()})
-            this.socket.on('graph_edit', this.onNetworkEvent)
-        }).then(() => {
-            this.connected = true
-            this.app.setConnected(true)
-            this.flushQueue()
-        }).catch(() => {
-            this.connected = false
-            this.app.setConnected(false)
-        })
         this.queued = []
         this.actionTemplates = {
             addNode    : {action : "add",    type : "node",    args : ["node_id", "def_id", "parent_id", "value"]},
@@ -38,21 +22,21 @@ export class EditProxy {
             removeType : {action : "remove", type : "type",    args : ["type_id"]},
             setLiteral : {action : "set",    type : "literal", args : ["node_id", "value"]},
         }
-        this.max_id = {
-            node : 0,
-            link : 0,
-            def  : 0,
-            port : 0,
-        }
-    }
-    
-    
-    // generate a new, unique id for an object of the given type
-    // (in "node", "link", "def", or "port").
-    generateID(objtype) {
-        var id = this.max_id[objtype]
-        this.max_id[objtype] += 1
-        return id
+        
+        new Promise((resolve, reject) => {
+            this.socket = io()
+            this.socket.on('connect', (socket) => {resolve()})
+            this.socket.on('disconnect',    () => {reject()})
+            this.socket.on('error',         () => {reject()})
+            this.socket.on('graph_edit', this.onNetworkEvent)
+        }).then(() => {
+            this.connected = true
+            this.app.setConnected(true)
+            this.flushQueue()
+        }).catch(() => {
+            this.connected = false
+            this.app.setConnected(false)
+        })
     }
     
     
