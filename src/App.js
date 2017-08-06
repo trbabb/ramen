@@ -4,19 +4,13 @@ import {Map}            from 'immutable'
 import ReactDOM         from 'react-dom'
 import crypto           from 'crypto'
 
-import {NodeData}       from './state/NodeData'
 import {NodeGraph}      from './state/NodeGraph'
-import {TypeSignature}  from './state/TypeSignature'
 import {EditProxy}      from './state/EditProxy'
 import {GraphElement}   from './state/GraphElement'
 import {SelectionModel} from './state/SelectionModel'
 
-// for startup node creation. won't be necessary as app progresses.
-import {NODE_TYPE}      from './state/Def'
-
 import {NodeView}       from './render/mNodeView'
 import {Link}           from './render/mLink'
-import {NewNodeDialog}  from './render/mNewNodeDialog'
 import {NarrowingList}  from './render/mNarrowingList'
 
 import './resource/App.css'
@@ -159,7 +153,7 @@ class App extends React.Component {
         var partial_link = this.state.partial_link_anchor
         var pe    = new GraphElement("port", {node_id, port_id, is_sink})
         var port  = this.getElement(pe)
-        var links = node.getLinks(port_id)
+        var links = node.getLinks(port_id, is_sink)
         var xy    = port.getConnectionPoint()
         var uv    = parent_corner
         
@@ -187,12 +181,7 @@ class App extends React.Component {
         var sig          = this.state.ng.defs.get(node.def_id).type_sig
         var parent_view  = this.getElement(new GraphElement("view", node.parent))
         var c            = parent_view.getCorner()
-        var partial_link = this.state.partial_link_anchor
-        for (let port_id of sig.type_by_port_id.keySeq()) {
-            let is_sink  = false
-            if (sig.sink_ids.has(port_id)) {
-                is_sink  = true
-            }
+        for (let {port_id, is_sink} of sig.getAllPorts()) {
             this.updateConnectedPortLinks(node_id, port_id, is_sink, c)
         }
     }
@@ -232,7 +221,7 @@ class App extends React.Component {
     
     onPortClicked = ({node_id, port_id, is_sink, mouse_evt}) => {
         // either create or complete the "partial" link
-        var p = {node_id, port_id}
+        var p = {node_id, port_id, is_sink}
         if (this.state.partial_link_anchor === null) {
             this.setState({partial_link_anchor : {node_id, port_id, is_sink}})
         } else {
@@ -443,7 +432,6 @@ class App extends React.Component {
     
     renderPartialLink() {
         if (this.state.partial_link_anchor !== null) {
-            var port  = this.state.partial_link_anchor
             return (<Link
                 partial={true}
                 anchor={this.state.partial_link_anchor}
