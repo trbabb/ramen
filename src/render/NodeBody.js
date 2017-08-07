@@ -167,13 +167,38 @@ export class LiteralNodeBody extends React.PureComponent {
     
     
     render() {
+        
+        const TYPE_COLORS = {
+            'int32_t'   : '#ffb005',
+            'int64_t'   : '#ffb005',
+            'float32_t' : '#ff7a7a',
+            'float64_t' : '#ff7a7a',
+            'string_t'  : '#86d61d',
+            'bool_t'    : 'black',
+            'proc_t'    : '#00bff3',
+            'array_t'   : '#a342f5',
+            'type_t'    : '#ff00ff',
+            'struct_t'  : '#3a43f9',
+        };
+                
         // not sure if "clear selection" is the right behavior, but 
         // we need /something/ for now so that backspace doesn't baleet everthang
         var sig      = this.props.def.type_sig
         var port_id  = sig.getSourceIDs().toSeq().first()
         var type_obj = sig.source_types.get(port_id)
+        
+        // xxx hack: does not override the right CSS element.
+        //           the background of the node is the parent div,
+        //           which we don't have control over. We should
+        //           probably refactor this; maybe use class inheritance
+        //           instead of composition.
+        var s = {
+            backgroundColor : TYPE_COLORS[type_obj.code], 
+            borderRadius    : "4px", // <-- parallel to app.css. :(
+        }
+        
         return (
-            <div className="LiteralNode">
+            <div className="LiteralNode" style={s}>
                 <div className="Handle"> </div>
                 <input 
                     className  = "NodeInput"

@@ -6,9 +6,9 @@ export class PortRack extends React.PureComponent {
     
     render() {
         var port_objs = this.props.ports
-        var ports = []
-        var self  = this
-        var prtadd = null
+        var ports     = []
+        var self      = this
+        var prtadd    = null
         
         // emit all the ports
         port_objs.forEach((type_obj, port_id) => {
@@ -43,17 +43,21 @@ export class PortRack extends React.PureComponent {
                 alt={"add a port"}
                 onClick={e => {
                     this.props.cbacks.onPortConfigClick({
-                        def_id : this.props.target,
-                        is_sink : this.props.is_sink,
+                        def_id    : this.props.target,
+                        is_sink   : this.props.is_sink,
                         mouse_evt : e
                     })
                 }}/>
         }
         
+        // hack: if there are no ports, the container div will collapse
+        //       the port-add button is position: absolute, so it isn't
+        //       included in the flow calculation. so we make a dummy element.
         return (
             <div className="PortRack">
                 {ports}
                 {prtadd}
+                <div style={{height:"20px", display:"inline-block"}}></div>
             </div>
         )
     }

@@ -15,6 +15,7 @@ export class NodeView extends React.PureComponent {
         super(props)
         this.state = this.getInitialState()
         this.elem  = null
+        this.dom   = null
     }
     
     
@@ -23,6 +24,16 @@ export class NodeView extends React.PureComponent {
             corner_offs : this.props.position
         };
     }
+    
+    
+    componentDidMount() {
+        if (this.elem) {
+            this.dom = ReactDOM.findDOMNode(this.elem)
+        } else {
+            this.dom = null
+        }
+    }
+    
     
     onRef = (e) => {
         this.elem = e
@@ -92,7 +103,13 @@ export class NodeView extends React.PureComponent {
             <div className="NodeView NodeInput"
                     id={this.props.id}
                     style={{position:"relative"}}
+                    tabIndex={1}
                     onMouseMove={this.onMouseMove}
+                    onClick={(e) => {
+                        if (e.target === this.dom) {
+                            this.props.cbacks.clearSelection()
+                        }
+                    }}
                     ref={this.onRef}>
                 {links}
                 {nodes}
