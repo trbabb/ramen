@@ -81,6 +81,7 @@ img {
   margin: 2px;
   cursor: default;
   position: absolute;
+  display: inline-block;
   right: 0px;
 }
 

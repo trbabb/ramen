@@ -1,6 +1,6 @@
 import React        from 'react'
 import {Port}       from './mPort'
-import portAddImage from '../resource/gear.png'
+import portAddImage from '../resource/add_port.png'
 
 export class PortRack extends React.PureComponent {
     

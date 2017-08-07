@@ -9,6 +9,7 @@ import type_img  from '../resource/c_type.png'
 import proc_img  from '../resource/c_proc.png'
 import list_img  from '../resource/c_list.png'
 import str_img   from '../resource/c_str.png'
+import obj_img   from '../resource/c_obj.png'
 
 const typeIcons = {
     'int32_t'   : int_img,
@@ -19,7 +20,8 @@ const typeIcons = {
     'bool_t'    : bool_img,
     'proc_t'    : proc_img,
     'array_t'   : list_img,
-    'type_t'    : type_img
+    'type_t'    : type_img,
+    'struct_t'  : obj_img,
 };
 
 
