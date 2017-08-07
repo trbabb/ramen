@@ -1,10 +1,10 @@
 .NodeView {
   text-align: left;
-  background-color: #444;
+  background-color: #d0d0d0;
   width: 100%;
   height: 1024px;
   user-select:none;
-  border: 1px solid #666;
+  border: 4px solid white;
 }
 
 .MNode .NodeView {
@@ -15,7 +15,7 @@
 
 .MNode {
   display:inline-block;
-  background-color:#777;
+  background-color:white;
   border-radius: 4px;
   position:absolute;
   cursor:grab;
@@ -30,13 +30,9 @@ img {
   vertical-align: bottom;
 }
 
-.CallName:hover {
-  background-color: #D51;
-}
-
 .CallName {
-  background-color: #333;
-  color: white;
+  background-color: white;
+  color: black;
   padding: 4px;
   font-family: helvetica;
   font-weight: bold;
@@ -49,8 +45,8 @@ img {
 }
 
 .Link * {
-  stroke: orange;
-  fill:   orange;
+  stroke: #888888;
+  fill:   #888888;
 }
 
 .LinkLine {
@@ -58,8 +54,8 @@ img {
 }
 
 .Link *:hover {
-  stroke: #ffdd00;
-  fill:   #ffdd00;
+  stroke: #f75100;
+  fill:   #f75100;
 }
 
 .LinkLine.Partial {
@@ -70,6 +66,7 @@ img {
   padding: 0px;
   margin: 0px;
   text-align: center;
+  width: 100%;
 }
 
 .Port {
@@ -83,23 +80,17 @@ img {
   padding: 2px;
   margin: 2px;
   cursor: default;
+  position: absolute;
+  right: 0px;
 }
 
 .Port:hover {
-  background-color:#fa0;
-}
-
-.Port.Sink {
-  margin-right: 0px;
-}
-
-.Port.Source {
-  margin-left: 0px;
+  background-color:#f75100;
 }
 
 .Port.Connected {
-  background-color: orange;
-  border: 2px solid orange;
+  background-color: #888888;
+  border: 2px solid #888888;
   margin: 0px;
 }
 
@@ -108,30 +99,32 @@ img {
   top: 30%;
   left: 50%;
   transform: translate(-50%, 0);
-  background-color: #666;
-  border: 1px solid #AAA;
+  background-color: white;
+  border: 3px solid #f75100;
   border-radius:3px;
 }
 
 .SelectionListElement.Selected > * {
-  background-color: #ffdd00;
+  background-color: #f75100;
+  color: white;
+  width: 100%;
 }
 
 .SelectedGraphElement {
-  outline: 1px dashed white;
+  outline: 1px dashed black;
 }
 
 .SelectedGraphElement:focus {
-  outline: 3px dashed orange;
+  outline: 3px dashed #f75100;
 }
 
 input {
   margin: 4px;
   padding: 3px;
-  background-color: #444;
+  background-color: white;
   border: none;
   border-radius:3px;
-  color:white;
+  color:black;
   font-family: helvetica;
   font-size: 13px;
 }

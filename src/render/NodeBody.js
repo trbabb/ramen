@@ -13,7 +13,6 @@ import {PortRack} from './mPortRack'
 export class CallNodeBody extends React.PureComponent {
     
     render() {
-        console.log("sinks:", this.props.def.type_sig.sink_types.toJS())
         return (
             <div className="CallNode">
                 {/* call inputs */}

@@ -2,13 +2,13 @@ import React          from 'react'
 import ReactDOM       from 'react-dom'
 import {GraphElement} from '../state/GraphElement'
 
-import float_img from '../resource/float.png'
-import int_img   from '../resource/int.png'
-import bool_img  from '../resource/bool.png'
-import type_img  from '../resource/type.png'
-import proc_img  from '../resource/proc.png'
-import list_img  from '../resource/list.png'
-import str_img   from '../resource/str.png'
+import float_img from '../resource/c_float.png'
+import int_img   from '../resource/c_int.png'
+import bool_img  from '../resource/c_bool.png'
+import type_img  from '../resource/c_type.png'
+import proc_img  from '../resource/c_proc.png'
+import list_img  from '../resource/c_list.png'
+import str_img   from '../resource/c_str.png'
 
 const typeIcons = {
     'int32_t'   : int_img,

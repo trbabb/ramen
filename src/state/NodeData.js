@@ -37,11 +37,10 @@ export class NodeData {
                 port_id,
                 new Set(),
                 (s) => {return s.add(link_id)})
-        if (is_sink) {
-            n.sink_links = update_thing
-        } else {
-            n.source_links = update_thing
-        }
+        
+        if (is_sink) n.sink_links   = update_thing
+        else         n.source_links = update_thing
+        
         return n
     }
     
@@ -127,7 +126,7 @@ export class NodeData {
     getAllLinks() {
         return (
             this.source_links.entrySeq().map(
-                ([linkset, port_id]) => {
+                ([port_id, linkset]) => {
                     return {
                         port_id : port_id,
                         is_sink : false,
@@ -136,7 +135,7 @@ export class NodeData {
                 }
         ).concat(
             this.sink_links.entrySeq().map(
-                ([linkset, port_id]) => {
+                ([port_id, linkset]) => {
                     return {
                         port_id : port_id,
                         is_sink : true,

@@ -9,23 +9,8 @@ import {TypeSignature}  from './TypeSignature'
 // an "immutable" NodeGraph.
 // mutation functions return a new altered copy; leaving original unchanged.
 
-
 // todo: it would be good to make alterations using immutable.AsMutable for performance.
 //       the mutable intermediates could be shared by mutators which call each other.
-// todo: it might be good to keep function type signatures in a common place.
-//       this will matter more when we have multiple function calls referring to a common
-//       definition.
-// todo: we need to separate the concept of a plain node and a body node,
-//       and need a concept for inner ports and outer ports. this is needed for both
-//       function definitions and loops. those ports will need connectivity too, so
-//       probably the best way to handle it is refer to exactly two nodes representing
-//       the header/footer. those nodes could have the outer node as a parent, and then
-//       we have a simplified connectivity rule that connections may only happen to
-//       nodes with the same parent.
-// todo: addPort/removePort will do different things for loops and functions; maybe
-//       should not be permitted for bare nodes. for loops: every port is added to
-//       both inner/outer and sorce/sink signatures. for functions: only changes the
-//       inner signature (and also possibly the signature at call sites).
 
 export class NodeGraph {
 
@@ -194,8 +179,8 @@ export class NodeGraph {
         var link      = this.links.get(link_id)
         var src_node  = this.nodes.get(link.src.node_id)
         var sink_node = this.nodes.get(link.sink.node_id)
-        src_node      =  src_node.removeLink(link.src.port_id,  true,  link_id)
-        sink_node     = sink_node.removeLink(link.sink.port_id, false, link_id)
+        src_node      =  src_node.removeLink(link.src.port_id,  false, link_id)
+        sink_node     = sink_node.removeLink(link.sink.port_id, true,  link_id)
         
         var ng   = _.clone(this)
         ng.links = this.links.remove(link_id)
