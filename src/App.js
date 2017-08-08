@@ -1,6 +1,6 @@
 import React            from 'react'
 import * as _           from 'lodash'
-import {Map}            from 'immutable'
+import {Map, List}      from 'immutable'
 import ReactDOM         from 'react-dom'
 import crypto           from 'crypto'
 
@@ -65,6 +65,7 @@ class App extends React.Component {
             onElementFocused      : this.selection.onElementFocused,
             clearSelection        : this.selection.clear_selection,
             dispatchCommand       : this.dispatchCommand,
+            appendMessage         : this.appendMessage,
         }
     }
     
@@ -85,6 +86,8 @@ class App extends React.Component {
             connected    : false,
             
             port_hovered : null,
+            
+            messages : new List(),
         }
     }
     
@@ -427,6 +430,15 @@ class App extends React.Component {
     }
     
     
+    appendMessage = (emsg) => {
+        this.setState(prevState => {
+            return {
+                messages : prevState.messages.push(emsg)
+            }
+        })
+    }
+    
+    
     /****** Rendering functions ******/
     
     
@@ -468,15 +480,21 @@ class App extends React.Component {
                         })
                     }}/>)
                 : [];
-        
+        var msg_items = []
+        for (var [i,msg] of this.state.messages.entries()) {
+            var m = <code key={i}>{msg}</code>
+            msg_items.push(m)
+        }
         return (
             <div
                 onMouseMove = {this.onMouseMove}
-                onClick     = {this.onClick}>
+                onClick     = {this.onClick}
+                style       = {{height:"100%"}}>
                     <div
                         onKeyDown   = {this.onKeyDown}
                         onKeyUp     = {this.onKeyUp}
                         tabIndex    = {1}
+                        style       = {{height:"85%"}}
                         ref         = {e => {this.elem = e}}>
                             <NodeView
                                 parent_id = {null}
@@ -486,7 +504,12 @@ class App extends React.Component {
                     </div>
                     {new_node_dlg}
                     {new_port_dlg}
-                    {this.state.connected ? null : <p>NOT CONNECTED</p>}
+                    <div style={{
+                            overflow:"scroll", 
+                            maxHeight:"15%"}}>
+                        {msg_items}
+                        {this.state.connected ? null : <p>NOT CONNECTED</p>}
+                    </div>
             </div>
         );
     }

@@ -28,7 +28,8 @@ export class EditProxy {
             this.socket.on('connect', (socket) => {resolve()})
             this.socket.on('disconnect',    () => {reject()})
             this.socket.on('error',         () => {reject()})
-            this.socket.on('graph_edit', this.onNetworkEvent)
+            this.socket.on('graph_edit', this.onNetworkGraphEdit)
+            this.socket.on('message',    this.onNetworkMessage)
         }).then(() => {
             this.connected = true
             this.app.setConnected(true)
@@ -60,18 +61,24 @@ export class EditProxy {
                     port    : "Port",
                     type    : "Type",
                     literal : "Literal"}[evt.type]
+        // the name of the function to call:
         act      = evt.action + act
-        var fn   = ng[act]
+        var fn   = ng[act] // get the thing with that name
         var args = this.unpackArgs(act, evt.details)
-        var new_ng = fn.apply(ng, args)
+        var new_ng = fn.apply(ng, args) // call it
         
         return new_ng
     }
     
     
+    onNetworkMessage = (data) => {
+        this.app.appendMessage(data.text)
+    }
+    
+    
     // handle and execute an edit action arriving from the server.
-    onNetworkEvent = (data) => {
-        console.log("from network:", data)
+    onNetworkGraphEdit = (data) => {
+        console.log(data)
         this.app.setState(prevState => {
             var ng = this.applyEvent(prevState.ng, data)
             if (ng === prevState.ng) {

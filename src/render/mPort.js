@@ -121,6 +121,7 @@ export class Port extends React.PureComponent {
                 src={typeIcons[this.props.type_id]}
                 width={16} height={16}
                 alt={this.props.port_id }
+                title={this.props.type_id + " named " + this.props.port_id}
                 className={classes.join(" ")}
                 draggable="false"
                 tabIndex="1"

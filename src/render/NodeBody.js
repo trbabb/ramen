@@ -194,7 +194,7 @@ export class LiteralNodeBody extends React.PureComponent {
         //           instead of composition.
         var s = {
             backgroundColor : TYPE_COLORS[type_obj.code], 
-            borderRadius    : "4px", // <-- parallel to app.css. :(
+            borderRadius    : "4px", // <-- mirroring `App.css`. :(
         }
         
         return (
