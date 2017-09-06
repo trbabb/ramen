@@ -1,5 +1,3 @@
-import io from 'socket.io-client'
-
 // EditProxy tattles on everything that's done to the node graph.
 // This is sent back to the server, so it can keep the AST in sync.
 
@@ -24,12 +22,12 @@ export class EditProxy {
         }
         
         new Promise((resolve, reject) => {
-            this.socket = io()
-            this.socket.on('connect', (socket) => {resolve()})
-            this.socket.on('disconnect',    () => {reject()})
-            this.socket.on('error',         () => {reject()})
-            this.socket.on('graph_edit', this.onNetworkGraphEdit)
-            this.socket.on('message',    this.onNetworkMessage)
+            var ws_prcol = (window.location.protocol === "https:") ? ('wss://') : ('ws://')
+            this.socket = new WebSocket(ws_prcol + window.location.host + "/socket")
+            this.socket.onopen    = (open)    => { resolve() }
+            this.socket.onmessage = this.routeMessage
+            this.socket.onclose   = (close)   => { reject() }
+            this.socket.onerror   = (error)   => { reject() }
         }).then(() => {
             this.connected = true
             this.app.setConnected(true)
@@ -38,6 +36,18 @@ export class EditProxy {
             this.connected = false
             this.app.setConnected(false)
         })
+    }
+    
+    
+    routeMessage = (message) => {
+        var json  = JSON.parse(message.data)
+        var route = json.route
+        var data  = json.data
+        if (route === "graph_edit") {
+            this.onNetworkGraphEdit(data)
+        } else if (route === "message") {
+            this.onNetworkMessage(data)
+        }
     }
     
     
@@ -72,7 +82,7 @@ export class EditProxy {
     
     
     onNetworkMessage = (data) => {
-        this.app.appendMessage(data.text)
+        this.app.appendMessage(data.text + "\n")
     }
     
     
@@ -96,7 +106,7 @@ export class EditProxy {
         let a = {action : act, type : type, details : args}
         console.log("    EMIT: ", a)
         if (this.connected) {
-            this.socket.emit('graph_edit', a)
+            this.socket.send(JSON.stringify(a))
         } else {
             this.queued.push(a)
         }
@@ -109,7 +119,7 @@ export class EditProxy {
         if (this.connected) {
             while (this.queued.length > 0) {
                 var act = this.queued.pop()
-                this.socket.emit('graph_edit', act)
+                this.socket.send(JSON.stringify(act))
             }
         }
     }

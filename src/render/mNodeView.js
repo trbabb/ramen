@@ -35,6 +35,13 @@ export class NodeView extends React.PureComponent {
     }
     
     
+    grabFocus() {
+        if (this.dom) {
+            this.dom.focus()
+        }
+    }
+    
+    
     onRef = (e) => {
         this.elem = e
         if (e) {

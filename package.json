@@ -2,7 +2,13 @@
   "name": "ramen",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:5000/",
+  "proxy": {
+    "/graph_edit": {
+      "target" : "ws://localhost:5000",
+      "ws" : true
+    }
+  },
+  "homepage": ".",
   "dependencies": {
     "immutability-helper": "^2.2.2",
     "immutable": "^3.8.1",
