@@ -156,6 +156,7 @@ class App extends React.Component {
         var partial_link = this.state.partial_link_anchor
         var pe    = new GraphElement("port", {node_id, port_id, is_sink})
         var port  = this.getElement(pe)
+        if (!port) return
         var links = node.getLinks(port_id, is_sink)
         var xy    = port.getConnectionPoint()
         var uv    = parent_corner
@@ -234,7 +235,9 @@ class App extends React.Component {
                 partial_link_anchor : null
             }))
             var link = this.state.ng.constructLink(anchor_port, p)
-            this.editProxy.action("add", "link", {link})
+            if (link !== null) {  // null implies src -> src or sink -> sink
+                this.editProxy.action("add", "link", {link})
+            }
         }
     }
     
@@ -356,13 +359,22 @@ class App extends React.Component {
         // both depend on what's selected. try to do a good job of being convenient.
         // called by the node placement dialog when it is closed.
         var elem = this.state.active_node_dialog.selected_elem
+        
         this.setState(prevState => {
             return { active_node_dialog : null }
         })
         
+        // the focused thing (new node dialog) just lost focus
+        // prevent focus from falling back to the main window
+        this.getElement(new GraphElement("view", null)).grabFocus()
+        
         if (def_id !== null) {
             let parent_id    = null
             let connect_port = null
+            
+            // todo: maybe we should pass the selected element in the creation command,
+            // and maybe the backend should handle what compound actions to do?
+            // (note that tit might remove some flexibility for alternate UI authors)
             
             // the selected elem at the time of placement determines any auto-parenting/auto-connect:
             if (elem !== null) {
@@ -480,11 +492,14 @@ class App extends React.Component {
                         })
                     }}/>)
                 : [];
+        
         var msg_items = []
         for (var [i,msg] of this.state.messages.entries()) {
             var m = <code key={i}>{msg}</code>
             msg_items.push(m)
+            msg_items.push(<br/>)
         }
+        
         return (
             <div
                 onMouseMove = {this.onMouseMove}
@@ -493,7 +508,6 @@ class App extends React.Component {
                     <div
                         onKeyDown   = {this.onKeyDown}
                         onKeyUp     = {this.onKeyUp}
-                        tabIndex    = {1}
                         style       = {{height:"85%"}}
                         ref         = {e => {this.elem = e}}>
                             <NodeView
