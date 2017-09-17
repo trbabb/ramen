@@ -2,26 +2,28 @@ import React          from 'react'
 import ReactDOM       from 'react-dom'
 import {GraphElement} from '../state/GraphElement'
 
-import float_img from '../resource/c_float.png'
-import int_img   from '../resource/c_int.png'
-import bool_img  from '../resource/c_bool.png'
-import type_img  from '../resource/c_type.png'
-import proc_img  from '../resource/c_proc.png'
-import list_img  from '../resource/c_list.png'
-import str_img   from '../resource/c_str.png'
-import obj_img   from '../resource/c_obj.png'
+import float_img    from '../resource/c_float.png'
+import int_img      from '../resource/c_int.png'
+import bool_img     from '../resource/c_bool.png'
+import type_img     from '../resource/c_type.png'
+import proc_img     from '../resource/c_proc.png'
+import list_img     from '../resource/c_list.png'
+import str_img      from '../resource/c_str.png'
+import obj_img      from '../resource/c_obj.png'
+import unsolved_img from '../resource/c_unsolved.png'
 
 const typeIcons = {
-    'int32_t'   : int_img,
-    'int64_t'   : int_img,
-    'float32_t' : float_img,
-    'float64_t' : float_img,
-    'string_t'  : str_img,
-    'bool_t'    : bool_img,
-    'proc_t'    : proc_img,
-    'array_t'   : list_img,
-    'type_t'    : type_img,
-    'struct_t'  : obj_img,
+    'int32_t'    : int_img,
+    'int64_t'    : int_img,
+    'float32_t'  : float_img,
+    'float64_t'  : float_img,
+    'string_t'   : str_img,
+    'bool_t'     : bool_img,
+    'proc_t'     : proc_img,
+    'array_t'    : list_img,
+    'type_t'     : type_img,
+    'struct_t'   : obj_img,
+    'unsolved_t' : unsolved_img
 };
 
 

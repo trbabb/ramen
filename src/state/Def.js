@@ -11,6 +11,7 @@ export var NODE_TYPE = {
     NODE_BRANCH   : "branch",
     NODE_ENTRY    : "entry",
     NODE_EXIT     : "exit",
+    NODE_EXPORT   : "export",
 }
 
 export class Def {

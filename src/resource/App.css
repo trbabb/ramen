@@ -139,10 +139,39 @@ input {
   width: 6em;
 }
 
+.LiteralNode > code {
+  color: white;
+}
+
 .Handle {
   background-color: #D51;
   border-radius: 3px 0px 0px 3px;
   width: 20px;
   height: 100%;
   display: inline-block;
+}
+
+.Console {
+  overflow: scroll;
+  max-height: 15%;
+}
+
+.ConsoleMessage {
+  margin:0;
+}
+
+.ConsoleMessage.neutral {
+  color: black;
+}
+
+.ConsoleMessage.error {
+  color: red;
+}
+
+.ConsoleMessage.warn {
+  color: orange;
+}
+
+.ConsoleMessage.ok {
+  color: green;
 }

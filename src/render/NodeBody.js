@@ -169,39 +169,54 @@ export class LiteralNodeBody extends React.PureComponent {
     render() {
         
         const TYPE_COLORS = {
-            'int32_t'   : '#ffb005',
-            'int64_t'   : '#ffb005',
-            'float32_t' : '#ff7a7a',
-            'float64_t' : '#ff7a7a',
-            'string_t'  : '#86d61d',
-            'bool_t'    : 'black',
-            'proc_t'    : '#00bff3',
-            'array_t'   : '#a342f5',
-            'type_t'    : '#ff00ff',
-            'struct_t'  : '#3a43f9',
+            'int32_t'    : '#ffb005',
+            'int64_t'    : '#ffb005',
+            'float32_t'  : '#ff7a7a',
+            'float64_t'  : '#ff7a7a',
+            'string_t'   : '#86d61d',
+            'bool_t'     : 'black',
+            'proc_t'     : '#00bff3',
+            'array_t'    : '#a342f5',
+            'type_t'     : '#ff00ff',
+            'struct_t'   : '#3a43f9',
+            'unsolved_t' : '#808080',
         };
-                
+        
+        var is_output = this.props.is_output
         // not sure if "clear selection" is the right behavior, but 
         // we need /something/ for now so that backspace doesn't baleet everthang
         var sig      = this.props.def.type_sig
-        var port_id  = sig.getSourceIDs().toSeq().first()
-        var type_obj = sig.source_types.get(port_id)
+        var ids      = (is_output) ? (sig.getSinkIDs()) : (sig.getSourceIDs())
+        var port_id  = ids.toSeq().first()
+        var type_obj = (is_output ? sig.sink_types : sig.source_types).get(port_id)
+        var val      = this.state.value
+        
+        // todo: will need a general purpose way to render data
+        if (val === true) {
+            val = "true"
+        } else if (val === false) {
+            val = "false"
+        }
         
         // xxx hack: does not override the right CSS element.
         //           the background of the node is the parent div,
         //           which we don't have control over. We should
         //           probably refactor this; maybe use class inheritance
-        //           instead of composition.
+        //           instead of composition for the different varieties of node.
         var s = {
             backgroundColor : TYPE_COLORS[type_obj.code], 
             borderRadius    : "4px", // <-- mirroring `App.css`. :(
         }
         
-        return (
-            <div className="LiteralNode" style={s}>
-                <div className="Handle"> </div>
-                <input 
+        var field = null
+        if (is_output) {
+            // "view" node: code outputs.
+            field = <code key="field">{val}</code>
+        } else {
+            // "literal" node: user inputs.
+            field = <input 
                     className  = "NodeInput"
+                    key        = "field"
                     name       = {this.props.node_id}
                     value      = {this.state.value}
                     onChange   = {e => {this.setState({value : e.target.value})}}
@@ -212,13 +227,29 @@ export class LiteralNodeBody extends React.PureComponent {
                             this.commitValue(e.target.value)
                         }
                     }}/>
-                <Port
-                    port_id   = {port_id}
-                    node_id   = {this.props.node_id}
-                    is_sink   = {false}
-                    type_id   = {type_obj.code}
-                    direction = {[1,0]}
-                    cbacks    = {this.props.cbacks}/>
+        }
+        
+        var port = <Port
+            key       = "port"
+            port_id   = {port_id}
+            node_id   = {this.props.node_id}
+            is_sink   = {is_output}
+            type_id   = {type_obj.code}
+            direction = {[(is_output ? -1 : 1), 0]}
+            cbacks    = {this.props.cbacks}/>
+        
+        var handle = <div className="Handle" key="handle"></div>
+        var body = []
+        
+        if (is_output) {
+            body = [port, field, handle]
+        } else {
+            body = [handle, field, port]
+        }
+        
+        return (
+            <div className="LiteralNode" style={s}>
+                {body}
             </div>
         )
     }

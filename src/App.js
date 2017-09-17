@@ -12,31 +12,38 @@ import {SelectionModel} from './state/SelectionModel'
 import {NodeView}       from './render/mNodeView'
 import {Link}           from './render/mLink'
 import {NarrowingList}  from './render/mNarrowingList'
+import {Console}        from './render/mConsole'
 
 import './resource/App.css'
 
 
-// todo: unify the two kinds of elements-- those used by the network and those used by the focus model.
-//       it is dumb that we repeat ourselves in this way.
+// todo: unify the two kinds of elements-- those used by the network and 
+//       those used by the focus model. it is dumb that we repeat ourselves in 
+//       this way.
 //       todo: it is also better to store the signature with every node. 
-//             internal handling will be simpler because everything is right there.
-//             it will also be easier to remove things from the selection when they are deleted,
-//             and delete things that are selected by just directly passing the element to the EditProxy.
-//       while refactoring this, it would be great if things were more directly translateable with the
-//       backed AST/module elements. (if we do away with the def thing, that might help with this too).
+//             internal handling will be simpler because everything is right 
+//             there. it will also be easier to remove things from the 
+//             selection when they are deleted, and delete things that are 
+//             selected by just directly passing the element to the EditProxy.
+//       while refactoring this, it would be great if things were more directly 
+//       translateable with the backed AST/module elements. (if we do away with 
+//       the def thing, that might help with this too).
 
 // todo: use asMutable to speed up some of the edits.
 // todo: make nodeviews resize themselves to contain their nodes.
 // todo: both nodeviews and ports must not drag the parent node
 // todo: function def ports and names should show up on the same line.
-// todo: link does not follow beyond the edge of the nodeview and this is bad for interaction
+// todo: link does not follow beyond the edge of the nodeview
+//       and this is bad for interaction
 // todo: nodes must accept initial position
-// todo: the above also makes it impossible to connect function args to function body.
-//       we should in general allow nodes to connect across nesting levels.
-// todo: should we override and re-implement or take advantage of browser native focus traversal?
-// todo: performance fix: only update port positions & node positions on drag stop.
-//       find some other way (pass a callback, edit DOM directly?) to get the links to track.
-// todo: xxx: links stopped updating after performance fix. GOD DAMMIT.
+// todo: the above also makes it impossible to connect function args to 
+//       function body. we should in general allow nodes to connect across 
+//       nesting levels.
+// todo: should we override and re-implement or take advantage of browser 
+//       native focus traversal?
+// todo: performance fix: only update port positions & node positions on drag 
+//       stop. find some other way (pass a callback, edit DOM directly?) to get 
+//       the links to track.
 
 
 // someday: draw the type at the free end of the temporary link.
@@ -50,6 +57,7 @@ class App extends React.Component {
         this.editProxy = new EditProxy(this)
         this.elements  = new Map()
         this.selection = new SelectionModel(this)
+        this.console   = null
         
         // neccesary to store across frames, or else the entire app will
         // redraw on every frame D:
@@ -86,8 +94,6 @@ class App extends React.Component {
             connected    : false,
             
             port_hovered : null,
-            
-            messages : new List(),
         }
     }
     
@@ -168,7 +174,9 @@ class App extends React.Component {
         }
         
         // is the partial link connected to this port?
-        if (partial_link && partial_link.node_id === node_id && partial_link.port_id === port_id) {
+        if (partial_link && 
+                partial_link.node_id === node_id && 
+                partial_link.port_id === port_id) {
             let ge = new GraphElement("partial_link", this.state.partial_link_anchor)
             let partial_elem = this.getElement(ge)
             // coordinate space is OUR coordinate space.
@@ -376,7 +384,8 @@ class App extends React.Component {
             // and maybe the backend should handle what compound actions to do?
             // (note that tit might remove some flexibility for alternate UI authors)
             
-            // the selected elem at the time of placement determines any auto-parenting/auto-connect:
+            // the selected elem at the time of placement determines any 
+            // auto-parenting/auto-connect:
             if (elem !== null) {
                 if (elem.type === "node") {
                     let node = this.state.ng.nodes.get(elem.id)
@@ -389,10 +398,18 @@ class App extends React.Component {
                         parent_id = node.parent
                         // connect the new node to the first output port of the selected node
                         let sig = def.type_sig
-                        connect_port = {
-                            node_id : elem.id,
-                            port_id : sig.getSourceIDs().first(),
-                            is_sink : false,
+                        if (sig.getSourceIDs().size > 0) {
+                            connect_port = {
+                                node_id : elem.id,
+                                port_id : sig.getSourceIDs().first(),
+                                is_sink : false,
+                            }
+                        } else {
+                            connect_port = {
+                                node_id : elem.id,
+                                port_id : sig.getSinkIDs().first(),
+                                is_sink : true,
+                            }
                         }
                     }
                 } else if (elem.type === "port") {
@@ -401,7 +418,8 @@ class App extends React.Component {
                     connect_port = elem.id
                 } else if (elem.type === "link") {
                     // xxx todo: insert the node along the selected link.
-                    //     implement composite actions; do [rm link, add node, add link, add link].
+                    //     implement composite actions; 
+                    //     do [rm link, add node, add link, add link].
                 }
             }
             
@@ -420,7 +438,9 @@ class App extends React.Component {
                 let new_sig  = this.state.ng.defs.get(def_id).type_sig
                 let new_port = {
                     node_id : node_id,
-                    port_id : (connect_port.is_sink ? new_sig.getSourceIDs() : new_sig.getSinkIDs()).first(),
+                    port_id : (connect_port.is_sink ? 
+                               new_sig.getSourceIDs() : 
+                               new_sig.getSinkIDs()).first(),
                     is_sink : !connect_port.is_sink
                 }
                 let link = {
@@ -442,12 +462,12 @@ class App extends React.Component {
     }
     
     
-    appendMessage = (emsg) => {
-        this.setState(prevState => {
-            return {
-                messages : prevState.messages.push(emsg)
-            }
-        })
+    appendMessage = (text, style='neutral') => {
+        if (this.console) {
+            this.console.push_message(text, style)
+        } else {
+            console.log("I am a sad panda.")
+        }
     }
     
     
@@ -469,7 +489,10 @@ class App extends React.Component {
         var new_node_dlg = this.state.active_node_dialog !== null ? 
                 (<NarrowingList
                     className="OverlayDialog"
-                    items={this.state.ng.defs.filter((def, def_id) => this.state.ng.placeable_defs.has(def_id))}
+                    items={
+                        this.state.ng.defs.filter(
+                            (def, def_id) => this.state.ng.placeable_defs.has(def_id))
+                    }
                     onAccept={this.onNodeCreate}
                     stringifier={def => def.name}/>)
                 : [];
@@ -493,13 +516,6 @@ class App extends React.Component {
                     }}/>)
                 : [];
         
-        var msg_items = []
-        for (var [i,msg] of this.state.messages.entries()) {
-            var m = <code key={i}>{msg}</code>
-            msg_items.push(m)
-            msg_items.push(<br/>)
-        }
-        
         return (
             <div
                 onMouseMove = {this.onMouseMove}
@@ -518,16 +534,14 @@ class App extends React.Component {
                     </div>
                     {new_node_dlg}
                     {new_port_dlg}
-                    <div style={{
-                            overflow:"scroll", 
-                            maxHeight:"15%"}}>
-                        {msg_items}
-                        {this.state.connected ? null : <p>NOT CONNECTED</p>}
-                    </div>
+                    <Console 
+                        connected={this.state.connected}
+                        ref={e => {this.console = e}}/>
             </div>
         );
     }
     
 }
+
 
 export default App;

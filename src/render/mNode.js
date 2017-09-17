@@ -83,7 +83,9 @@ export class MNode extends React.PureComponent {
         } else if (t === NODE_TYPE.NODE_FUNCTION) {
             body = <FunctionNodeBody {...subprops} ng={this.props.ng}/>
         } else if (t === NODE_TYPE.NODE_LITERAL) {
-            body = <LiteralNodeBody  {...subprops}/>
+            body = <LiteralNodeBody  {...subprops} is_output={false}/>
+        } else if (t === NODE_TYPE.NODE_EXPORT) {
+            body = <LiteralNodeBody {...subprops} is_output={true}/>
         } else if (t === NODE_TYPE.NODE_LOOP) {
             body = <LoopNodeBody {...subprops} ng={this.props.ng}/>
         }
